@@ -1,38 +1,212 @@
-.App {
-  text-align: center;
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+:root {
+  --primary: #2b2d42;
+  --primary-light: #4c5062;
+  --secondary: #666;
+  --accent: #ff9100;
+  --accent-hover: #ff8000;
+  --light-bg: #f5f7fa;
+  --text-dark: #111;
+  --text-light: #fff;
+  --border-color: #e1e5eb;
+  --success: #4caf50;
+  --warning: #ffc107;
+  --danger: #f44336;
+  --transition-speed: 0.3s;
+  --sidebar-width: 250px;
+  --sidebar-collapsed-width: 70px;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
+body {
+  background-color: var(--light-bg);
+  color: var(--text-dark);
+  overflow-x: hidden;
 }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
+.app-container {
   display: flex;
-  flex-direction: column;
+  min-height: 100vh;
+  width: 100%;
+  position: relative;
+}
+
+.main-content {
+  flex: 1;
+  padding: 0;
+  overflow-y: auto;
+  transition: margin-left var(--transition-speed) ease,
+    width var(--transition-speed) ease;
+  width: calc(100% - var(--sidebar-width));
+  margin-left: var(--sidebar-width);
+}
+
+.main-content.expanded {
+  width: calc(100% - var(--sidebar-collapsed-width));
+  margin-left: var(--sidebar-collapsed-width);
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+/* Estilos para botões */
+.btn-adicionar,
+.btn-adicionar-aluno,
+.btn-adicionar-verde,
+.btn-salvar,
+.btn-detalhes {
+  background-color: var(--primary);
+  color: var(--text-light);
+  display: flex;
   align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+  gap: 8px;
+  padding: 8px 16px;
+  transition: background-color 0.2s ease, transform 0.1s ease;
 }
 
-.App-link {
-  color: #61dafb;
+.btn-adicionar:hover,
+.btn-adicionar-aluno:hover,
+.btn-adicionar-verde:hover,
+.btn-salvar:hover,
+.btn-detalhes:hover {
+  background-color: var(--primary-light);
+  transform: translateY(-2px);
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
+.btn-adicionar:active,
+.btn-adicionar-aluno:active,
+.btn-adicionar-verde:active,
+.btn-salvar:active,
+.btn-detalhes:active {
+  transform: translateY(0);
+}
+
+/* Estilos para cards e elementos de interface */
+.card,
+.card-aluno-atual,
+.alunos-atuais,
+.historico-aulas,
+.selecao-aluno-panel {
+  border-radius: 8px;
+  transition: box-shadow 0.3s ease, transform 0.2s ease;
+}
+
+.card:hover,
+.card-aluno-atual:hover {
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+/* Estilos para títulos */
+.page-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 20px;
+  color: var(--primary);
+}
+
+.icon {
+  margin-right: 4px;
+}
+
+/* Estilos para tabelas */
+.tabela-historico th {
+  background-color: var(--primary);
+  color: var(--text-light);
+}
+
+/* Estilos para inputs e selects */
+input,
+select,
+textarea {
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 8px 12px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(255, 145, 0, 0.1);
+}
+
+/* Responsividade para telas menores */
+@media (max-width: 768px) {
+  :root {
+    --sidebar-width: 200px;
   }
-  to {
-    transform: rotate(360deg);
+
+  .main-content {
+    width: 100%;
+    margin-left: 0;
+    padding-left: var(--sidebar-width);
+  }
+
+  .main-content.expanded {
+    width: 100%;
+    padding-left: 0;
+    margin-left: 0;
+  }
+}
+
+/* Adicionando estilos para o content-wrapper */
+.content-wrapper {
+  padding: 20px;
+  min-height: calc(100vh - 70px);
+  box-sizing: border-box;
+  width: 100%;
+}
+
+/* Ajustando a altura máxima de tabelas e listas */
+.tabela-historico,
+.data-table,
+.lista-alunos {
+  max-height: calc(100vh - 200px);
+  overflow-y: auto;
+}
+
+/* Garantindo que os botões e campos são mais acessíveis em dispositivos móveis */
+@media (max-width: 480px) {
+  button,
+  input,
+  select {
+    min-height: 44px; /* Seguindo recomendações de acessibilidade */
+  }
+
+  .content-wrapper {
+    padding: 15px;
+  }
+
+  .actions-container,
+  .list-controls {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .show-entries {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .search-box {
+    width: 100%;
+  }
+
+  .search-box input {
+    width: 100%;
   }
 }

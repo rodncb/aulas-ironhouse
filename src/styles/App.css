@@ -1,0 +1,57 @@
+/* Responsividade para telas menores */
+@media (max-width: 768px) {
+  :root {
+    --sidebar-width: 200px;
+  }
+
+  .main-content {
+    width: 100%;
+    margin-left: 0;
+    padding-left: var(--sidebar-width);
+  }
+
+  .main-content.expanded {
+    width: 100%;
+    padding-left: var(--sidebar-collapsed-width);
+    margin-left: 0;
+  }
+}
+
+/* Melhorias para dispositivos móveis */
+@media (max-width: 480px) {
+  :root {
+    --sidebar-width: 100%;
+    --sidebar-collapsed-width: 0;
+  }
+
+  .main-content {
+    width: 100%;
+    margin-left: 0;
+    padding-left: 0;
+  }
+
+  .main-content.expanded {
+    width: 100%;
+    margin-left: 0;
+    padding-left: 0;
+  }
+
+  .content-wrapper {
+    padding: 10px;
+  }
+
+  button,
+  input,
+  select {
+    min-height: 44px; /* Melhorando acessibilidade em dispositivos touch */
+  }
+
+  /* Ajustando os botões para melhor uso em touch */
+  .btn-adicionar,
+  .btn-adicionar-aluno,
+  .btn-adicionar-verde,
+  .btn-salvar,
+  .btn-detalhes {
+    padding: 10px 15px;
+  }
+}
