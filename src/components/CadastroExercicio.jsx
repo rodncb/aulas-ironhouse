@@ -40,6 +40,8 @@ const CadastroExercicio = () => {
   });
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [searchTerm, setSearchTerm] = useState("");
+  const [editando, setEditando] = useState(false);
+  const [exercicioEditando, setExercicioEditando] = useState(null);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -54,15 +56,30 @@ const CadastroExercicio = () => {
     if (novoExercicio.nome.trim() === "" || novoExercicio.musculatura === "")
       return;
 
-    const newId = Math.max(...exercicios.map((e) => e.id), 0) + 1;
-    setExercicios([
-      ...exercicios,
-      {
-        id: newId,
-        nome: novoExercicio.nome,
-        musculatura: novoExercicio.musculatura,
-      },
-    ]);
+    if (editando && exercicioEditando) {
+      const exerciciosAtualizados = exercicios.map((ex) =>
+        ex.id === exercicioEditando.id
+          ? {
+              ...ex,
+              nome: novoExercicio.nome,
+              musculatura: novoExercicio.musculatura,
+            }
+          : ex
+      );
+      setExercicios(exerciciosAtualizados);
+      setEditando(false);
+      setExercicioEditando(null);
+    } else {
+      const newId = Math.max(...exercicios.map((e) => e.id), 0) + 1;
+      setExercicios([
+        ...exercicios,
+        {
+          id: newId,
+          nome: novoExercicio.nome,
+          musculatura: novoExercicio.musculatura,
+        },
+      ]);
+    }
 
     setNovoExercicio({
       nome: "",
@@ -74,6 +91,24 @@ const CadastroExercicio = () => {
     setExercicios(exercicios.filter((e) => e.id !== id));
   };
 
+  const handleEdit = (item) => {
+    setEditando(true);
+    setExercicioEditando(item);
+    setNovoExercicio({
+      nome: item.nome,
+      musculatura: item.musculatura,
+    });
+  };
+
+  const cancelarEdicao = () => {
+    setEditando(false);
+    setExercicioEditando(null);
+    setNovoExercicio({
+      nome: "",
+      musculatura: "",
+    });
+  };
+
   const filteredItems = exercicios.filter((item) =>
     item.nome.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -83,9 +118,20 @@ const CadastroExercicio = () => {
       <h1>Exercício</h1>
 
       <form onSubmit={handleSubmit} className="cadastro-form">
-        <button type="submit" className="btn-cadastrar">
-          Cadastrar
-        </button>
+        <div className="form-header">
+          <button type="submit" className="btn-cadastrar">
+            {editando ? "Salvar" : "Cadastrar"}
+          </button>
+          {editando && (
+            <button
+              type="button"
+              className="btn-cancelar"
+              onClick={cancelarEdicao}
+            >
+              Cancelar
+            </button>
+          )}
+        </div>
         <div className="form-fields">
           <input
             type="text"
@@ -155,7 +201,9 @@ const CadastroExercicio = () => {
                 >
                   Excluir
                 </button>
-                <button className="btn-editar">Editar</button>
+                <button className="btn-editar" onClick={() => handleEdit(item)}>
+                  Editar
+                </button>
               </td>
             </tr>
           ))}

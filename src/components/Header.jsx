@@ -6,6 +6,7 @@ import {
   faSignOutAlt,
   faUser,
 } from "@fortawesome/free-solid-svg-icons";
+import logoCompleta from "../assets/logo_completa.png";
 
 function Header({ toggleSidebar, user, onLogout }) {
   return (
@@ -14,7 +15,9 @@ function Header({ toggleSidebar, user, onLogout }) {
         <button className="menu-toggle" onClick={toggleSidebar}>
           <FontAwesomeIcon icon={faBars} />
         </button>
-        <h1>Iron House</h1>
+        <h1>
+          <img src={logoCompleta} alt="Iron House" className="header-logo" />
+        </h1>
       </div>
       <div className="header-right">
         {user && (

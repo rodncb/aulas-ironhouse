@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from "react";
 import "./App.css";
+import "./styles/Apple.css";
 import Sidebar from "./components/Sidebar";
 import Header from "./components/Header";
 import AlunosEmAula from "./components/AlunosEmAula";
 import Cadastros from "./components/Cadastros";
 import GerenciamentoAlunos from "./components/GerenciamentoAlunos";
+import GerenciamentoProfessores from "./components/GerenciamentoProfessores";
 import Geral from "./components/Geral";
 import Login from "./components/Login";
 
-function App() {
+const App = () => {
   // Estado de autenticação
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
@@ -19,8 +21,6 @@ function App() {
   const [alunosEmAulaApp, setAlunosEmAulaApp] = useState([]);
   // Estado para controlar se o sidebar está colapsado
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  // Estado para controlar a largura da janela
-  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
 
   // Verificar se há um usuário no localStorage ao carregar
   useEffect(() => {
@@ -39,8 +39,6 @@ function App() {
   // Escuta eventos de redimensionamento da janela
   useEffect(() => {
     const handleResize = () => {
-      setWindowWidth(window.innerWidth);
-
       // Auto-recolhe o sidebar em dispositivos móveis
       if (window.innerWidth <= 768 && !sidebarCollapsed) {
         setSidebarCollapsed(true);
@@ -54,6 +52,38 @@ function App() {
       window.removeEventListener("resize", handleResize);
     };
   }, [sidebarCollapsed]);
+
+  // Adicionar um novo useEffect para gerenciar o comportamento responsivo
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth <= 768) {
+        setSidebarCollapsed(true);
+      }
+    };
+
+    // Executar no mount
+    handleResize();
+
+    // Adicionar listener para redimensionamento
+    window.addEventListener("resize", handleResize);
+
+    // Cleanup
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  // Adicionando um listener para eventos de navegação
+  useEffect(() => {
+    // Event listener para navegação
+    const handleNavegacao = (event) => {
+      setActiveSection(event.detail.secao);
+    };
+
+    window.addEventListener("navegarPara", handleNavegacao);
+
+    return () => {
+      window.removeEventListener("navegarPara", handleNavegacao);
+    };
+  }, []);
 
   // Função para lidar com o login
   const handleLogin = (role, user) => {
@@ -86,15 +116,24 @@ function App() {
   // Função para controlar o estado do sidebar
   const toggleSidebar = () => {
     setSidebarCollapsed(!sidebarCollapsed);
+
+    // Controle do scroll do body no mobile
+    if (window.innerWidth <= 768) {
+      if (!sidebarCollapsed) {
+        document.body.style.overflow = "";
+      } else {
+        document.body.style.overflow = "hidden";
+      }
+    }
   };
 
-  // Função modificada para tratar mudança de seção e esconder sidebar em mobile
+  // Função para tratar mudança de seção
   const handleSectionChange = (section) => {
     setActiveSection(section);
-
-    // Em dispositivos móveis, colapsar o sidebar quando um item do menu é selecionado
+    // Em dispositivos móveis, fechar o sidebar após selecionar uma seção
     if (window.innerWidth <= 768) {
       setSidebarCollapsed(true);
+      document.body.style.overflow = "";
     }
   };
 
@@ -111,7 +150,9 @@ function App() {
       case "cadastros":
         return <Cadastros />;
       case "alunos":
-        return <GerenciamentoAlunos />;
+        return <GerenciamentoAlunos setActiveSection={setActiveSection} />;
+      case "professores":
+        return <GerenciamentoProfessores />;
       case "alunos_em_aula":
         return <AlunosEmAula atualizarAlunosEmAula={atualizarAlunosEmAula} />;
       default:
@@ -131,23 +172,25 @@ function App() {
 
   return (
     <div className="app-container">
+      <Header
+        toggleSidebar={toggleSidebar}
+        user={currentUser}
+        onLogout={handleLogout}
+      />
       <Sidebar
         activeSection={activeSection}
         setActiveSection={handleSectionChange}
         collapsed={sidebarCollapsed}
         toggleSidebar={toggleSidebar}
         userRole={userRole}
+        currentUser={currentUser}
+        onLogout={handleLogout}
       />
-      <div className={`main-content ${sidebarCollapsed ? "expanded" : ""}`}>
-        <Header
-          toggleSidebar={toggleSidebar}
-          user={currentUser}
-          onLogout={handleLogout}
-        />
+      <main className={`main-content ${sidebarCollapsed ? "expanded" : ""}`}>
         <div className="content-wrapper">{renderContent()}</div>
-      </div>
+      </main>
     </div>
   );
-}
+};
 
 export default App;

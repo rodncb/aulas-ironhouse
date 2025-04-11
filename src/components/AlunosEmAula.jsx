@@ -5,17 +5,7 @@ import TreinosList from "./TreinosList";
 
 const AlunosEmAula = ({ atualizarAlunosEmAula }) => {
   // Lista de alunos disponíveis para adicionar à aula
-  const [todosAlunos, setTodosAlunos] = useState([
-    { id: 1, nome: "Adriano Faria de Souza", idade: 43 },
-    { id: 2, nome: "Adriano Laranjo", idade: 37 },
-    { id: 3, nome: "Adriano Silva", idade: 39 },
-    { id: 4, nome: "Agnella Massara", idade: 46 },
-    { id: 5, nome: "Alessandra Cunha", idade: 46 },
-    { id: 6, nome: "Alessandra Maria Sales", idade: 46 },
-    { id: 7, nome: "Alexandre Buscher", idade: 36 },
-    { id: 8, nome: "Alexandre Teixeira", idade: 36 },
-    { id: 9, nome: "Vitor", idade: 25 },
-  ]);
+  const [todosAlunos, setTodosAlunos] = useState([]);
 
   // Alunos que estão atualmente na aula
   const [alunosEmAula, setAlunosEmAula] = useState([]);
@@ -29,6 +19,14 @@ const AlunosEmAula = ({ atualizarAlunosEmAula }) => {
   const [showModal, setShowModal] = useState(false);
   const [alunoSelecionadoModal, setAlunoSelecionadoModal] = useState(null);
 
+  // Carregar alunos do localStorage ao montar o componente
+  useEffect(() => {
+    const alunosSalvos = localStorage.getItem("todosAlunos");
+    if (alunosSalvos) {
+      setTodosAlunos(JSON.parse(alunosSalvos));
+    }
+  }, []);
+
   // Atualiza o componente pai sempre que a lista de alunos em aula muda
   useEffect(() => {
     if (atualizarAlunosEmAula) {
@@ -41,9 +39,40 @@ const AlunosEmAula = ({ atualizarAlunosEmAula }) => {
 
     const aluno = todosAlunos.find((a) => a.id === parseInt(alunoId));
     if (aluno) {
-      const novosAlunosEmAula = [...alunosEmAula, aluno];
+      // Adicionar aula atual ao histórico do aluno
+      const novaAula = {
+        id: Date.now(),
+        data: new Date().toLocaleDateString(),
+        status: "atual",
+      };
+
+      const alunoAtualizado = {
+        ...aluno,
+        historicoAulas: [novaAula, ...(aluno.historicoAulas || [])],
+      };
+
+      // Atualizar o aluno na lista de todos os alunos
+      const todosAlunosAtualizados = todosAlunos.map((a) =>
+        a.id === aluno.id ? alunoAtualizado : a
+      );
+
+      // Atualizar estados e localStorage
+      setTodosAlunos(todosAlunosAtualizados);
+      localStorage.setItem(
+        "todosAlunos",
+        JSON.stringify(todosAlunosAtualizados)
+      );
+
+      // Adicionar à lista de alunos em aula
+      const novosAlunosEmAula = [...alunosEmAula, alunoAtualizado];
       setAlunosEmAula(novosAlunosEmAula);
       setAlunoSelecionado("");
+
+      // Disparar evento de atualização
+      const event = new CustomEvent("atualizarHistoricoAlunos", {
+        detail: { alunos: todosAlunosAtualizados },
+      });
+      window.dispatchEvent(event);
     }
   };
 
@@ -52,14 +81,9 @@ const AlunosEmAula = ({ atualizarAlunosEmAula }) => {
   };
 
   const salvarAula = () => {
-    console.log("Alunos em aula salvos:", alunosEmAula);
-
     if (atualizarAlunosEmAula) {
       atualizarAlunosEmAula(alunosEmAula);
     }
-
-    // Aqui poderia ter lógica adicional para salvar no backend
-
     setShowSelecao(false);
   };
 

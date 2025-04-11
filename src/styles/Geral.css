@@ -1,5 +1,7 @@
 .geral-container {
   padding: 20px;
+  position: relative;
+  padding-top: 20px;
 }
 
 .geral-header {
@@ -7,12 +9,15 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 25px;
+  padding: 15px 0;
+  background-color: transparent;
+  width: 100%;
 }
 
-.geral-container h1 {
-  font-size: 1.8rem;
-  color: #333;
+.geral-header h1 {
   margin: 0;
+  font-size: 1.5rem;
+  color: #333;
 }
 
 .btn-adicionar-aluno {
@@ -118,12 +123,28 @@
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   padding: 20px;
+  margin-top: 20px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #888 #f1f1f1;
 }
 
-.historico-aulas h2 {
-  font-size: 1.4rem;
-  color: #333;
-  margin-bottom: 20px;
+.historico-aulas::-webkit-scrollbar {
+  width: 8px;
+}
+
+.historico-aulas::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.historico-aulas::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+.historico-aulas::-webkit-scrollbar-thumb:hover {
+  background: #555;
 }
 
 .sem-registros {
@@ -161,13 +182,77 @@
   color: white;
   border: none;
   border-radius: 4px;
-  padding: 6px 12px;
+  padding: 8px 16px;
   cursor: pointer;
   font-size: 0.9rem;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 60px;
+  margin: 2px;
+  transition: all 0.2s ease;
 }
 
 .btn-detalhes:hover {
   background-color: #2a5a8f;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Estilos para o painel de seleção de alunos incorporado na página */
+.selecao-aluno-panel-embedded {
+  width: 100%;
+  margin: 20px 0;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.selecao-aluno-panel-embedded .selecao-aluno-content {
+  width: 100%;
+  max-width: none;
+  padding: 0;
+  box-shadow: none;
+  border-radius: 0;
+}
+
+.selecao-aluno-panel-embedded h2 {
+  font-size: 1.5rem;
+  color: #333;
+  margin-top: 0;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #eee;
+}
+
+/* Melhorias para exibição em dispositivos móveis */
+@media (max-width: 768px) {
+  .selecao-aluno-panel-embedded {
+    padding: 15px;
+  }
+
+  .selecao-aluno-panel-embedded .lista-exercicios {
+    max-height: 300px;
+  }
+
+  .historico-aulas {
+    max-height: calc(100vh - 250px);
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .tabela-historico {
+    width: 100%;
+    min-width: 600px; /* Garante que a tabela tenha um tamanho mínimo para scroll horizontal */
+  }
+}
+
+@media (max-width: 480px) {
+  .historico-aulas {
+    max-height: calc(100vh - 200px);
+  }
 }
 
 /* Estilos para o painel de seleção de alunos */
@@ -245,32 +330,92 @@
   background-color: #286090;
 }
 
-/* Estilos para o botão Nova Aula e o container de botões do header */
+/* Estilos para os botões do header */
 .header-buttons {
   display: flex;
-  gap: 1rem;
+  align-items: center;
+  gap: 10px;
 }
 
 .btn-nova-aula {
+  padding: 12px 25px;
+  font-size: 18px;
+  font-weight: bold;
   background-color: #4caf50;
   color: white;
   border: none;
-  padding: 0.5rem 1rem;
   border-radius: 4px;
   cursor: pointer;
-  font-weight: bold;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  transition: background-color 0.3s;
+  justify-content: center;
+  transition: background-color 0.3s, transform 0.2s;
 }
 
 .btn-nova-aula:hover {
   background-color: #45a049;
+  transform: translateY(-2px);
 }
 
-.icon-plus {
-  font-size: 1rem;
+.btn-nova-aula span {
+  margin-right: 8px;
+  font-size: 20px;
+}
+
+@media (max-width: 768px) {
+  .header-buttons {
+    width: auto;
+  }
+
+  .btn-nova-aula {
+    padding: 8px 16px;
+    font-size: 14px;
+    height: 36px;
+    min-width: auto;
+  }
+
+  .btn-nova-aula span {
+    font-size: 16px;
+    margin-right: 4px;
+  }
+}
+
+.btn-editar-aula {
+  padding: 12px 25px;
+  font-size: 18px;
+  font-weight: bold;
+  background-color: #337ab7;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.3s, transform 0.2s;
+}
+
+.btn-editar-aula:hover {
+  background-color: #2e6da4;
+  transform: translateY(-2px);
+}
+
+/* Ajustes para dispositivos móveis */
+@media (max-width: 768px) {
+  .header-buttons {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+  }
+
+  .btn-nova-aula,
+  .btn-editar-aula {
+    width: 100%;
+    margin-bottom: 10px;
+    justify-content: center;
+  }
 }
 
 /* Destaque para a linha da aula atual na tabela */
@@ -300,7 +445,7 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: rgba(0, 0, 0, 0.7);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -313,9 +458,10 @@
   max-width: 600px;
   border-radius: 8px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-  max-height: 80vh;
+  max-height: 85vh;
   display: flex;
   flex-direction: column;
+  position: relative;
 }
 
 .modal-detalhes-header {
@@ -324,28 +470,56 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  background-color: #f8f9fa;
+  border-radius: 8px 8px 0 0;
+  position: sticky;
+  top: 0;
+  z-index: 5;
 }
 
 .modal-detalhes-header h2 {
   margin: 0;
   color: var(--primary);
+  font-size: 1.4rem;
 }
 
 .btn-fechar {
   background: none;
   border: none;
-  font-size: 1.5rem;
+  font-size: 1.8rem;
   cursor: pointer;
   color: #888;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s;
 }
 
 .btn-fechar:hover {
   color: var(--primary);
+  background-color: rgba(0, 0, 0, 0.05);
 }
 
 .modal-detalhes-body {
   padding: 1.5rem;
   overflow-y: auto;
+  flex: 1;
+}
+
+.modal-detalhes-body p {
+  margin-bottom: 10px;
+  font-size: 1rem;
+}
+
+.modal-detalhes-body h3 {
+  margin: 25px 0 15px 0;
+  color: #333;
+  font-size: 1.2rem;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 8px;
 }
 
 .lista-alunos-detalhes {
@@ -409,6 +583,62 @@
   .modal-detalhes-body {
     padding: 1rem;
   }
+
+  .exercicios-detalhes {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  }
+
+  .exercicio-detalhe-item {
+    padding: 12px;
+  }
+
+  .exercicio-detalhe-nome {
+    font-size: 0.95rem;
+  }
+
+  .exercicio-detalhe-musculatura {
+    font-size: 0.85rem;
+  }
+
+  .lista-alunos-detalhes {
+    margin-top: 0.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .modal-detalhes-content {
+    width: 100%;
+    height: 100%;
+    max-height: 100%;
+    border-radius: 0;
+  }
+
+  .modal-detalhes-header {
+    border-radius: 0;
+    padding: 1rem;
+  }
+
+  .btn-fechar {
+    width: 44px;
+    height: 44px;
+    font-size: 2rem;
+  }
+
+  .modal-detalhes-body {
+    padding: 1rem;
+  }
+
+  .exercicios-detalhes {
+    grid-template-columns: 1fr;
+  }
+
+  .exercicio-detalhe-item {
+    margin-bottom: 10px;
+  }
+
+  .aluno-detalhe-item {
+    margin-bottom: 10px;
+  }
 }
 
 /* Estilos para indicadores de status de aula */
@@ -447,6 +677,8 @@
   align-items: center;
   margin-top: 1.5rem;
   gap: 0.5rem;
+  flex-wrap: wrap;
+  padding: 0 10px;
 }
 
 .btn-pagina {
@@ -457,6 +689,11 @@
   border-radius: 4px;
   cursor: pointer;
   transition: all 0.2s;
+  min-height: 44px;
+  min-width: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .btn-pagina:hover:not(:disabled) {
@@ -472,11 +709,13 @@
 .numeros-pagina {
   display: flex;
   gap: 0.3rem;
+  flex-wrap: wrap;
+  justify-content: center;
 }
 
 .btn-numero-pagina {
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   border: 1px solid #ddd;
   background-color: #f8f9fa;
@@ -486,6 +725,7 @@
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s;
+  font-size: 1rem;
 }
 
 .btn-numero-pagina:hover {
@@ -498,283 +738,151 @@
   border-color: #337ab7;
 }
 
-/* Estilos para botões de ação na tabela */
+/* Estilos para os botões de ações nas tabelas */
 .acoes-aula {
   display: flex;
-  gap: 0.5rem;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-start;
 }
 
-.btn-cancelar {
-  background-color: #dc3545;
-  color: white;
+.acoes-aula button {
+  padding: 6px 10px;
   border: none;
-  padding: 0.5rem 1rem;
   border-radius: 4px;
   cursor: pointer;
-  font-weight: bold;
-  transition: background-color 0.3s;
-}
-
-.btn-cancelar:hover {
-  background-color: #c82333;
-}
-
-/* Estilos para linha de aula cancelada */
-.aula-cancelada-row {
-  background-color: rgba(220, 53, 69, 0.05);
-}
-
-.aula-cancelada-row:hover {
-  background-color: rgba(220, 53, 69, 0.1);
-}
-
-/* Estilos para os indicadores de status */
-.status-atual {
-  background-color: #ffc107;
-  color: #333;
-  padding: 4px 8px;
-  border-radius: 4px;
   font-size: 0.85rem;
-  font-weight: bold;
-}
-
-.status-realizada {
-  background-color: #28a745;
-  color: white;
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 0.85rem;
-  font-weight: bold;
-}
-
-.status-cancelada {
-  background-color: #dc3545;
-  color: white;
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 0.85rem;
-  font-weight: bold;
-}
-
-/* Modal de confirmação */
-.modal-confirmacao-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-}
-
-.modal-confirmacao-content {
-  background-color: white;
-  width: 90%;
-  max-width: 400px;
-  padding: 1.5rem;
-  border-radius: 8px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-  text-align: center;
-}
-
-.modal-confirmacao-content h3 {
-  color: #dc3545;
-  margin-top: 0;
-}
-
-.acoes-confirmacao {
-  display: flex;
-  justify-content: center;
-  gap: 1rem;
-  margin-top: 1.5rem;
-}
-
-.btn-confirmar-cancelar {
-  background-color: #dc3545;
-  color: white;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: bold;
-}
-
-.btn-confirmar-cancelar:hover {
-  background-color: #c82333;
-}
-
-.btn-nao-cancelar {
-  background-color: #6c757d;
-  color: white;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: bold;
-}
-
-.btn-nao-cancelar:hover {
-  background-color: #5a6268;
-}
-
-/* Estilo para o botão Realizar e Editar */
-.btn-realizar-editar {
-  background-color: #17a2b8;
-  color: white;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: bold;
-  transition: background-color 0.3s;
+  font-weight: 500;
+  transition: all 0.2s;
   white-space: nowrap;
 }
 
-.btn-realizar-editar:hover {
-  background-color: #138496;
+.btn-detalhes {
+  background-color: #2196f3;
+  color: white;
 }
 
-/* Estilo para o botão Editar */
+.btn-detalhes:hover {
+  background-color: #0d8bf2;
+}
+
 .btn-editar {
-  background-color: #6c757d;
+  background-color: #4caf50;
   color: white;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: bold;
-  transition: background-color 0.3s;
 }
 
 .btn-editar:hover {
-  background-color: #5a6268;
+  background-color: #3e9142;
 }
 
-/* Estilo para o botão Cancelar Edição */
-.btn-cancelar-edicao {
-  background-color: #6c757d;
-  color: white;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: bold;
-  transition: background-color 0.3s;
-}
-
-.btn-cancelar-edicao:hover {
-  background-color: #5a6268;
-}
-
-/* Layout de ações finais no painel de seleção */
-.acoes-finais {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-  justify-content: center;
-}
-
-/* Ajustes para a responsividade da tabela de ações */
-@media (max-width: 992px) {
-  .acoes-aula {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-
-  .acoes-aula button {
-    width: 100%;
-  }
-}
-
-/* Estilo para o botão Marcar Realizada */
 .btn-realizar {
-  background-color: #28a745;
+  background-color: #ff9800;
   color: white;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: bold;
-  transition: background-color 0.3s;
-  white-space: nowrap;
 }
 
 .btn-realizar:hover {
-  background-color: #218838;
+  background-color: #e68900;
 }
 
-/* Estilo para o botão Salvar Aula (sem finalizar) */
-.btn-salvar-sem-finalizar {
-  background-color: #0275d8;
+.btn-cancelar {
+  background-color: #f44336;
   color: white;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  cursor: pointer;
+}
+
+.btn-cancelar:hover {
+  background-color: #e53935;
+}
+
+/* Estilos para os status das aulas */
+.aula-atual {
+  background-color: rgba(33, 150, 243, 0.05);
+}
+
+.aula-realizada {
+  background-color: rgba(76, 175, 80, 0.05);
+}
+
+.aula-cancelada {
+  background-color: rgba(244, 67, 54, 0.05);
+}
+
+.status-atual {
+  color: #2196f3;
   font-weight: bold;
-  transition: background-color 0.3s;
+  padding: 3px 8px;
+  border-radius: 4px;
+  background-color: rgba(33, 150, 243, 0.1);
 }
 
-.btn-salvar-sem-finalizar:hover {
-  background-color: #025aa5;
+.status-realizada {
+  color: #4caf50;
+  font-weight: bold;
+  padding: 3px 8px;
+  border-radius: 4px;
+  background-color: rgba(76, 175, 80, 0.1);
 }
 
-/* Ajustes para o container de ações finais */
+.status-cancelada {
+  color: #f44336;
+  font-weight: bold;
+  padding: 3px 8px;
+  border-radius: 4px;
+  background-color: rgba(244, 67, 54, 0.1);
+}
+
+/* Melhorias na lista de alunos presentes */
+.aluno-item {
+  padding: 8px 12px;
+  margin: 4px 0;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+}
+
+/* Responsividade para dispositivos móveis */
 @media (max-width: 768px) {
-  .acoes-finais {
-    flex-direction: column;
-  }
-
-  .acoes-finais button {
-    width: 100%;
-    margin-bottom: 0.5rem;
-  }
-}
-
-/* Ajustes responsivos para tabelas no mobile */
-@media (max-width: 768px) {
-  .tabela-historico {
-    display: block;
-    overflow-x: auto;
-    white-space: nowrap;
-    width: 100%;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  .tabela-historico th,
-  .tabela-historico td {
-    min-width: 100px;
-  }
-
   .acoes-aula {
-    display: flex;
-    flex-wrap: wrap;
+    flex-direction: column;
     gap: 5px;
-    justify-content: flex-start;
-    min-width: 200px;
   }
 
   .acoes-aula button {
-    padding: 5px 10px;
-    font-size: 0.85rem;
-    margin-bottom: 3px;
+    width: 100%;
   }
+}
 
+/* Responsividade padrão para o dashboard e cards */
+@media (max-width: 768px) {
   /* Melhorar a visualização no mobile */
   .dashboard-cards {
     grid-template-columns: 1fr;
+    gap: 15px;
   }
 
   .lista-alunos-atuais {
     grid-template-columns: 1fr;
   }
+
+  /* Paginação responsiva */
+  .paginacao {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .numeros-pagina {
+    order: -1;
+    margin: 10px 0;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .btn-numero-pagina {
+    width: 38px;
+    height: 38px;
+    margin: 0 2px;
+  }
 }
 
-/* Ajuste específico para telas muito pequenas */
+/* Ajustes específicos para telas muito pequenas */
 @media (max-width: 480px) {
   .geral-header {
     flex-direction: column;
@@ -789,14 +897,535 @@
 
   .header-buttons button {
     width: 100%;
+    height: 44px; /* Melhor área de toque para dispositivos móveis */
+    margin-bottom: 8px;
   }
 
   .btn-adicionar-verde {
     width: 100%;
+    height: 44px;
   }
 
   .selecao-actions {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  /* Ajuste para paginação em telas pequenas */
+  .paginacao {
+    flex-direction: column;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .numeros-pagina {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 5px;
+    margin: 5px 0;
+    max-width: 90vw;
+  }
+
+  .btn-numero-pagina {
+    width: 36px;
+    height: 36px;
+    font-size: 0.9rem;
+  }
+
+  .btn-pagina {
+    width: 100%;
+    max-width: 150px;
+    height: 44px;
+    font-size: 0.9rem;
+  }
+
+  .modal-confirmacao-content {
+    width: 95%;
+    padding: 1.25rem;
+  }
+
+  .acoes-confirmacao {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .btn-confirmar-cancelar,
+  .btn-nao-cancelar {
+    width: 100%;
+    min-height: 48px;
+  }
+
+  .btn-nova-aula {
+    width: auto;
+    padding: 6px 12px;
+    font-size: 13px;
+    margin-bottom: 8px;
+    height: 32px;
+    min-width: 120px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  }
+
+  .btn-nova-aula span {
+    font-size: 14px;
+    margin-right: 4px;
+  }
+
+  .geral-header h1 {
+    font-size: 1.3rem;
+  }
+}
+
+/* Ajustar a posição do título da página */
+.page-title {
+  margin-top: 0;
+}
+
+/* Estilos para os alunos selecionados no modal */
+.alunos-selecionados {
+  margin: 15px 0;
+  padding: 10px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  border: 1px solid #e5e5e5;
+}
+
+.alunos-selecionados h3 {
+  margin-top: 0;
+  color: #333;
+  font-size: 1rem;
+  margin-bottom: 10px;
+}
+
+.lista-alunos-selecionados {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.aluno-selecionado-item {
+  background-color: #e3f2fd;
+  border: 1px solid #bbdefb;
+  border-radius: 4px;
+  padding: 6px 12px;
+  font-size: 0.9rem;
+  color: #1976d2;
+  display: inline-flex;
+  align-items: center;
+}
+
+/* Estilo para o botão de remover aluno */
+.btn-remover-aluno {
+  background: none;
+  border: none;
+  color: #d32f2f;
+  font-size: 16px;
+  font-weight: bold;
+  margin-left: 8px;
+  padding: 0 5px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s;
+}
+
+.btn-remover-aluno:hover {
+  background-color: rgba(211, 47, 47, 0.1);
+}
+
+/* Estilos para lista de exercícios */
+.lista-exercicios {
+  max-height: 300px;
+  overflow-y: auto;
+  margin: 15px 0;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+}
+
+.exercicio-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  margin-bottom: 8px;
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.exercicio-item:hover {
+  background: #f5f5f5;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.exercicio-item.selecionado {
+  background: #e3f2fd;
+  border-color: #2196f3;
+}
+
+.exercicio-musculatura {
+  color: #666;
+  font-size: 0.9em;
+  padding: 4px 8px;
+  background: #f0f0f0;
+  border-radius: 4px;
+}
+
+.selecao-exercicios {
+  margin-top: 20px;
+  padding: 15px;
+  background: #f9f9f9;
+  border-radius: 8px;
+  border: 1px solid #e5e5e5;
+}
+
+/* Contador de exercícios */
+.contador-exercicios {
+  text-align: right;
+  color: #666;
+  margin: 10px 0;
+  font-size: 0.9em;
+}
+
+/* Input de pesquisa */
+.input-pesquisa {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  margin-bottom: 10px;
+}
+
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.detalhes-modal {
+  background-color: white;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 600px;
+  max-height: 85vh;
+  overflow-y: auto;
+  padding: 20px;
+  position: relative;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.detalhes-modal h2 {
+  margin: 0 0 20px 0;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #eee;
+  color: #333;
+  font-size: 1.5rem;
+}
+
+.detalhes-data {
+  margin-bottom: 20px;
+}
+
+.detalhes-data p {
+  margin: 8px 0;
+  font-size: 1.1rem;
+}
+
+.lista-alunos-presentes {
+  list-style: none;
+  padding: 0;
+  margin: 15px 0;
+}
+
+.aluno-item {
+  background-color: #f8f9fa;
+  padding: 12px;
+  margin-bottom: 8px;
+  border-radius: 6px;
+  border-left: 4px solid #337ab7;
+}
+
+.visualizacao-exercicios {
+  margin-top: 25px;
+  padding-top: 15px;
+  border-top: 1px solid #eee;
+}
+
+.exercicios-count {
+  background-color: #f8f9fa;
+  padding: 10px 15px;
+  border-radius: 6px;
+  margin: 10px 0;
+}
+
+.exercicios-total {
+  font-weight: bold;
+  color: #337ab7;
+}
+
+/* Melhorias responsivas para a tabela de histórico */
+@media (max-width: 768px) {
+  .historico-aulas {
+    padding: 10px;
+    margin: 10px -10px;
+    border-radius: 0;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .tabela-historico {
+    font-size: 0.9rem;
+    min-width: 600px; /* Garante largura mínima para scroll horizontal */
+  }
+
+  .tabela-historico th,
+  .tabela-historico td {
+    padding: 8px;
+  }
+
+  .acoes-aula {
+    min-width: 120px;
+  }
+
+  /* Melhorar visualização dos botões de ação */
+  .acoes-aula button {
+    padding: 8px 12px;
+    height: 36px;
+    min-width: 80px;
+    font-size: 0.85rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .geral-container {
+    padding: 10px;
+  }
+
+  .historico-aulas {
+    margin: 10px -10px;
+    box-shadow: none;
+  }
+
+  .historico-aulas h2 {
+    padding: 0 10px;
+    margin-bottom: 15px;
+  }
+
+  /* Ajustar o padding dos cards para economizar espaço */
+  .dashboard-cards {
+    gap: 10px;
+    margin: 0 -5px;
+  }
+
+  .card {
+    padding: 15px;
+    margin: 0 5px;
+  }
+
+  .numero-destaque {
+    font-size: 2rem;
+  }
+
+  /* Melhorar espaçamento e tamanho de toque em dispositivos móveis */
+  .btn-detalhes,
+  .btn-editar,
+  .btn-realizar,
+  .btn-cancelar {
+    height: 44px;
+    min-width: 90px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 2px 0;
+  }
+
+  /* Ajustar alinhamento dos status */
+  .status-atual,
+  .status-realizada,
+  .status-cancelada {
+    display: inline-block;
+    width: 100%;
+    text-align: center;
+    margin: 2px 0;
+  }
+}
+
+/* Melhorias para desktop, tablet e mobile */
+@media (min-width: 1024px) {
+  .dashboard-cards {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    padding: 0;
+  }
+
+  .historico-aulas {
+    max-width: 1200px;
+    margin: 20px auto;
+  }
+}
+
+@media (max-width: 1023px) {
+  .dashboard-cards {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+    padding: 0 10px;
+  }
+}
+
+@media (max-width: 768px) {
+  .geral-container {
+    padding: 10px;
+  }
+
+  .dashboard-cards {
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+
+  .card {
+    padding: 15px;
+  }
+
+  .numero-destaque {
+    font-size: 2rem;
+  }
+
+  .header-buttons {
+    width: 100%;
+  }
+
+  .btn-nova-aula {
+    width: 100%;
+    padding: 12px;
+    height: 44px;
+    font-size: 16px;
+  }
+
+  .tabela-historico {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+    max-width: 100%;
+  }
+
+  .acoes-aula {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .acoes-aula button {
+    width: 100%;
+    min-height: 44px;
+  }
+
+  .lista-alunos-atuais {
+    grid-template-columns: 1fr;
+  }
+
+  .selecao-aluno-panel-embedded {
+    margin: 10px -10px;
+    border-radius: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .geral-container {
+    padding: 5px;
+  }
+
+  .geral-header {
+    padding: 10px;
+  }
+
+  .geral-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .btn-nova-aula {
+    font-size: 14px;
+  }
+
+  .card {
+    padding: 12px;
+  }
+
+  .numero-destaque {
+    font-size: 1.8rem;
+  }
+
+  .historico-aulas {
+    margin: 10px -5px;
+  }
+
+  .tabela-historico th,
+  .tabela-historico td {
+    padding: 8px;
+    font-size: 0.9rem;
+  }
+
+  .status-atual,
+  .status-realizada,
+  .status-cancelada {
+    padding: 4px 6px;
+    font-size: 0.8rem;
+  }
+
+  .selecao-aluno-panel-embedded {
+    padding: 10px;
+  }
+
+  .selecao-aluno-content h2 {
+    font-size: 1.2rem;
+  }
+
+  .select-aluno,
+  .select-professor {
+    font-size: 0.9rem;
+  }
+
+  .lista-exercicios {
+    max-height: 250px;
+  }
+
+  .exercicio-item {
+    padding: 8px;
+    font-size: 0.9rem;
+  }
+}
+
+/* Melhorias para scroll em dispositivos móveis */
+.lista-alunos,
+.historico-aulas,
+.tabela-historico,
+.data-table {
+  -webkit-overflow-scrolling: touch;
+}
+
+.lista-alunos-container,
+.historico-container {
+  max-height: calc(100vh - 200px);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 768px) {
+  .lista-alunos-container,
+  .historico-container {
+    max-height: calc(100vh - 150px);
   }
 }

@@ -1,0 +1,392 @@
+/* Estilos globais no padrão Apple */
+:root {
+  --apple-primary: #0a84ff;
+  --apple-secondary: #1d1d1f;
+  --apple-light: #f5f5f7;
+  --apple-danger: #ff3b30;
+  --apple-success: #34c759;
+  --apple-border: #d1d1d6;
+  --apple-text: #000000;
+  --apple-text-secondary: #8e8e93;
+  --apple-shadow: rgba(0, 0, 0, 0.1);
+
+  /* Sidebar */
+  --sidebar-width: 260px;
+  --sidebar-collapsed-width: 70px;
+  --transition-speed: 0.3s;
+
+  /* Colors */
+  --apple-dark: #1c1c1e;
+  --apple-text-dark: #ffffff;
+  --primary-light: #2196ff;
+
+  /* Spacing */
+  --content-padding: 20px;
+  --header-height: 60px;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "San Francisco",
+    "Helvetica Neue", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  color: var(--apple-text);
+  background-color: var(--apple-light);
+}
+
+/* Botões primários */
+.btn-cadastrar,
+.btn-salvar,
+.btn-realizar,
+.btn-detalhes {
+  background-color: var(--apple-primary);
+  color: white;
+  border-radius: 8px;
+  font-weight: 500;
+  padding: 10px 20px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 1px 2px var(--apple-shadow);
+  border: none;
+}
+
+.btn-cadastrar:hover,
+.btn-salvar:hover,
+.btn-realizar:hover,
+.btn-detalhes:hover {
+  background-color: #0062c3;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 5px var(--apple-shadow);
+}
+
+/* Botões secundários */
+.btn-cancelar,
+.dropdown-btn,
+.btn-editar,
+.btn-nao-cancelar {
+  background-color: #e7e7e7;
+  color: var(--apple-text);
+  border-radius: 8px;
+  font-weight: 500;
+  border: none;
+}
+
+.btn-cancelar:hover,
+.dropdown-btn:hover,
+.btn-editar:hover,
+.btn-nao-cancelar:hover {
+  background-color: #d1d1d6;
+}
+
+/* Botões de perigo */
+.btn-excluir,
+.btn-confirmar-cancelar {
+  background-color: var(--apple-danger);
+  color: white;
+  border-radius: 8px;
+  font-weight: 500;
+  border: none;
+}
+
+.btn-excluir:hover,
+.btn-confirmar-cancelar:hover {
+  background-color: #e6352b;
+}
+
+/* Cards e Containers */
+.modal-aluno,
+.modal-professor,
+.modal-detalhes-content,
+.modal-confirmacao-content {
+  border-radius: 12px;
+  box-shadow: 0 10px 20px var(--apple-shadow);
+  overflow: hidden;
+  background-color: white;
+}
+
+.modal-header,
+.modal-detalhes-header {
+  background-color: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--apple-border);
+}
+
+.close-btn,
+.btn-fechar {
+  font-size: 24px;
+  color: var(--apple-text-secondary);
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s;
+}
+
+.close-btn:hover,
+.btn-fechar:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.exercicio-detalhe-item,
+.aluno-detalhe-item,
+.professor-detalhe-item,
+.card,
+.card-aluno-atual {
+  border-radius: 12px;
+  border-left: none;
+  background-color: rgba(255, 255, 255, 0.8);
+  box-shadow: 0 2px 8px var(--apple-shadow);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 15px;
+}
+
+.exercicio-detalhe-item:hover,
+.aluno-detalhe-item:hover,
+.professor-detalhe-item:hover {
+  transform: translateY(-2px) scale(1.02);
+}
+
+/* Tabelas */
+.data-table,
+.tabela-historico {
+  border-collapse: separate;
+  border-spacing: 0;
+  width: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 10px var(--apple-shadow);
+  background-color: white;
+}
+
+.data-table th,
+.tabela-historico th {
+  background-color: rgba(245, 245, 247, 0.8);
+  backdrop-filter: blur(10px);
+  font-weight: 500;
+  color: var(--apple-text-secondary);
+  padding: 14px 16px;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  letter-spacing: 0.5px;
+}
+
+.data-table td,
+.tabela-historico td {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--apple-border);
+}
+
+.data-table tr:last-child td,
+.tabela-historico tr:last-child td {
+  border-bottom: none;
+}
+
+.data-table tr:hover,
+.tabela-historico tr:hover {
+  background-color: rgba(0, 113, 227, 0.05);
+}
+
+/* Formulários */
+.form-group input,
+.form-group select,
+.form-group textarea,
+.search-box input {
+  border-radius: 8px;
+  border: 1px solid var(--apple-border);
+  padding: 12px;
+  transition: all 0.2s;
+  font-size: 16px;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus,
+.search-box input:focus {
+  outline: none;
+  border-color: var(--apple-primary);
+  box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.15);
+}
+
+.form-group label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--apple-text-secondary);
+  margin-bottom: 6px;
+}
+
+/* Dropdown Menu */
+.dropdown-content {
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+  background-color: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--apple-border);
+}
+
+.dropdown-content button {
+  transition: all 0.2s;
+  font-weight: 500;
+}
+
+.dropdown-content button:hover {
+  background-color: rgba(0, 113, 227, 0.1);
+}
+
+/* Status Indicators */
+.status-atual,
+.status-realizada,
+.status-cancelada {
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-weight: 500;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.status-atual {
+  background-color: #ffd60a;
+  color: #000;
+}
+
+.status-realizada {
+  background-color: var(--apple-success);
+  color: white;
+}
+
+.status-cancelada {
+  background-color: var(--apple-danger);
+  color: white;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .dropdown-content {
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+    animation: slide-up 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  @keyframes slide-up {
+    from {
+      transform: translate(-50%, 20px);
+      opacity: 0;
+    }
+    to {
+      transform: translate(-50%, -50%);
+      opacity: 1;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .modal-aluno,
+  .modal-professor,
+  .modal-detalhes-content {
+    border-radius: 20px 20px 0 0;
+    margin-top: 50px;
+    height: calc(100% - 50px);
+    animation: slide-up-modal 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  @keyframes slide-up-modal {
+    from {
+      transform: translateY(100%);
+    }
+    to {
+      transform: translateY(0);
+    }
+  }
+}
+
+/* Outros estilos específicos */
+h1,
+h2,
+h3 {
+  font-weight: 600;
+  color: var(--apple-text);
+}
+
+h1 {
+  font-size: 1.8rem;
+  margin-bottom: 20px;
+}
+
+h2 {
+  font-size: 1.5rem;
+  margin-bottom: 15px;
+}
+
+h3 {
+  font-size: 1.2rem;
+  margin-bottom: 10px;
+}
+
+.numero-destaque {
+  font-weight: 600;
+  font-size: 2.5rem;
+}
+
+.actions-container {
+  background-color: transparent;
+  border-radius: 12px;
+  padding: 15px;
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Botão Voltar Estilo Apple */
+.apple-back-button-container {
+  margin-bottom: 15px;
+  padding: 0;
+  display: none; /* Ocultar os botões "Voltar" */
+}
+
+.apple-back-button {
+  background: none;
+  border: none;
+  color: var(--apple-primary);
+  font-size: 16px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  min-height: 44px; /* Altura mínima para área de toque adequada */
+  touch-action: manipulation; /* Melhora o comportamento em dispositivos touch */
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent; /* Remove highlight em mobile */
+}
+
+.apple-back-button:hover {
+  background-color: rgba(0, 113, 227, 0.08);
+}
+
+.apple-back-button:active {
+  background-color: rgba(0, 113, 227, 0.12);
+  transform: scale(0.98);
+}
+
+.apple-back-arrow {
+  font-size: 20px;
+  margin-right: 6px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+}
+
+@media (max-width: 768px) {
+  .apple-back-button {
+    padding: 10px 15px;
+    font-size: 15px;
+    min-height: 48px; /* Área de toque maior em mobile */
+  }
+
+  .apple-back-arrow {
+    font-size: 22px;
+  }
+}

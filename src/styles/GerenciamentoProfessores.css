@@ -1,8 +1,8 @@
-.alunos-principal-container {
+.professores-principal-container {
   padding: 20px;
 }
 
-.alunos-principal-container h1 {
+.professores-principal-container h1 {
   font-size: 1.8rem;
   margin-bottom: 20px;
   color: #333;
@@ -16,25 +16,18 @@
 }
 
 .btn-cadastrar {
-  background-color: #2196f3;
+  background-color: #3a6ea5;
   color: white;
   border: none;
-  border-radius: 6px;
-  padding: 10px 20px;
+  border-radius: 4px;
+  padding: 8px 15px;
   cursor: pointer;
   font-weight: 500;
   white-space: nowrap;
-  transition: all 0.2s ease;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
 }
 
 .btn-cadastrar:hover {
-  background-color: #1e88e5;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  background-color: #2a5a8f;
 }
 
 .list-controls {
@@ -105,7 +98,7 @@
   z-index: 1000;
 }
 
-.modal-aluno {
+.modal-professor {
   background-color: white;
   border-radius: 8px;
   width: 600px;
@@ -161,7 +154,7 @@
   max-height: calc(85vh - 60px);
 }
 
-.aluno-form {
+.professor-form {
   padding: 20px;
 }
 
@@ -226,30 +219,22 @@
   background-color: #388e3c;
 }
 
-/* Estilos do dropdown */
+/* Estilos para o menu dropdown nas ações */
 .dropdown {
   position: relative;
   display: inline-block;
 }
 
 .dropdown-btn {
-  background-color: #3498db;
+  background-color: #6c757d;
   color: white;
-  padding: 8px 16px;
-  font-size: 14px;
+  padding: 6px 15px;
   border: none;
   border-radius: 4px;
   cursor: pointer;
-  transition: background-color 0.3s;
-  min-width: 44px;
-  min-height: 35px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.dropdown-btn:hover {
-  background-color: #2980b9;
+  font-size: 0.9rem;
+  min-width: 90px;
+  min-height: 36px;
 }
 
 .dropdown-content {
@@ -257,116 +242,121 @@
   position: absolute;
   right: 0;
   top: 100%;
-  margin-top: 5px;
-  background-color: #f9f9f9;
-  min-width: 160px;
+  background-color: #ffffff;
+  min-width: 150px;
   box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
-  z-index: 1060;
+  z-index: 9999;
   border-radius: 4px;
-  overflow: hidden;
-}
-
-.dropdown.active .dropdown-content {
-  display: block;
+  margin-top: 4px;
+  border: 1px solid #e0e0e0;
 }
 
 .dropdown-content button {
+  display: block;
   width: 100%;
-  padding: 12px 16px;
   text-align: left;
-  background-color: transparent;
-  color: #333;
+  padding: 12px 16px;
   border: none;
-  border-bottom: 1px solid #eee;
+  background: none;
   cursor: pointer;
-  transition: background-color 0.2s;
+  font-size: 0.9rem;
+  min-height: 44px;
+  color: #333;
+  border-bottom: 1px solid #f0f0f0;
 }
 
-.dropdown-content button:last-child {
-  border-bottom: none;
+.dropdown-content .btn-editar {
+  color: #337ab7;
+  background-color: transparent;
+}
+
+.dropdown-content .btn-excluir {
+  color: #d9534f;
+  background-color: transparent;
+}
+
+.dropdown-content .btn-historico {
+  color: #3a6ea5;
+  background-color: transparent;
 }
 
 .dropdown-content button:hover {
   background-color: #f1f1f1;
 }
 
-/* Overlay para mobile */
-#dropdown-overlay {
-  display: block;
-  background-color: rgba(0, 0, 0, 0.5);
-  transition: opacity 0.3s ease;
-  z-index: 1050;
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+/* Remover todos os comportamentos hover anteriores */
+.dropdown:hover .dropdown-content,
+.dropdown:focus-within .dropdown-content,
+.dropdown-content:hover {
+  display: none;
 }
 
-/* Estilos para dispositivos móveis */
+/* Apenas exibir quando a classe active está presente */
+.dropdown.active .dropdown-content {
+  display: block !important;
+}
+
+/* Ajustes para mobile */
 @media (max-width: 768px) {
+  .dropdown {
+    position: static;
+  }
+
   .dropdown-content {
     position: fixed;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 90%;
+    width: 80%;
     max-width: 300px;
-    background-color: white;
     border-radius: 8px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-    animation: fade-in 0.2s ease-out;
-    z-index: 1060;
+    box-shadow: 0 5px 25px rgba(0, 0, 0, 0.3);
+    padding: 10px 0;
+    z-index: 1100;
+    display: none;
+    background-color: white;
+    border: 1px solid #ddd;
   }
 
-  @keyframes fade-in {
-    from {
-      opacity: 0;
-      transform: translate(-50%, -45%);
-    }
-    to {
-      opacity: 1;
-      transform: translate(-50%, -50%);
-    }
+  .dropdown.active .dropdown-content {
+    display: block !important;
+  }
+
+  .dropdown-content button {
+    padding: 15px 20px;
+    font-size: 1rem;
+    min-height: 50px;
+    border-bottom: 1px solid #eee;
+  }
+
+  .dropdown-content button:last-child {
+    border-bottom: none;
   }
 
   .dropdown-content::before {
     content: "Ações";
     display: block;
-    padding: 15px;
-    font-weight: bold;
     text-align: center;
-    background-color: #f7f7f7;
+    padding: 10px;
+    font-weight: bold;
     border-bottom: 1px solid #eee;
+    margin-bottom: 5px;
   }
 
-  .dropdown-content button {
-    padding: 16px;
-    font-size: 16px;
-    text-align: left;
-    border-bottom: 1px solid #eee;
-    display: flex;
-    align-items: center;
-    gap: 10px;
+  /* Adicionar overlay para fechar dropdown em mobile */
+  .dropdown-background {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1050;
   }
 
-  .dropdown-content button svg {
-    font-size: 18px;
-  }
-
-  .excluir-btn {
-    color: #d9534f !important;
-  }
-
-  /* Estilo específico para o botão de ações em mobile */
-  .dropdown-btn {
-    width: 44px;
-    height: 44px;
-    font-size: 16px;
-    padding: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  .dropdown.active .dropdown-background {
+    display: block;
   }
 }
 
@@ -379,6 +369,21 @@
 .data-table th:last-child,
 .data-table td:last-child {
   text-align: center;
+}
+
+.btn-historico {
+  width: 100%;
+  text-align: left;
+  padding: 8px 16px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: #3a6ea5;
+  font-size: 0.9rem;
+}
+
+.btn-historico:hover {
+  background-color: #f1f1f1;
 }
 
 .tabela-historico {
@@ -405,14 +410,14 @@
   background-color: #f5f5f5;
 }
 
-.aluno-info-resumo {
+.professor-info-resumo {
   background-color: #f8f9fa;
   padding: 15px;
   border-radius: 8px;
   margin-bottom: 20px;
 }
 
-.aluno-info-resumo p {
+.professor-info-resumo p {
   margin: 8px 0;
   font-size: 1rem;
   color: #333;
@@ -450,36 +455,123 @@
   color: white;
 }
 
-/* Estilos para exibição do professor no histórico */
-.professor-especialidade {
-  margin-left: 8px;
-  font-size: 0.9rem;
-  color: #666;
-  font-style: italic;
+/* Responsividade para dispositivos móveis */
+@media (max-width: 768px) {
+  .actions-container {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+
+  .list-controls {
+    width: 100%;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+
+  .show-entries,
+  .search-box {
+    width: 100%;
+  }
+
+  .search-box input {
+    width: 100%;
+  }
+
+  .data-table {
+    font-size: 0.9rem;
+  }
+
+  .professor-info-resumo {
+    padding: 12px;
+  }
+
+  .tabela-historico th,
+  .tabela-historico td {
+    padding: 10px;
+  }
+
+  .exercicios-detalhes {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  }
+
+  .exercicio-detalhe-item {
+    padding: 12px;
+  }
+
+  .exercicio-detalhe-nome {
+    font-size: 0.95rem;
+  }
 }
 
-.btn-detalhes {
-  background-color: #3a6ea5;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  padding: 6px 12px;
-  cursor: pointer;
-  font-size: 0.9rem;
-  min-width: 60px;
-  display: inline-block;
-  text-align: center;
-}
+@media (max-width: 480px) {
+  .professores-principal-container {
+    padding: 15px;
+  }
 
-.btn-detalhes:hover {
-  background-color: #2a5a8f;
+  .professores-principal-container h1 {
+    font-size: 1.5rem;
+  }
+
+  .data-table th,
+  .data-table td {
+    padding: 8px 10px;
+  }
+
+  .modal-professor {
+    width: 100%;
+    max-width: 100%;
+    height: 100%;
+    max-height: 100%;
+    margin: 0;
+    border-radius: 0;
+  }
+
+  .modal-header {
+    padding: 15px;
+  }
+
+  .modal-body {
+    padding: 15px;
+    max-height: calc(100vh - 60px);
+  }
+
+  .close-btn {
+    width: 44px;
+    height: 44px;
+    font-size: 2rem;
+  }
+
+  .form-actions {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .btn-cancelar,
+  .btn-salvar {
+    width: 100%;
+  }
+
+  .dropdown-btn {
+    padding: 8px;
+    font-size: 0.8rem;
+  }
+
+  .professor-info-resumo p {
+    font-size: 0.9rem;
+  }
+
+  .exercicios-detalhes {
+    grid-template-columns: 1fr;
+  }
+
+  .exercicio-detalhe-item {
+    margin-bottom: 10px;
+  }
 }
 
 .aula-info-detalhes {
-  background-color: #f8f9fa;
-  padding: 15px;
-  border-radius: 8px;
-  margin-bottom: 20px;
   margin-top: 10px;
   font-size: 1rem;
   line-height: 1.5;
@@ -540,196 +632,110 @@
   padding-bottom: 5px;
 }
 
-/* Adaptar largura das colunas da tabela de histórico */
-@media (max-width: 768px) {
-  .actions-container {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 15px;
-  }
-
-  .list-controls {
-    width: 100%;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 15px;
-  }
-
-  .show-entries,
-  .search-box {
-    width: 100%;
-  }
-
-  .search-box input {
-    width: 100%;
-  }
-
-  .data-table {
-    font-size: 0.9rem;
-  }
-
-  .aluno-info-resumo {
-    padding: 12px;
-  }
-
-  .tabela-historico th,
-  .tabela-historico td {
-    padding: 10px;
-  }
-
-  .tabela-historico {
-    min-width: 500px;
-    overflow-x: auto;
-  }
-
-  .tabela-historico th:nth-child(3), /* Coluna do professor */
-  .tabela-historico td:nth-child(3) {
-    max-width: 100px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .modal-body {
-    overflow-x: auto;
-  }
-
-  .exercicios-detalhes {
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  }
-
-  .exercicio-detalhe-item {
-    padding: 12px;
-  }
-
-  .exercicio-detalhe-nome {
-    font-size: 0.95rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .alunos-principal-container {
-    padding: 15px;
-  }
-
-  .alunos-principal-container h1 {
-    font-size: 1.5rem;
-  }
-
-  .data-table th,
-  .data-table td {
-    padding: 8px 10px;
-  }
-
-  .modal-aluno {
-    width: 100%;
-    max-width: 100%;
-    height: 100%;
-    max-height: 100%;
-    margin: 0;
-    border-radius: 0;
-  }
-
-  .modal-header {
-    padding: 15px;
-  }
-
-  .modal-body {
-    padding: 15px;
-    max-height: calc(100vh - 60px);
-  }
-
-  .close-btn {
-    width: 44px;
-    height: 44px;
-    font-size: 2rem;
-  }
-
-  .form-actions {
-    flex-direction: column;
-    gap: 10px;
-  }
-
-  .btn-cancelar,
-  .btn-salvar {
-    width: 100%;
-  }
-
-  .dropdown-btn {
-    padding: 8px;
-    font-size: 0.8rem;
-  }
-
-  .aluno-info-resumo p {
-    font-size: 0.9rem;
-  }
-
-  .exercicios-detalhes {
-    grid-template-columns: 1fr;
-  }
-
-  .exercicio-detalhe-item {
-    margin-bottom: 10px;
-  }
+.dropdown.active .dropdown-content {
+  display: block !important;
+  z-index: 1100;
 }
 
 /* Ocultar o botão voltar que conflita com o logo */
-.alunos-principal-container .apple-back-button-container {
+.professores-principal-container .apple-back-button-container {
+  display: none;
+}
+
+.data-table .dropdown-content {
+  position: absolute;
+  right: 0;
+  top: 100%;
+  background-color: white;
+  min-width: 150px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+  border-radius: 4px;
+  overflow: hidden;
+  z-index: 9999;
+  display: none;
+}
+
+.data-table .dropdown.active .dropdown-content {
+  display: block;
+  margin-top: 5px;
+}
+
+.dropdown-content button {
+  width: 100%;
+  text-align: left;
+  padding: 10px 15px;
+  background: none;
+  border: none;
+  border-bottom: 1px solid #eee;
+  cursor: pointer;
+  font-size: 14px;
+  color: #333;
+  display: block;
+}
+
+.dropdown-content button:hover {
+  background-color: #f5f5f5;
+}
+
+.dropdown-content .btn-editar {
+  color: #4285f4;
+}
+
+.dropdown-content .btn-excluir {
+  color: #ea4335;
+}
+
+.dropdown-content .btn-historico {
+  color: #34a853;
+}
+
+/* Remover estilos antigos que podem estar interferindo */
+.dropdown:hover .dropdown-content,
+.dropdown:focus-within .dropdown-content,
+.dropdown-content:hover {
   display: none;
 }
 
 /* Estilos para botões de ações na tabela */
-.acoes {
-  display: flex;
-  flex-wrap: nowrap;
-  gap: 6px;
-  justify-content: center;
-  align-items: center;
-}
-
 .btn-editar,
 .btn-excluir,
 .btn-historico {
-  padding: 6px 8px;
+  padding: 6px 12px;
   border-radius: 4px;
   cursor: pointer;
-  font-size: 0.9rem;
-  font-weight: 500;
+  margin-right: 5px;
   border: none;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  transition: all 0.2s ease;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  width: 78px; /* Ajuste fino na largura */
-  min-width: 78px;
-  max-width: 78px;
-  white-space: nowrap;
-  justify-content: center;
-  flex: 0 0 78px;
-}
-
-.btn-editar svg,
-.btn-excluir svg,
-.btn-historico svg {
   font-size: 14px;
-  width: 14px;
-  height: 14px;
-  margin-right: 2px;
+  font-weight: 500;
 }
 
-/* Responsividade para mobile */
+.btn-editar {
+  background-color: #337ab7;
+  color: white;
+}
+
+.btn-excluir {
+  background-color: #d9534f;
+  color: white;
+}
+
+.btn-historico {
+  background-color: #5bc0de;
+  color: white;
+}
+
+/* Ajustes para mobile */
 @media (max-width: 768px) {
-  .acoes {
+  .actions {
+    display: flex;
     flex-direction: column;
-    width: 100%;
   }
 
   .btn-editar,
   .btn-excluir,
   .btn-historico {
+    margin-bottom: 5px;
     width: 100%;
-    min-height: 44px;
-    justify-content: center;
+    margin-right: 0;
   }
 }

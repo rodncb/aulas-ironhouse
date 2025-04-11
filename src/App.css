@@ -51,6 +51,30 @@ body {
   margin-left: var(--sidebar-collapsed-width);
 }
 
+@media (max-width: 768px) {
+  :root {
+    --sidebar-width: 200px;
+  }
+
+  .main-content,
+  .main-content.expanded {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .main-content {
+    width: 100%;
+    margin-left: 0;
+    padding-left: var(--sidebar-width);
+  }
+
+  .main-content.expanded {
+    width: 100%;
+    padding-left: 0;
+    margin-left: 0;
+  }
+}
+
 button {
   cursor: pointer;
   border: none;

@@ -1,18 +1,49 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "../styles/Cadastro.css";
 import "../styles/CadastroAluno.css";
+import "../styles/Modal.css";
 
 const CadastroAluno = () => {
   const [showModal, setShowModal] = useState(false);
   const [alunos, setAlunos] = useState([
-    { id: 1, nome: "Adriano Faria de Souza 12 check", idade: 43 },
-    { id: 2, nome: "Adriano Laranjo 8 Checkins", idade: 37 },
-    { id: 3, nome: "Adriano Silva 8 check", idade: 39 },
-    { id: 4, nome: "Agnella Massara Premium", idade: 46 },
-    { id: 5, nome: "Alessandra Cunha 16 Checkins", idade: 46 },
-    { id: 6, nome: "Alessandra Maria Sales 16 check", idade: 46 },
-    { id: 7, nome: "Alexandre Buscher 12 Checkins", idade: 36 },
-    { id: 8, nome: "Alexandre Teixeira (drinho)", idade: 36 },
+    {
+      id: 1,
+      nome: "Adriano Faria de Souza 12 check",
+      idade: 43,
+      historicoAulas: [],
+    },
+    {
+      id: 2,
+      nome: "Adriano Laranjo 8 Checkins",
+      idade: 37,
+      historicoAulas: [],
+    },
+    { id: 3, nome: "Adriano Silva 8 check", idade: 39, historicoAulas: [] },
+    { id: 4, nome: "Agnella Massara Premium", idade: 46, historicoAulas: [] },
+    {
+      id: 5,
+      nome: "Alessandra Cunha 16 Checkins",
+      idade: 46,
+      historicoAulas: [],
+    },
+    {
+      id: 6,
+      nome: "Alessandra Maria Sales 16 check",
+      idade: 46,
+      historicoAulas: [],
+    },
+    {
+      id: 7,
+      nome: "Alexandre Buscher 12 Checkins",
+      idade: 36,
+      historicoAulas: [],
+    },
+    {
+      id: 8,
+      nome: "Alexandre Teixeira (drinho)",
+      idade: 36,
+      historicoAulas: [],
+    },
   ]);
 
   const [itemsPerPage, setItemsPerPage] = useState(10);
@@ -22,7 +53,34 @@ const CadastroAluno = () => {
     idade: "",
     lesao: "Não",
     objetivo: "",
+    historicoAulas: [],
   });
+  const [alunoHistorico, setAlunoHistorico] = useState(null);
+
+  // Carregar alunos do localStorage ao montar o componente
+  useEffect(() => {
+    const alunosSalvos = localStorage.getItem("todosAlunos");
+    if (alunosSalvos) {
+      setAlunos(JSON.parse(alunosSalvos));
+    }
+  }, []);
+
+  // Escutar por atualizações do histórico de aulas
+  useEffect(() => {
+    const handleHistoricoUpdate = (event) => {
+      const { alunos: alunosAtualizados } = event.detail;
+      setAlunos(alunosAtualizados);
+    };
+
+    window.addEventListener("atualizarHistoricoAlunos", handleHistoricoUpdate);
+
+    return () => {
+      window.removeEventListener(
+        "atualizarHistoricoAlunos",
+        handleHistoricoUpdate
+      );
+    };
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -37,27 +95,52 @@ const CadastroAluno = () => {
     if (novoAluno.nome.trim() === "" || !novoAluno.idade) return;
 
     const newId = Math.max(...alunos.map((a) => a.id), 0) + 1;
-    setAlunos([
+    const alunosAtualizados = [
       ...alunos,
       {
         id: newId,
         nome: novoAluno.nome,
         idade: parseInt(novoAluno.idade),
+        lesao: novoAluno.lesao,
+        objetivo: novoAluno.objetivo,
+        historicoAulas: [],
       },
-    ]);
+    ];
+
+    setAlunos(alunosAtualizados);
+    localStorage.setItem("todosAlunos", JSON.stringify(alunosAtualizados));
+
+    // Disparar evento para atualizar outros componentes
+    const event = new CustomEvent("atualizarHistoricoAlunos", {
+      detail: { alunos: alunosAtualizados },
+    });
+    window.dispatchEvent(event);
 
     setNovoAluno({
       nome: "",
       idade: "",
       lesao: "Não",
       objetivo: "",
+      historicoAulas: [],
     });
 
     setShowModal(false);
   };
 
   const handleDelete = (id) => {
-    setAlunos(alunos.filter((a) => a.id !== id));
+    const alunosAtualizados = alunos.filter((a) => a.id !== id);
+    setAlunos(alunosAtualizados);
+    localStorage.setItem("todosAlunos", JSON.stringify(alunosAtualizados));
+
+    // Disparar evento para atualizar outros componentes
+    const event = new CustomEvent("atualizarHistoricoAlunos", {
+      detail: { alunos: alunosAtualizados },
+    });
+    window.dispatchEvent(event);
+  };
+
+  const handleVerHistorico = (aluno) => {
+    setAlunoHistorico(aluno);
   };
 
   const filteredItems = alunos.filter((item) =>
@@ -72,8 +155,39 @@ const CadastroAluno = () => {
     setShowModal(false);
   };
 
+  const getStatusLabel = (status) => {
+    switch (status) {
+      case "realizada":
+        return <span className="status-realizada">Realizada</span>;
+      case "cancelada":
+        return <span className="status-cancelada">Cancelada</span>;
+      case "atual":
+      default:
+        return <span className="status-atual">Atual</span>;
+    }
+  };
+
+  // Função para voltar à página anterior ou para o dashboard
+  const voltarPagina = () => {
+    if (window.history.length > 1) {
+      window.history.back();
+    } else {
+      // Se não houver histórico, voltar para o dashboard
+      const event = new CustomEvent("navegarPara", {
+        detail: { secao: "geral" },
+      });
+      window.dispatchEvent(event);
+    }
+  };
+
   return (
     <div className="cadastro-container">
+      <div className="voltar-container">
+        <button className="btn-voltar" onClick={voltarPagina}>
+          Voltar
+        </button>
+      </div>
+
       <h1>Aluno</h1>
 
       <div className="actions-container">
@@ -88,9 +202,6 @@ const CadastroAluno = () => {
               value={itemsPerPage}
               onChange={(e) => setItemsPerPage(Number(e.target.value))}
             >
-              <option value={10}>10</option>
-              <option value={25}>25</option>
-              <option value={50}>50</option>
               <option value={100}>100</option>
             </select>
           </div>
@@ -129,6 +240,12 @@ const CadastroAluno = () => {
                       onClick={() => handleDelete(item.id)}
                     >
                       Excluir
+                    </button>
+                    <button
+                      className="btn-historico"
+                      onClick={() => handleVerHistorico(item)}
+                    >
+                      Ver Histórico
                     </button>
                   </div>
                 </div>
@@ -212,6 +329,68 @@ const CadastroAluno = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de histórico */}
+      {alunoHistorico && (
+        <div className="modal-overlay">
+          <div className="modal-aluno">
+            <div className="modal-header">
+              <h2>Histórico de Aulas - {alunoHistorico.nome}</h2>
+              <button
+                className="close-btn"
+                onClick={() => setAlunoHistorico(null)}
+              >
+                ×
+              </button>
+            </div>
+            <div className="modal-body">
+              <div className="aluno-info-resumo">
+                <p>
+                  <strong>Idade:</strong> {alunoHistorico.idade} anos
+                </p>
+                <p>
+                  <strong>Total de aulas:</strong>{" "}
+                  {alunoHistorico.historicoAulas?.length || 0}
+                </p>
+              </div>
+
+              {alunoHistorico.historicoAulas?.length > 0 ? (
+                <table className="tabela-historico">
+                  <thead>
+                    <tr>
+                      <th>Data</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[...alunoHistorico.historicoAulas]
+                      .sort((a, b) => {
+                        // Ordenar por data (mais recente primeiro)
+                        const dataA = new Date(
+                          a.data.split("/").reverse().join("-")
+                        );
+                        const dataB = new Date(
+                          b.data.split("/").reverse().join("-")
+                        );
+                        return dataB - dataA;
+                      })
+                      .map((aula) => (
+                        <tr key={aula.id}>
+                          <td>{aula.data}</td>
+                          <td>{getStatusLabel(aula.status)}</td>
+                        </tr>
+                      ))}
+                  </tbody>
+                </table>
+              ) : (
+                <p className="sem-aulas">
+                  Este aluno ainda não participou de nenhuma aula.
+                </p>
+              )}
+            </div>
           </div>
         </div>
       )}

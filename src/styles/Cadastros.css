@@ -87,3 +87,8 @@
     flex-wrap: wrap;
   }
 }
+
+/* Ocultar o botão voltar que conflita com o logo */
+.cadastros-container .apple-back-button-container {
+  display: none;
+}

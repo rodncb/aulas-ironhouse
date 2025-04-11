@@ -18,18 +18,42 @@ const CadastroMusculatura = () => {
   const [novaMusculatura, setNovaMusculatura] = useState("");
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [searchTerm, setSearchTerm] = useState("");
+  const [editando, setEditando] = useState(false);
+  const [musculaturaEditando, setMusculaturaEditando] = useState(null);
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (novaMusculatura.trim() === "") return;
 
-    const newId = Math.max(...musculaturas.map((m) => m.id), 0) + 1;
-    setMusculaturas([...musculaturas, { id: newId, nome: novaMusculatura }]);
+    if (editando && musculaturaEditando) {
+      const musculaturasAtualizadas = musculaturas.map((m) =>
+        m.id === musculaturaEditando.id ? { ...m, nome: novaMusculatura } : m
+      );
+      setMusculaturas(musculaturasAtualizadas);
+      setEditando(false);
+      setMusculaturaEditando(null);
+    } else {
+      const newId = Math.max(...musculaturas.map((m) => m.id), 0) + 1;
+      setMusculaturas([...musculaturas, { id: newId, nome: novaMusculatura }]);
+    }
+
     setNovaMusculatura("");
   };
 
   const handleDelete = (id) => {
     setMusculaturas(musculaturas.filter((m) => m.id !== id));
+  };
+
+  const handleEdit = (item) => {
+    setEditando(true);
+    setMusculaturaEditando(item);
+    setNovaMusculatura(item.nome);
+  };
+
+  const cancelarEdicao = () => {
+    setEditando(false);
+    setMusculaturaEditando(null);
+    setNovaMusculatura("");
   };
 
   const filteredItems = musculaturas.filter((item) =>
@@ -41,9 +65,20 @@ const CadastroMusculatura = () => {
       <h1>Musculatura</h1>
 
       <form onSubmit={handleSubmit} className="cadastro-form">
-        <button type="submit" className="btn-cadastrar">
-          Cadastrar
-        </button>
+        <div className="form-header">
+          <button type="submit" className="btn-cadastrar">
+            {editando ? "Salvar" : "Cadastrar"}
+          </button>
+          {editando && (
+            <button
+              type="button"
+              className="btn-cancelar"
+              onClick={cancelarEdicao}
+            >
+              Cancelar
+            </button>
+          )}
+        </div>
         <input
           type="text"
           value={novaMusculatura}
@@ -95,7 +130,9 @@ const CadastroMusculatura = () => {
                 >
                   Excluir
                 </button>
-                <button className="btn-editar">Editar</button>
+                <button className="btn-editar" onClick={() => handleEdit(item)}>
+                  Editar
+                </button>
               </td>
             </tr>
           ))}
