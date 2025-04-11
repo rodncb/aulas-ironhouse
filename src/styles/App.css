@@ -70,6 +70,7 @@ body {
   height: 100%;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
+  padding-top: 30px; /* Adicionando mais espaço superior */
 }
 
 /* Responsividade */
