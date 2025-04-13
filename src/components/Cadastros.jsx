@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import "../styles/Cadastros.css";
 import CadastroMusculatura from "./CadastroMusculatura";
 import CadastroExercicio from "./CadastroExercicio";
+import { voltarPagina, navegarPara } from "../lib/utils"; // Importar funções utilitárias
 
 const Cadastros = () => {
   const [activeCadastro, setActiveCadastro] = useState(null);

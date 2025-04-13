@@ -637,11 +637,6 @@
   z-index: 1100;
 }
 
-/* Ocultar o botão voltar que conflita com o logo */
-.professores-principal-container .apple-back-button-container {
-  display: none;
-}
-
 .data-table .dropdown-content {
   position: absolute;
   right: 0;

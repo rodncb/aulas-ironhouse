@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import "../styles/GerenciamentoProfessores.css";
+import { voltarPagina, getStatusLabel } from "../lib/utils"; // Importar funções utilitárias
 
 const GerenciamentoProfessores = (props) => {
   const [showModal, setShowModal] = useState(false);
@@ -235,18 +236,6 @@ const GerenciamentoProfessores = (props) => {
   const fecharDetalhesAula = () => {
     setShowAulaDetalhes(false);
     setAulaDetalhes(null);
-  };
-
-  const getStatusLabel = (status) => {
-    switch (status) {
-      case "realizada":
-        return <span className="status-realizada">Realizada</span>;
-      case "cancelada":
-        return <span className="status-cancelada">Cancelada</span>;
-      case "atual":
-      default:
-        return <span className="status-atual">Atual</span>;
-    }
   };
 
   const filteredItems = professores.filter((item) =>

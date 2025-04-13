@@ -202,13 +202,6 @@ a:hover {
   }
 }
 
-/* Ocultar todos os botões voltar */
-.btn-voltar,
-.apple-back-button-container,
-.voltar-container {
-  display: none !important;
-}
-
 .sidebar-overlay {
   background-color: rgba(0, 0, 0, 0.7);
 }

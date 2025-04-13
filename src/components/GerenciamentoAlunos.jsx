@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "../styles/GerenciamentoAlunos.css";
 import { FaEye, FaEdit, FaTrash } from "react-icons/fa";
+import { voltarPagina, getStatusLabel } from "../lib/utils"; // Importar as funções de utilitário
 
 const GerenciamentoAlunos = (props) => {
   const [showModal, setShowModal] = useState(false);
@@ -320,18 +321,6 @@ const GerenciamentoAlunos = (props) => {
     setAulaDetalhes(null);
   };
 
-  const getStatusLabel = (status) => {
-    switch (status) {
-      case "realizada":
-        return <span className="status-realizada">Realizada</span>;
-      case "cancelada":
-        return <span className="status-cancelada">Cancelada</span>;
-      case "atual":
-      default:
-        return <span className="status-atual">Atual</span>;
-    }
-  };
-
   const filteredItems = alunos.filter((item) =>
     item.nome.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -364,34 +353,6 @@ const GerenciamentoAlunos = (props) => {
     setShowModal(false);
     setModoEdicao(false);
     setAlunoEditando(null);
-  };
-
-  // Função para voltar à página anterior
-  const voltarPagina = (e) => {
-    // Prevenir propagação do evento se for passado
-    if (e) {
-      e.preventDefault();
-      e.stopPropagation();
-    }
-
-    try {
-      // Verifica se há histórico para voltar
-      if (window.history.length > 1) {
-        window.history.back();
-      } else {
-        // Se não houver histórico, navegue para o dashboard
-        const event = new CustomEvent("navegarPara", {
-          detail: { secao: "geral" },
-        });
-        window.dispatchEvent(event);
-      }
-    } catch (error) {
-      // Fallback - força navegação para o dashboard
-      const event = new CustomEvent("navegarPara", {
-        detail: { secao: "geral" },
-      });
-      window.dispatchEvent(event);
-    }
   };
 
   return (

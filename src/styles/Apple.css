@@ -341,7 +341,6 @@ h3 {
 .apple-back-button-container {
   margin-bottom: 15px;
   padding: 0;
-  display: none; /* Ocultar os botões "Voltar" */
 }
 
 .apple-back-button {

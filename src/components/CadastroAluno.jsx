@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import "../styles/Cadastro.css";
 import "../styles/CadastroAluno.css";
 import "../styles/Modal.css";
+import { voltarPagina, getStatusLabel } from "../lib/utils"; // Importar funções utilitárias
 
 const CadastroAluno = () => {
   const [showModal, setShowModal] = useState(false);
@@ -153,18 +154,6 @@ const CadastroAluno = () => {
 
   const closeModal = () => {
     setShowModal(false);
-  };
-
-  const getStatusLabel = (status) => {
-    switch (status) {
-      case "realizada":
-        return <span className="status-realizada">Realizada</span>;
-      case "cancelada":
-        return <span className="status-cancelada">Cancelada</span>;
-      case "atual":
-      default:
-        return <span className="status-atual">Atual</span>;
-    }
   };
 
   // Função para voltar à página anterior ou para o dashboard

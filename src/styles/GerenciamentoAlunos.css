@@ -674,11 +674,6 @@
   }
 }
 
-/* Ocultar o botão voltar que conflita com o logo */
-.alunos-principal-container .apple-back-button-container {
-  display: none;
-}
-
 /* Estilos para botões de ações na tabela */
 .acoes {
   display: flex;

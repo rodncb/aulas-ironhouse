@@ -1,5 +1,11 @@
 import React, { useState, useEffect } from "react";
 import "../styles/Geral.css";
+import {
+  voltarPagina,
+  getStatusLabel,
+  formatarData,
+  navegarPara,
+} from "../lib/utils"; // Importar funções utilitárias
 
 const Geral = ({ alunosEmAula, atualizarAlunosEmAula }) => {
   const [historicoAulas, setHistoricoAulas] = useState([]);
@@ -679,11 +685,21 @@ const Geral = ({ alunosEmAula, atualizarAlunosEmAula }) => {
     // Mostrar painel de seleção
     setShowSelecao(true);
 
-    // Scroll suave até o histórico
+    // Scroll suave até o formulário de nova aula (não mais ao histórico)
     setTimeout(() => {
-      const historicoElement = document.querySelector(".historico-aulas");
-      if (historicoElement) {
-        historicoElement.scrollIntoView({ behavior: "smooth", block: "start" });
+      const selecaoElement = document.querySelector(
+        ".selecao-aluno-panel-embedded"
+      );
+      if (selecaoElement) {
+        // Rolar até o formulário de nova aula
+        selecaoElement.scrollIntoView({ behavior: "smooth", block: "start" });
+
+        // Focar no primeiro campo do formulário (select do professor) para melhor experiência
+        const selectProfessor =
+          selecaoElement.querySelector(".select-professor");
+        if (selectProfessor) {
+          selectProfessor.focus();
+        }
       }
     }, 100);
   };
@@ -1293,18 +1309,6 @@ const Geral = ({ alunosEmAula, atualizarAlunosEmAula }) => {
 
       {/* Modal de detalhes da aula */}
       {showDetalhesAula && renderizarModalDetalhes()}
-
-      {/* Botão de voltar */}
-      <button
-        className="btn-voltar"
-        onClick={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          voltarPagina(e);
-        }}
-      >
-        Voltar
-      </button>
     </div>
   );
 };
