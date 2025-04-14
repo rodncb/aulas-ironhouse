@@ -1,13 +1,26 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "../styles/Cadastros.css";
 import CadastroMusculatura from "./CadastroMusculatura";
 import CadastroExercicio from "./CadastroExercicio";
 import { voltarPagina, navegarPara } from "../lib/utils"; // Importar funções utilitárias
 
-const Cadastros = () => {
+const Cadastros = ({ userRole }) => {
   const [activeCadastro, setActiveCadastro] = useState(null);
 
+  // Se o usuário for professor, mostrar diretamente a tela de exercícios
+  useEffect(() => {
+    if (userRole === "professor") {
+      setActiveCadastro("exercicio");
+    }
+  }, [userRole]);
+
   const renderCadastroContent = () => {
+    // Se for professor, mostrar apenas o cadastro de exercícios
+    if (userRole === "professor") {
+      return <CadastroExercicio />;
+    }
+
+    // Para administradores, mostrar todas as opções
     switch (activeCadastro) {
       case "musculatura":
         return <CadastroMusculatura />;
@@ -33,6 +46,30 @@ const Cadastros = () => {
     }
   };
 
+  // Ajustar o título da página com base no papel do usuário
+  const renderTitle = () => {
+    if (userRole === "professor") {
+      return (
+        <h2 className="page-title">
+          <span>
+            <i className="icon">➕</i> Cadastro de Exercícios
+          </span>
+        </h2>
+      );
+    }
+
+    return (
+      <h2 className="page-title">
+        <span onClick={() => setActiveCadastro(null)}>
+          <i className="icon">➕</i> Cadastros
+        </span>
+        {activeCadastro && <i className="icon-separator">▶</i>}
+        {activeCadastro === "musculatura" && "Musculatura"}
+        {activeCadastro === "exercicio" && "Exercício"}
+      </h2>
+    );
+  };
+
   return (
     <div className="cadastros-container">
       <div className="apple-back-button-container">
@@ -50,16 +87,7 @@ const Cadastros = () => {
         </button>
       </div>
 
-      <div className="cadastros-header">
-        <h2 className="page-title">
-          <span onClick={() => setActiveCadastro(null)}>
-            <i className="icon">➕</i> Cadastros
-          </span>
-          {activeCadastro && <i className="icon-separator">▶</i>}
-          {activeCadastro === "musculatura" && "Musculatura"}
-          {activeCadastro === "exercicio" && "Exercício"}
-        </h2>
-      </div>
+      <div className="cadastros-header">{renderTitle()}</div>
       {renderCadastroContent()}
     </div>
   );

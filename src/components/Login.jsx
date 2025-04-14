@@ -8,6 +8,23 @@ const Login = ({ onLogin }) => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
+  // Preencher os campos com as credenciais padrão para facilitar
+  const preencherCredenciaisPadrao = (tipo) => {
+    if (tipo === "professor") {
+      setUsername("professor@example.com");
+      setPassword("prof123");
+    } else {
+      setUsername("admin@example.com");
+      setPassword("admin123");
+    }
+  };
+
+  // Atualiza as credenciais quando o tipo de usuário é alterado
+  const handleUserTypeChange = (tipo) => {
+    setUserType(tipo);
+    preencherCredenciaisPadrao(tipo);
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     setError("");
@@ -18,23 +35,8 @@ const Login = ({ onLogin }) => {
       return;
     }
 
-    // Simulação de autenticação
-    // Em uma aplicação real, isto seria feito através de uma API
-    if (userType === "professor") {
-      // Credenciais de exemplo para professor
-      if (username === "professor" && password === "123456") {
-        onLogin(userType, { nome: "Professor", role: "professor" });
-      } else {
-        setError("Credenciais inválidas para Professor");
-      }
-    } else {
-      // Credenciais de exemplo para admin
-      if (username === "admin" && password === "123456") {
-        onLogin(userType, { nome: "Administrador", role: "admin" });
-      } else {
-        setError("Credenciais inválidas para Administrador");
-      }
-    }
+    // Chamar o onLogin corretamente
+    onLogin(username, password);
   };
 
   return (
@@ -48,14 +50,14 @@ const Login = ({ onLogin }) => {
         <div className="user-type-toggle">
           <button
             className={`toggle-btn ${userType === "professor" ? "active" : ""}`}
-            onClick={() => setUserType("professor")}
+            onClick={() => handleUserTypeChange("professor")}
             type="button"
           >
             Professor
           </button>
           <button
             className={`toggle-btn ${userType === "admin" ? "active" : ""}`}
-            onClick={() => setUserType("admin")}
+            onClick={() => handleUserTypeChange("admin")}
             type="button"
           >
             Administrador
@@ -64,7 +66,7 @@ const Login = ({ onLogin }) => {
 
         <form onSubmit={handleSubmit} className="login-form">
           <div className="form-group">
-            <label htmlFor="username">Usuário</label>
+            <label htmlFor="username">Email</label>
             <input
               type="text"
               id="username"
@@ -72,8 +74,8 @@ const Login = ({ onLogin }) => {
               onChange={(e) => setUsername(e.target.value)}
               placeholder={
                 userType === "professor"
-                  ? "Nome do Professor"
-                  : "Nome do Administrador"
+                  ? "professor@example.com"
+                  : "admin@example.com"
               }
             />
           </div>

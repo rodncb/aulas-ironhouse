@@ -12,6 +12,8 @@ import {
   faUserPlus,
   faChartPie,
   faSignOutAlt,
+  faHistory,
+  faCog,
 } from "@fortawesome/free-solid-svg-icons";
 
 function Sidebar({
@@ -99,29 +101,38 @@ function Sidebar({
         )}
 
         <div className="sidebar-menu">
-          {/* Menu específico para professores */}
+          {/* Menu comum para todos os usuários */}
+          <div
+            className={getClassName("geral")}
+            onClick={() => handleSectionChange("geral")}
+          >
+            <FontAwesomeIcon icon={faChartPie} className="sidebar-icon" />
+            {!collapsed && <span>Dashboard</span>}
+          </div>
+
+          {/* Acesso limitado para professores */}
           {userRole === "professor" && (
             <>
               <div
-                className={getClassName("alunos_em_aula")}
-                onClick={() => handleSectionChange("alunos_em_aula")}
+                className={getClassName("alunos_historico")}
+                onClick={() => handleSectionChange("alunos_historico")}
+              >
+                <FontAwesomeIcon icon={faHistory} className="sidebar-icon" />
+                {!collapsed && <span>Histórico de Alunos</span>}
+              </div>
+              <div
+                className={getClassName("cadastro_exercicios")}
+                onClick={() => handleSectionChange("cadastro_exercicios")}
               >
                 <FontAwesomeIcon icon={faDumbbell} className="sidebar-icon" />
-                {!collapsed && <span>Alunos em Aula</span>}
+                {!collapsed && <span>Cadastro de Exercícios</span>}
               </div>
             </>
           )}
 
-          {/* Menu específico para administradores */}
+          {/* Acesso completo para administradores */}
           {userRole === "admin" && (
             <>
-              <div
-                className={getClassName("geral")}
-                onClick={() => handleSectionChange("geral")}
-              >
-                <FontAwesomeIcon icon={faChartPie} className="sidebar-icon" />
-                {!collapsed && <span>Geral</span>}
-              </div>
               <div
                 className={getClassName("cadastros")}
                 onClick={() => handleSectionChange("cadastros")}
@@ -142,6 +153,13 @@ function Sidebar({
               >
                 <FontAwesomeIcon icon={faUser} className="sidebar-icon" />
                 {!collapsed && <span>Professores</span>}
+              </div>
+              <div
+                className={getClassName("configuracoes")}
+                onClick={() => handleSectionChange("configuracoes")}
+              >
+                <FontAwesomeIcon icon={faCog} className="sidebar-icon" />
+                {!collapsed && <span>Configurações</span>}
               </div>
             </>
           )}

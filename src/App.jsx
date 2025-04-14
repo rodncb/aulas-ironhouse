@@ -9,8 +9,15 @@ import GerenciamentoAlunos from "./components/GerenciamentoAlunos";
 import GerenciamentoProfessores from "./components/GerenciamentoProfessores";
 import Geral from "./components/Geral";
 import Login from "./components/Login";
+import HistoricoAlunos from "./components/HistoricoAlunos";
+import CadastroExercicio from "./components/CadastroExercicio";
+import Configuracoes from "./components/Configuracoes";
+import { useAuth } from "./hooks/useAuth";
 
 const App = () => {
+  // Usando o hook de autenticação
+  const { user, loading, signIn, signOut, canAccess } = useAuth();
+
   // Estado de autenticação
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
@@ -24,17 +31,17 @@ const App = () => {
 
   // Verificar se há um usuário no localStorage ao carregar
   useEffect(() => {
-    const savedUser = localStorage.getItem("currentUser");
-    const savedRole = localStorage.getItem("userRole");
-
-    if (savedUser && savedRole) {
-      setCurrentUser(JSON.parse(savedUser));
-      setUserRole(savedRole);
+    if (user) {
+      setCurrentUser(user);
+      setUserRole(user.role);
       setIsAuthenticated(true);
-      // Sempre definir geral como seção inicial após login/recarregamento
       setActiveSection("geral");
+    } else if (!loading) {
+      setIsAuthenticated(false);
+      setCurrentUser(null);
+      setUserRole(null);
     }
-  }, []);
+  }, [user, loading]);
 
   // Escuta eventos de redimensionamento da janela
   useEffect(() => {
@@ -86,26 +93,19 @@ const App = () => {
   }, []);
 
   // Função para lidar com o login
-  const handleLogin = (role, user) => {
-    setIsAuthenticated(true);
-    setCurrentUser(user);
-    setUserRole(role);
+  const handleLogin = async (email, password) => {
+    const { error } = await signIn(email, password);
 
-    // Salvar no localStorage para persistir entre recarregamentos
-    localStorage.setItem("currentUser", JSON.stringify(user));
-    localStorage.setItem("userRole", role);
+    if (error) {
+      return { success: false, message: error.message };
+    }
 
-    // Sempre definir geral como seção inicial após login
-    setActiveSection("geral");
+    return { success: true };
   };
 
   // Função para lidar com o logout
   const handleLogout = () => {
-    setIsAuthenticated(false);
-    setCurrentUser(null);
-    setUserRole(null);
-    localStorage.removeItem("currentUser");
-    localStorage.removeItem("userRole");
+    signOut();
   };
 
   // Função para atualizar os alunos em aula
@@ -129,6 +129,13 @@ const App = () => {
 
   // Função para tratar mudança de seção
   const handleSectionChange = (section) => {
+    // Verificar se o usuário tem acesso a esta seção
+    if (!canUserAccessSection(section)) {
+      // Redirecionar para a página permitida padrão
+      setActiveSection("geral");
+      return;
+    }
+
     setActiveSection(section);
     // Em dispositivos móveis, fechar o sidebar após selecionar uma seção
     if (window.innerWidth <= 768) {
@@ -137,8 +144,37 @@ const App = () => {
     }
   };
 
+  // Função para verificar se o usuário pode acessar uma seção
+  const canUserAccessSection = (section) => {
+    // Administradores podem acessar todas as seções
+    if (userRole === "admin") return true;
+
+    // Seções permitidas para professores
+    if (userRole === "professor") {
+      const allowedSections = [
+        "geral",
+        "alunos_historico",
+        "cadastro_exercicios",
+      ];
+      return allowedSections.includes(section);
+    }
+
+    return false;
+  };
+
   // Renderiza o componente apropriado com base na seção ativa
   const renderContent = () => {
+    // Verificar novamente se o usuário pode acessar esta seção
+    if (!canUserAccessSection(activeSection)) {
+      setActiveSection("geral");
+      return (
+        <Geral
+          alunosEmAula={alunosEmAulaApp}
+          atualizarAlunosEmAula={atualizarAlunosEmAula}
+        />
+      );
+    }
+
     switch (activeSection) {
       case "geral":
         return (
@@ -148,13 +184,19 @@ const App = () => {
           />
         );
       case "cadastros":
-        return <Cadastros />;
+        return <Cadastros userRole={userRole} />;
       case "alunos":
         return <GerenciamentoAlunos setActiveSection={setActiveSection} />;
       case "professores":
         return <GerenciamentoProfessores />;
       case "alunos_em_aula":
         return <AlunosEmAula atualizarAlunosEmAula={atualizarAlunosEmAula} />;
+      case "alunos_historico":
+        return <HistoricoAlunos />;
+      case "cadastro_exercicios":
+        return <CadastroExercicio />;
+      case "configuracoes":
+        return <Configuracoes />;
       default:
         return (
           <Geral
@@ -164,6 +206,11 @@ const App = () => {
         );
     }
   };
+
+  // Aguardar o carregamento inicial da autenticação
+  if (loading) {
+    return <div className="loading">Carregando...</div>;
+  }
 
   // Se não estiver autenticado, mostra a tela de login
   if (!isAuthenticated) {
