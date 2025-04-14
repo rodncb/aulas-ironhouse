@@ -1,3 +1,4 @@
+// Importações
 import React, { useState, useEffect } from "react";
 import "../styles/Geral.css";
 import {
@@ -5,9 +6,10 @@ import {
   getStatusLabel,
   formatarData,
   navegarPara,
-} from "../lib/utils"; // Importar funções utilitárias
+} from "../lib/utils";
 
 const Geral = ({ alunosEmAula, atualizarAlunosEmAula }) => {
+  // Estados
   const [historicoAulas, setHistoricoAulas] = useState([]);
   const [todosAlunos, setTodosAlunos] = useState([]);
   const [todosProfessores, setTodosProfessores] = useState([]);
@@ -18,41 +20,88 @@ const Geral = ({ alunosEmAula, atualizarAlunosEmAula }) => {
   const [exerciciosSelecionados, setExerciciosSelecionados] = useState([]);
   const [pesquisaExercicio, setPesquisaExercicio] = useState("");
   const [alunosNaAula, setAlunosNaAula] = useState([]);
-  // Estado para controlar o modal de detalhes da aula
   const [showDetalhesAula, setShowDetalhesAula] = useState(false);
-  const [aulaDetalhes, setAulaDetalhes] = useState(null);
-  // Estado para a aula atual
   const [aulaAtual, setAulaAtual] = useState(null);
-  // Flag para controlar se a inicialização já foi feita
   const [initialized, setInitialized] = useState(false);
-
-  // Estados para paginação
   const [paginaAtual, setPaginaAtual] = useState(1);
-  const itensPorPagina = 100; // Alterado de 5 para 100
-
-  // Estado para confirmação de cancelamento
+  const itensPorPagina = 100;
   const [showConfirmCancelar, setShowConfirmCancelar] = useState(false);
   const [aulaCancelar, setAulaCancelar] = useState(null);
-
-  // Estado para edição de aula
   const [aulaEditando, setAulaEditando] = useState(null);
   const [modoEdicao, setModoEdicao] = useState(false);
-
-  // Estado para controlar o dropdown
   const [activeDropdown, setActiveDropdown] = useState(null);
-
-  // Estado para controlar o modal de detalhes da aula
   const [modalAberto, setModalAberto] = useState(false);
 
-  // Função para formatar a data
-  const formatarData = (dataString) => {
-    if (!dataString) return "";
-    try {
-      const data = new Date(dataString);
-      return data.toLocaleDateString("pt-BR");
-    } catch (error) {
-      return dataString;
-    }
+  // Função para atualizar o histórico de aulas dos alunos
+  const atualizarHistoricoAlunos = (aula) => {
+    const alunosAtualizados = todosAlunos.map((aluno) => {
+      if (aula.alunos.some((alunoAula) => alunoAula.id === aluno.id)) {
+        const historicoExistente = aluno.historicoAulas || [];
+        const aulaJaExiste = historicoExistente.some((h) => h.id === aula.id);
+        if (!aulaJaExiste) {
+          return {
+            ...aluno,
+            historicoAulas: [
+              ...historicoExistente,
+              {
+                id: aula.id,
+                data: aula.data,
+                status: aula.status,
+              },
+            ],
+          };
+        }
+      }
+      return aluno;
+    });
+    setTodosAlunos(alunosAtualizados);
+    localStorage.setItem("alunos", JSON.stringify(alunosAtualizados));
+    window.dispatchEvent(
+      new CustomEvent("atualizarHistoricoAlunos", {
+        detail: { alunos: alunosAtualizados },
+      })
+    );
+  };
+
+  // Função para atualizar o histórico de aulas dos professores
+  const atualizarHistoricoProfessores = (aula) => {
+    if (!aula.professor) return; // Se não tiver professor, não faz nada
+
+    const professoresAtualizados = todosProfessores.map((professor) => {
+      if (professor.id === aula.professor.id) {
+        const historicoExistente = professor.historicoAulas || [];
+        const aulaJaExiste = historicoExistente.some((h) => h.id === aula.id);
+
+        if (!aulaJaExiste) {
+          return {
+            ...professor,
+            historicoAulas: [
+              ...historicoExistente,
+              {
+                id: aula.id,
+                data: aula.data,
+                status: aula.status,
+              },
+            ],
+          };
+        }
+      }
+      return professor;
+    });
+
+    // Atualiza no estado local e no localStorage
+    setTodosProfessores(professoresAtualizados);
+    localStorage.setItem(
+      "todosProfessores",
+      JSON.stringify(professoresAtualizados)
+    );
+
+    // Dispara um evento personalizado para notificar outros componentes
+    window.dispatchEvent(
+      new CustomEvent("atualizarHistoricoProfessores", {
+        detail: { professores: professoresAtualizados },
+      })
+    );
   };
 
   // Inicializar dados do localStorage ao montar o componente
@@ -299,6 +348,7 @@ const Geral = ({ alunosEmAula, atualizarAlunosEmAula }) => {
     };
   }, []);
 
+  // Funções
   const abrirSelecao = () => {
     setShowSelecao(true);
   };
@@ -359,7 +409,6 @@ const Geral = ({ alunosEmAula, atualizarAlunosEmAula }) => {
     setAlunoSelecionado("");
   };
 
-  // Função para adicionar ou remover exercício da seleção
   const toggleExercicio = (exercicio) => {
     const jaExiste = exerciciosSelecionados.some((e) => e.id === exercicio.id);
 
@@ -374,157 +423,61 @@ const Geral = ({ alunosEmAula, atualizarAlunosEmAula }) => {
     }
   };
 
-  // Função para verificar se um exercício está selecionado
   const isExercicioSelecionado = (id) => {
     return exerciciosSelecionados.some((e) => e.id === id);
   };
 
-  // Filtra exercícios com base na pesquisa
-  const exerciciosFiltrados = todosExercicios.filter(
-    (exercicio) =>
-      exercicio.nome.toLowerCase().includes(pesquisaExercicio.toLowerCase()) ||
-      exercicio.musculatura
-        .toLowerCase()
-        .includes(pesquisaExercicio.toLowerCase())
-  );
-
-  // Função para salvar a aula sem finalizar (mantém status "atual")
   const salvarAulaSemFinalizar = () => {
     if (alunosNaAula.length === 0) {
       alert("Adicione pelo menos um aluno à aula antes de salvar.");
       return;
     }
-
     const professor = professorSelecionado
       ? todosProfessores.find((p) => p.id === parseInt(professorSelecionado))
       : null;
-
-    // Criar a aula atualizada mantendo o ID original se estiver em modo de edição
-    const aulaAtualizada = {
-      id: modoEdicao && aulaEditando ? aulaEditando.id : Date.now(),
-      data:
-        modoEdicao && aulaEditando
-          ? aulaEditando.data
-          : new Date().toLocaleDateString("pt-BR"),
-      alunos: [...alunosNaAula],
-      totalAlunos: alunosNaAula.length,
-      professor: professor,
-      exercicios: [...exerciciosSelecionados],
-      status: "atual",
-    };
-
-    // Atualizar no histórico
-    let historicoAtualizado;
+    let historicoAulasAtual = JSON.parse(
+      localStorage.getItem("historicoAulas") || "[]"
+    );
+    let novaAula;
     if (modoEdicao && aulaEditando) {
-      historicoAtualizado = historicoAulas.map((aula) =>
-        aula.id === aulaEditando.id ? aulaAtualizada : aula
+      novaAula = {
+        ...aulaEditando,
+        alunos: alunosNaAula,
+        totalAlunos: alunosNaAula.length,
+        professor: professor || aulaEditando.professor || null,
+        exercicios: exerciciosSelecionados,
+        status: "atual",
+        ultimaAtualizacao: new Date().toISOString(),
+      };
+      historicoAulasAtual = historicoAulasAtual.map((aula) =>
+        aula.id === aulaEditando.id ? novaAula : aula
       );
     } else {
-      historicoAtualizado = [...historicoAulas, aulaAtualizada];
+      novaAula = {
+        id: Date.now(),
+        data: new Date().toLocaleDateString("pt-BR"),
+        alunos: alunosNaAula,
+        totalAlunos: alunosNaAula.length,
+        professor: professor || null,
+        exercicios: exerciciosSelecionados,
+        status: "atual",
+        dataCriacao: new Date().toISOString(),
+      };
+      historicoAulasAtual = [...historicoAulasAtual, novaAula];
     }
-
-    // Atualizar estados e localStorage
-    setHistoricoAulas(historicoAtualizado);
-    localStorage.setItem("historicoAulas", JSON.stringify(historicoAtualizado));
-
-    // Atualizar aula atual
-    setAulaAtual(aulaAtualizada);
-    localStorage.setItem("aulaAtual", JSON.stringify(aulaAtualizada));
-
-    // Atualizar históricos
-    atualizarHistoricoAlunos(aulaAtualizada);
-    if (professor) {
-      atualizarHistoricoProfessores(aulaAtualizada);
-    }
-
-    // Limpar estados
+    setHistoricoAulas(historicoAulasAtual);
+    localStorage.setItem("historicoAulas", JSON.stringify(historicoAulasAtual));
+    setAulaAtual(novaAula);
+    localStorage.setItem("aulaAtual", JSON.stringify(novaAula));
     setShowSelecao(false);
     setModoEdicao(false);
     setAulaEditando(null);
     setAlunoSelecionado("");
     setProfessorSelecionado("");
     setExerciciosSelecionados([]);
-
-    // Atualizar no App.js
-    if (atualizarAlunosEmAula) {
-      atualizarAlunosEmAula(alunosNaAula);
-    }
-
+    setAlunosNaAula([]);
+    if (atualizarAlunosEmAula) atualizarAlunosEmAula([]);
     alert("Aula salva com sucesso!");
-  };
-
-  // Função para atualizar o histórico de aulas dos alunos
-  const atualizarHistoricoAlunos = (aula) => {
-    const alunosAtualizados = todosAlunos.map((aluno) => {
-      if (aula.alunos.some((alunoAula) => alunoAula.id === aluno.id)) {
-        const historicoExistente = aluno.historicoAulas || [];
-        const aulaJaExiste = historicoExistente.some((h) => h.id === aula.id);
-
-        if (!aulaJaExiste) {
-          return {
-            ...aluno,
-            historicoAulas: [
-              ...historicoExistente,
-              {
-                id: aula.id,
-                data: aula.data,
-                status: aula.status,
-              },
-            ],
-          };
-        }
-      }
-      return aluno;
-    });
-
-    // Atualiza no estado local e no localStorage
-    setTodosAlunos(alunosAtualizados);
-    localStorage.setItem("alunos", JSON.stringify(alunosAtualizados));
-
-    // Dispara um evento personalizado para notificar outros componentes
-    window.dispatchEvent(
-      new CustomEvent("atualizarHistoricoAlunos", {
-        detail: { alunos: alunosAtualizados },
-      })
-    );
-  };
-
-  // Função para atualizar o histórico de aulas dos professores
-  const atualizarHistoricoProfessores = (aula) => {
-    if (!aula.professor) return; // Se não tiver professor, não faz nada
-
-    const professoresAtualizados = todosProfessores.map((professor) => {
-      if (professor.id === aula.professor.id) {
-        const historicoExistente = professor.historicoAulas || [];
-        const aulaJaExiste = historicoExistente.some((h) => h.id === aula.id);
-
-        if (!aulaJaExiste) {
-          return {
-            ...professor,
-            historicoAulas: [
-              ...historicoExistente,
-              {
-                id: aula.id,
-                data: aula.data,
-                status: aula.status,
-              },
-            ],
-          };
-        }
-      }
-      return professor;
-    });
-
-    // Atualiza no estado local e no localStorage
-    setTodosProfessores(professoresAtualizados);
-    localStorage.setItem("professores", JSON.stringify(professoresAtualizados));
-
-    // Dispara um evento personalizado para notificar outros componentes
-    window.dispatchEvent(
-      new CustomEvent("atualizarHistoricoProfessores", {
-        detail: { professores: professoresAtualizados },
-      })
-    );
   };
 
   const salvarAula = () => {
@@ -532,8 +485,6 @@ const Geral = ({ alunosEmAula, atualizarAlunosEmAula }) => {
       alert("Adicione pelo menos um aluno à aula");
       return;
     }
-
-    // Criar objeto da aula
     const dataAtual = new Date();
     const dataFormatada = `${String(dataAtual.getDate()).padStart(
       2,
@@ -542,95 +493,54 @@ const Geral = ({ alunosEmAula, atualizarAlunosEmAula }) => {
       2,
       "0"
     )}/${dataAtual.getFullYear()}`;
-
-    // Recuperar o professor selecionado
     const professorObj = todosProfessores.find(
       (p) => p.id === parseInt(professorSelecionado)
     );
-
-    // Atualizar histórico existente ou criar novo
-    const historicoAulas = JSON.parse(
+    let historicoAulasAtual = JSON.parse(
       localStorage.getItem("historicoAulas") || "[]"
     );
-
+    let novaAula;
     if (modoEdicao && aulaEditando) {
-      // Atualizar aula existente
-      const aulaIndex = historicoAulas.findIndex(
-        (a) => a.id === aulaEditando.id
-      );
-
-      if (aulaIndex !== -1) {
-        const aulaAtualizada = {
-          ...historicoAulas[aulaIndex],
-          professor: professorObj || null,
-          alunos: alunosNaAula,
-          totalAlunos: alunosNaAula.length,
-          exercicios: exerciciosSelecionados,
-          ultimaAtualizacao: new Date().toISOString(),
-        };
-
-        historicoAulas[aulaIndex] = aulaAtualizada;
-
-        // Salvar no localStorage
-        localStorage.setItem("historicoAulas", JSON.stringify(historicoAulas));
-
-        // Atualizar o histórico de alunos
-        atualizarHistoricoAlunos(aulaAtualizada);
-
-        // Atualizar o histórico de professores
-        if (professorObj) {
-          atualizarHistoricoProfessores(aulaAtualizada);
-        }
-
-        // Resetar os estados
-        setModoEdicao(false);
-        setAulaEditando(null);
-        setShowSelecao(false);
-        setAlunosNaAula([]);
-        setExerciciosSelecionados([]);
-        setProfessorSelecionado("");
-
-        // Mostrar mensagem de sucesso
-        alert("Aula atualizada com sucesso!");
-      } else {
-        alert("Aula não encontrada para edição!");
-      }
-    } else {
-      // Criar nova aula
-      const novaAula = {
-        id: Math.max(...historicoAulas.map((a) => a.id || 0), 0) + 1,
-        data: dataFormatada,
-        professor: professorObj || null,
+      novaAula = {
+        ...aulaEditando,
+        data: aulaEditando.data || dataFormatada,
         alunos: alunosNaAula,
         totalAlunos: alunosNaAula.length,
+        professor: professorObj || aulaEditando.professor || null,
+        exercicios: exerciciosSelecionados,
+        ultimaAtualizacao: new Date().toISOString(),
+      };
+      historicoAulasAtual = historicoAulasAtual.map((aula) =>
+        aula.id === aulaEditando.id ? novaAula : aula
+      );
+    } else {
+      novaAula = {
+        id: Date.now(),
+        data: dataFormatada,
+        alunos: alunosNaAula,
+        totalAlunos: alunosNaAula.length,
+        professor: professorObj || null,
         exercicios: exerciciosSelecionados,
         status: "atual",
         dataCriacao: new Date().toISOString(),
       };
-
-      historicoAulas.push(novaAula);
-      localStorage.setItem("historicoAulas", JSON.stringify(historicoAulas));
-
-      // Atualizar histórico de alunos
-      atualizarHistoricoAlunos(novaAula);
-
-      // Atualizar histórico de professores
-      if (professorObj) {
-        atualizarHistoricoProfessores(novaAula);
-      }
-
-      // Limpeza de estados
-      setShowSelecao(false);
-      setAlunosNaAula([]);
-      setExerciciosSelecionados([]);
-      setProfessorSelecionado("");
-
-      // Mostrar mensagem de sucesso
-      alert("Aula registrada com sucesso!");
+      historicoAulasAtual = [...historicoAulasAtual, novaAula];
     }
+    setHistoricoAulas(historicoAulasAtual);
+    localStorage.setItem("historicoAulas", JSON.stringify(historicoAulasAtual));
+    setAulaAtual(novaAula);
+    localStorage.setItem("aulaAtual", JSON.stringify(novaAula));
+    setShowSelecao(false);
+    setModoEdicao(false);
+    setAulaEditando(null);
+    setAlunoSelecionado("");
+    setProfessorSelecionado("");
+    setExerciciosSelecionados([]);
+    setAlunosNaAula([]);
+    if (atualizarAlunosEmAula) atualizarAlunosEmAula([]);
+    alert("Aula salva com sucesso!");
   };
 
-  // Iniciar uma nova aula, garantindo que os exercícios sejam resetados
   const iniciarNovaAula = () => {
     // Limpar localStorage e estados relacionados à aula atual
     localStorage.removeItem("aulaAtual");
@@ -704,7 +614,6 @@ const Geral = ({ alunosEmAula, atualizarAlunosEmAula }) => {
     }, 100);
   };
 
-  // Editar uma aula
   const editarAula = (aula) => {
     // Primeiro, configurar o modo de edição e a aula sendo editada
     setModoEdicao(true);
@@ -723,7 +632,6 @@ const Geral = ({ alunosEmAula, atualizarAlunosEmAula }) => {
     setShowSelecao(true);
   };
 
-  // Cancelar uma aula
   const prepararCancelarAula = (aula) => {
     setAulaCancelar(aula);
     setShowConfirmCancelar(true);
@@ -764,14 +672,12 @@ const Geral = ({ alunosEmAula, atualizarAlunosEmAula }) => {
     setActiveDropdown(null); // Fecha o dropdown ao fechar o modal
   };
 
-  // Função para exibir detalhes da aula
   const exibirDetalhesAula = (aula) => {
     setAulaAtual(aula);
     setShowDetalhesAula(true);
     setModalAberto(true);
   };
 
-  // Modal de detalhes da aula
   const renderizarModalDetalhes = () => {
     if (!modalAberto || !aulaAtual) return null;
 
@@ -784,6 +690,15 @@ const Geral = ({ alunosEmAula, atualizarAlunosEmAula }) => {
         }}
       >
         <div className="detalhes-modal" onClick={(e) => e.stopPropagation()}>
+          <button
+            className="btn-fechar"
+            onClick={() => {
+              setModalAberto(false);
+              setShowDetalhesAula(false);
+            }}
+          >
+            ×
+          </button>
           <h2>Detalhes da Aula</h2>
 
           <div className="detalhes-data">
@@ -835,28 +750,15 @@ const Geral = ({ alunosEmAula, atualizarAlunosEmAula }) => {
               <p>Nenhum exercício registrado para esta aula.</p>
             )}
           </div>
-
-          <button
-            className="btn-fechar"
-            onClick={() => {
-              setModalAberto(false);
-              setShowDetalhesAula(false);
-            }}
-          >
-            ×
-          </button>
         </div>
       </div>
     );
   };
 
-  // Função para obter todas as aulas para exibição
   const todasAulas = () => {
-    // Retorna todas as aulas do histórico, incluindo as atuais (limitado a 1000)
     return historicoAulas.slice(0, 1000);
   };
 
-  // Função para ordenar aulas
   const aulasOrdenadas = () => {
     const aulasParaExibir = todasAulas();
 
@@ -873,20 +775,6 @@ const Geral = ({ alunosEmAula, atualizarAlunosEmAula }) => {
     });
   };
 
-  // Obter o status formatado
-  const getStatusLabel = (status) => {
-    switch (status) {
-      case "realizada":
-        return <span className="status-realizada">Realizada</span>;
-      case "cancelada":
-        return <span className="status-cancelada">Cancelada</span>;
-      case "atual":
-      default:
-        return <span className="status-atual">Atual</span>;
-    }
-  };
-
-  // Marcar aula como realizada sem editar
   const marcarComoRealizada = (aula) => {
     // Atualizar o status da aula para "realizada" no histórico de aulas
     const aulasAtualizadas = historicoAulas.map((a) =>
@@ -916,72 +804,41 @@ const Geral = ({ alunosEmAula, atualizarAlunosEmAula }) => {
     setActiveDropdown(null); // Fechar dropdown se estiver aberto
   };
 
-  // Função para verificar quantas aulas atuais existem
   const contarAulasAtuais = () => {
     return historicoAulas.filter((aula) => aula.status === "atual").length;
   };
 
-  // Obter o contador de aulas atuais
   const totalAulasAtuais = contarAulasAtuais();
 
-  // Função para voltar à página anterior ou para a dashboard
-  const voltarPagina = (e) => {
-    if (e) {
-      e.preventDefault();
-      e.stopPropagation();
-    }
-
-    if (window.history.length > 1) {
-      window.history.back();
-    } else {
-      // Disparar evento para navegar para a página geral
-      const event = new CustomEvent("navegarPara", {
-        detail: { section: "geral" },
-      });
-      window.dispatchEvent(event);
-    }
-  };
-
-  // Função para exibir detalhes da aula pelo ID
-  const verDetalhesAula = (aulaId) => {
-    // Buscar a aula no histórico
-    const aulaEncontrada = historicoAulas.find((aula) => aula.id === aulaId);
-
-    if (aulaEncontrada) {
-      setAulaDetalhes(aulaEncontrada);
-      setShowDetalhesAula(true);
-    } else {
-      alert("Detalhes da aula não encontrados.");
-    }
-  };
-
   const removerAlunoDaAula = (alunoId) => {
-    // Filtra o aluno selecionado da lista
+    // Remove o aluno da lista
     const novosAlunosEmAula = alunosNaAula.filter(
       (aluno) => aluno.id !== alunoId
     );
-
-    // Atualiza o estado
     setAlunosNaAula(novosAlunosEmAula);
 
-    // Atualiza a aula que está sendo editada
-    if (modoEdicao && aulaEditando) {
-      const aulaAtualizada = {
-        ...aulaEditando,
-        alunos: novosAlunosEmAula,
-        totalAlunos: novosAlunosEmAula.length,
-      };
-      setAulaEditando(aulaAtualizada);
-    }
-
-    // Se estiver atualizando a aula atual, atualiza também
-    if (aulaAtual && aulaAtual.id === (aulaEditando ? aulaEditando.id : null)) {
+    // Atualiza a aula atual (estado e localStorage)
+    if (aulaAtual) {
       const aulaAtualizada = {
         ...aulaAtual,
         alunos: novosAlunosEmAula,
         totalAlunos: novosAlunosEmAula.length,
       };
       setAulaAtual(aulaAtualizada);
+      localStorage.setItem("aulaAtual", JSON.stringify(aulaAtualizada));
+
+      // Atualiza o histórico de aulas (mantendo consistência)
+      const historicoAulasSalvo = JSON.parse(
+        localStorage.getItem("historicoAulas") || "[]"
+      );
+      const historicoAtualizado = historicoAulasSalvo.map((aula) =>
+        aula.id === aulaAtualizada.id ? aulaAtualizada : aula
+      );
+      setHistoricoAulas(historicoAtualizado);
+      localStorage.setItem(
+        "historicoAulas",
+        JSON.stringify(historicoAtualizado)
+      );
     }
 
     // Atualiza também no App.js
@@ -990,46 +847,47 @@ const Geral = ({ alunosEmAula, atualizarAlunosEmAula }) => {
     }
   };
 
-  // Função para mostrar os alunos na aula atual
   const renderizarAlunosAtuais = () => {
+    // Obter todas as aulas com status "atual"
     const aulasAtuais = todasAulas().filter((aula) => aula.status === "atual");
+
+    // Array para armazenar todos os alunos das aulas atuais
+    let todosAlunosAtuais = [];
+
+    // Combinar alunos de todas as aulas atuais
+    aulasAtuais.forEach((aula) => {
+      if (aula.alunos && aula.alunos.length > 0) {
+        // Usar um Map para evitar alunos duplicados (usando ID como chave)
+        aula.alunos.forEach((aluno) => {
+          if (!todosAlunosAtuais.some((a) => a.id === aluno.id)) {
+            todosAlunosAtuais.push(aluno);
+          }
+        });
+      }
+    });
+
+    // Limitar a 8 alunos
+    todosAlunosAtuais = todosAlunosAtuais.slice(0, 8);
 
     return (
       <div className="alunos-atuais">
-        <h2>Alunos na Aula Atual</h2>
+        <h2>Alunos em Aula</h2>
 
         {aulasAtuais.length === 0 ? (
           <p className="sem-registros">Nenhuma aula atual registrada.</p>
-        ) : (
-          (() => {
-            // Use a primeira aula atual encontrada para exibir seus alunos
-            const aulaAtual = aulasAtuais[0];
-
-            if (!aulaAtual.alunos || aulaAtual.alunos.length === 0) {
-              return (
-                <p className="sem-registros">
-                  Nenhum aluno adicionado à aula atual.
-                </p>
-              );
-            }
-
-            return (
-              <div className="lista-alunos-atuais">
-                {aulaAtual.alunos.map((aluno) => (
-                  <div key={aluno.id} className="card-aluno-atual">
-                    <h3>{aluno.nome}</h3>
-                    <p>Idade: {aluno.idade} anos</p>
-                    <button
-                      className="btn-remover-aluno-aula"
-                      onClick={() => removerAlunoDaAula(aluno.id)}
-                    >
-                      Remover
-                    </button>
-                  </div>
-                ))}
+        ) : todosAlunosAtuais.length > 0 ? (
+          <div className="lista-alunos-atuais">
+            {todosAlunosAtuais.map((aluno) => (
+              <div key={aluno.id} className="card-aluno-atual">
+                <h3>{aluno.nome}</h3>
+                <p>Idade: {aluno.idade} anos</p>
               </div>
-            );
-          })()
+            ))}
+          </div>
+        ) : (
+          <p className="sem-registros">
+            Nenhum aluno adicionado às aulas atuais.
+          </p>
         )}
       </div>
     );

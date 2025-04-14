@@ -99,86 +99,50 @@
 
 /* Estilos para a seção de alunos na aula atual */
 .alunos-atuais {
+  margin: 20px 0;
   background-color: white;
-  border-radius: 12px;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
-  padding: 25px;
-  margin: 20px auto 30px auto;
-  max-width: 1200px;
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
 }
 
 .alunos-atuais h2 {
   font-size: 1.5rem;
-  color: #333;
   margin-bottom: 20px;
-  text-align: center;
-  position: relative;
-  padding-bottom: 10px;
-}
-
-.alunos-atuais h2:after {
-  content: "";
-  position: absolute;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 80px;
-  height: 3px;
-  background-color: #4caf50;
-  border-radius: 3px;
+  color: #333;
+  border-left: 5px solid #ff5722;
+  padding-left: 15px;
 }
 
 .lista-alunos-atuais {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 20px;
-  justify-content: center;
-  margin: 0 auto;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 15px;
 }
 
 .card-aluno-atual {
-  background-color: #f8f9fa;
-  border-radius: 10px;
-  padding: 20px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
-  transition: all 0.3s ease;
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  border: 1px solid #eee;
-  position: relative;
-  overflow: hidden;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  padding: 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s, box-shadow 0.2s;
 }
 
 .card-aluno-atual:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-}
-
-.card-aluno-atual:before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 5px;
-  height: 100%;
-  background-color: #4caf50;
-  border-radius: 10px 0 0 10px;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .card-aluno-atual h3 {
-  font-size: 1.2rem;
+  font-size: 1rem;
+  margin: 0 0 8px 0;
   color: #333;
-  margin: 0 0 10px 0;
-  text-align: center;
 }
 
 .card-aluno-atual p {
-  margin: 0 0 15px 0;
+  font-size: 0.85rem;
   color: #666;
-  font-size: 1rem;
-  flex-grow: 1;
-  text-align: center;
+  margin: 0;
 }
 
 .historico-aulas {
@@ -328,6 +292,10 @@
     width: 100%;
     min-width: 600px; /* Garante que a tabela tenha um tamanho mínimo para scroll horizontal */
   }
+
+  .lista-alunos-atuais {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  }
 }
 
 @media (max-width: 480px) {
@@ -343,6 +311,22 @@
 
   .historico-aulas {
     max-height: calc(100vh - 200px);
+  }
+
+  .lista-alunos-atuais {
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  }
+
+  .card-aluno-atual {
+    padding: 10px;
+  }
+
+  .card-aluno-atual h3 {
+    font-size: 0.9rem;
+  }
+
+  .card-aluno-atual p {
+    font-size: 0.8rem;
   }
 }
 
@@ -1309,6 +1293,32 @@
   border-bottom: 1px solid #eee;
   color: #333;
   font-size: 1.5rem;
+  padding-right: 40px; /* Espaço para o botão de fechar */
+}
+
+.detalhes-modal .btn-fechar {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: none;
+  border: none;
+  font-size: 1.8rem;
+  cursor: pointer;
+  color: #888;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s;
+  z-index: 10;
+  padding: 0;
+}
+
+.detalhes-modal .btn-fechar:hover {
+  color: #333;
+  background-color: #f1f1f1;
 }
 
 .detalhes-data {
