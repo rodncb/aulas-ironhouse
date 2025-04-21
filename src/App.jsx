@@ -104,22 +104,27 @@ const App = () => {
   const handleLogin = async (email, password) => {
     try {
       const result = await signIn(email, password);
-      
+
       if (!result || !result.success) {
-        console.error("Erro durante login:", result?.message || "Falha na autenticação");
-        return { 
-          success: false, 
-          error: result?.message || "Credenciais inválidas. Verifique seu email e senha." 
+        console.error(
+          "Erro durante login:",
+          result?.message || "Falha na autenticação"
+        );
+        return {
+          success: false,
+          error:
+            result?.message ||
+            "Credenciais inválidas. Verifique seu email e senha.",
         };
       }
-      
+
       // Login bem-sucedido
       return { success: true, data: result.data };
     } catch (error) {
       console.error("Exceção durante login:", error);
-      return { 
-        success: false, 
-        error: "Erro ao processar login. Tente novamente mais tarde." 
+      return {
+        success: false,
+        error: "Erro ao processar login. Tente novamente mais tarde.",
       };
     }
   };

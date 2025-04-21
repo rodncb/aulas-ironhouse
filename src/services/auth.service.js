@@ -19,15 +19,19 @@ const authService = {
             nome: userData.nome,
             role: userData.role || "professor",
           },
+          // Não redirecionar automaticamente
+          emailRedirectTo: window.location.origin,
         },
       });
 
       if (authError) {
+        console.error("Erro durante registro:", authError);
         throw new Error(authError.message);
       }
 
       return { success: true, data: authData };
     } catch (error) {
+      console.error("Exceção durante registro:", error);
       return { success: false, error: error.message };
     }
   },
@@ -35,17 +39,58 @@ const authService = {
   // Login de usuário
   async login(email, password) {
     try {
+      console.log("Tentando login para:", email);
+      console.log("Domínio atual:", window.location.hostname);
+
       // Usar Supabase para autenticação
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
-      if (error) throw new Error(error.message);
+      if (error) {
+        console.error("Erro de autenticação:", error);
+        console.error("Código do erro:", error.status, error.name);
+        throw new Error(error.message);
+      }
 
-      return { success: true, data };
+      if (!data || !data.session) {
+        console.error("Sessão não foi criada após login");
+        throw new Error("Falha ao criar sessão de usuário");
+      }
+
+      // Verificar se o usuário tem role definido nos metadados
+      const userRole = data.user?.user_metadata?.role;
+      if (!userRole) {
+        console.warn("Usuário não tem role definido nos metadados");
+      }
+
+      console.log("Login bem-sucedido:", data.user.email);
+      console.log("Detalhes da sessão:", {
+        expiry: data.session.expires_at,
+        tokenType: data.session.token_type,
+        userID: data.user.id,
+      });
+
+      return {
+        success: true,
+        data: {
+          user: {
+            id: data.user.id,
+            email: data.user.email,
+            role: userRole || "professor", // Fallback para professor se não estiver definido
+            nome: data.user.user_metadata?.nome || "Usuário",
+          },
+          session: data.session,
+        },
+      };
     } catch (error) {
-      return { success: false, error: error.message };
+      console.error("Exceção durante login:", error);
+      return {
+        success: false,
+        error: error.message,
+        details: "Verifique suas credenciais e tente novamente",
+      };
     }
   },
 
@@ -59,10 +104,18 @@ const authService = {
   // Logout de usuário
   async logout() {
     try {
+      console.log("Iniciando logout...");
       const { error } = await supabase.auth.signOut();
-      if (error) throw new Error(error.message);
+
+      if (error) {
+        console.error("Erro durante logout:", error);
+        throw new Error(error.message);
+      }
+
+      console.log("Logout realizado com sucesso");
       return { success: true };
     } catch (error) {
+      console.error("Exceção durante logout:", error);
       return { success: false, error: error.message };
     }
   },
@@ -70,25 +123,63 @@ const authService = {
   // Obter usuário atual
   async getCurrentUser() {
     try {
+      console.log("Verificando usuário atual...");
+
+      // Primeiro tenta obter a sessão (mais rápido)
+      const { data: sessionData } = await supabase.auth.getSession();
+
+      if (!sessionData?.session) {
+        console.log("Nenhuma sessão ativa encontrada");
+        return { success: false, error: "Sem sessão ativa" };
+      }
+
+      // Se temos uma sessão, obtém os dados do usuário completos
       const { data, error } = await supabase.auth.getUser();
 
-      if (error) throw new Error(error.message);
+      if (error) {
+        console.error("Erro ao obter usuário:", error);
+        throw new Error(error.message);
+      }
 
       if (!data.user) {
+        console.log("Usuário não encontrado mesmo com sessão ativa");
         return { success: false, error: "Usuário não encontrado" };
       }
+
+      console.log("Usuário atual recuperado com sucesso:", data.user.email);
 
       return {
         success: true,
         data: {
           id: data.user.id,
           email: data.user.email,
-          nome: data.user.user_metadata?.nome,
-          role: data.user.user_metadata?.role,
+          nome: data.user.user_metadata?.nome || "Usuário",
+          role: data.user.user_metadata?.role || "professor",
         },
       };
     } catch (error) {
+      console.error("Exceção ao obter usuário atual:", error);
       return { success: false, error: error.message };
+    }
+  },
+
+  // Verificar se a sessão é válida
+  async verificarSessao() {
+    try {
+      const { data, error } = await supabase.auth.getSession();
+
+      if (error) {
+        console.error("Erro ao verificar sessão:", error);
+        return { valida: false, error: error.message };
+      }
+
+      const sessaoValida = !!data?.session;
+      console.log("Sessão válida?", sessaoValida);
+
+      return { valida: sessaoValida };
+    } catch (error) {
+      console.error("Exceção ao verificar sessão:", error);
+      return { valida: false, error: error.message };
     }
   },
 

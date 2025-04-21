@@ -100,6 +100,10 @@
   font-size: 0.9rem;
   margin-bottom: 20px;
   text-align: center;
+  padding: 10px;
+  border-radius: 4px;
+  background-color: rgba(220, 53, 69, 0.1);
+  animation: shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
 }
 
 .login-button {
@@ -183,6 +187,112 @@
   font-size: 0.9rem;
 }
 
+/* Indicador de status de conexão */
+.connection-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 10px;
+  font-size: 0.8rem;
+  color: var(--secondary);
+}
+
+.status-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 6px;
+}
+
+.status-indicator.online {
+  background-color: #28a745;
+  box-shadow: 0 0 5px #28a745;
+}
+
+.status-indicator.offline {
+  background-color: #dc3545;
+  box-shadow: 0 0 5px #dc3545;
+}
+
+/* Estilos para mensagem de erro de conexão */
+.connection-error {
+  background-color: #f8d7da;
+  border: 1px solid #f5c6cb;
+  color: #721c24;
+  padding: 12px;
+  border-radius: 5px;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.connection-error p {
+  margin: 0 0 10px 0;
+}
+
+.reload-btn {
+  background-color: #721c24;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.reload-btn:hover {
+  background-color: #5c171d;
+}
+
+/* Spinner de carregamento para o botão */
+.login-button.loading {
+  background-color: var(--primary-light);
+  cursor: not-allowed;
+}
+
+.loading-text {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.loading-spinner {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: #fff;
+  animation: spin 1s ease-in-out infinite;
+  margin-right: 10px;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Efeito de feedback para erro de autenticação */
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  10%,
+  30%,
+  50%,
+  70%,
+  90% {
+    transform: translateX(-5px);
+  }
+  20%,
+  40%,
+  60%,
+  80% {
+    transform: translateX(5px);
+  }
+}
+
 /* Responsividade */
 @media (max-width: 768px) {
   .login-card {
@@ -203,4 +313,98 @@
   .login-logo h1 {
     font-size: 1.2rem;
   }
+
+  .toggle-btn {
+    padding: 10px 5px;
+    font-size: 0.9rem;
+  }
+
+  .form-group input {
+    padding: 10px;
+  }
+
+  .login-button {
+    padding: 12px;
+  }
+}
+
+/* Adicionando estilos para o botão de reset e mensagens */
+.reset-section {
+  margin-top: 15px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.reset-button {
+  background-color: transparent;
+  color: #888;
+  border: none;
+  font-size: 0.9rem;
+  padding: 5px 10px;
+  cursor: pointer;
+  text-decoration: underline;
+  margin-bottom: 10px;
+}
+
+.reset-button:hover {
+  color: #555;
+}
+
+.reset-button:disabled {
+  color: #ccc;
+  cursor: default;
+}
+
+.reset-message {
+  font-size: 0.9rem;
+  color: #2c7be5;
+  text-align: center;
+  padding: 5px;
+  border-radius: 4px;
+  background-color: rgba(44, 123, 229, 0.1);
+  margin-bottom: 10px;
+}
+
+/* Adicionando estilos para o botão de login direto */
+.direct-login-button {
+  width: 100%;
+  padding: 12px;
+  background-color: #17a2b8;
+  color: white;
+  font-size: 0.9rem;
+  font-weight: 500;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 10px;
+}
+
+.direct-login-button:hover {
+  background-color: #138496;
+}
+
+.direct-login-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Estilos para as informações de domínio */
+.domain-info {
+  margin-top: 15px;
+  padding: 10px;
+  background-color: #f8f9fa;
+  border-radius: 5px;
+  font-size: 0.8rem;
+  text-align: left;
+  color: #6c757d;
+}
+
+.domain-info p {
+  margin: 5px 0;
+}
+
+.domain-info strong {
+  color: #495057;
 }
