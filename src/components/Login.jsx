@@ -1,11 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "../styles/Login.css";
 import logoCompleta from "../assets/logo_completa.png";
-import {
-  supabase,
-  resetSupabaseClient,
-  verifyRedirectURLs,
-} from "../services/supabase";
+import { supabase } from "../services/supabase";
 
 const Login = ({ onLogin }) => {
   const [userType, setUserType] = useState("professor"); // 'professor' ou 'admin'
@@ -13,15 +9,10 @@ const Login = ({ onLogin }) => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [connectivityChecked, setConnectivityChecked] = useState(false);
   const [connectionError, setConnectionError] = useState(false);
-  const [domainInfo, setDomainInfo] = useState(null);
+  const [connectionChecked, setConnectionChecked] = useState(false);
 
-  // Estado para controlar o reset do cliente Supabase
-  const [resettingClient, setResettingClient] = useState(false);
-  const [resetMessage, setResetMessage] = useState("");
-
-  // Verificar conectividade com Supabase e informações de redirecionamento ao carregar
+  // Verificar conectividade com Supabase ao carregar o componente
   useEffect(() => {
     const checkSupabaseConnection = async () => {
       try {
@@ -37,16 +28,11 @@ const Login = ({ onLogin }) => {
           console.log("Conexão com Supabase verificada com sucesso");
           setConnectionError(false);
         }
-
-        // Verificar informações de domínio e redirecionamento
-        const redirectInfo = await verifyRedirectURLs();
-        setDomainInfo(redirectInfo);
-        console.log("Informações de domínio:", redirectInfo);
       } catch (err) {
         console.error("Exceção ao verificar conexão:", err.message);
         setConnectionError(true);
       } finally {
-        setConnectivityChecked(true);
+        setConnectionChecked(true);
       }
     };
 
@@ -59,8 +45,9 @@ const Login = ({ onLogin }) => {
     setError(""); // Limpar mensagens de erro ao trocar tipo de usuário
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault(); // Impede o refresh padrão do formulário
+  // Login direto com Supabase
+  const handleLogin = async (e) => {
+    e.preventDefault();
     setError("");
     setLoading(true);
 
@@ -72,7 +59,6 @@ const Login = ({ onLogin }) => {
     }
 
     try {
-      // Verificar conectividade antes de tentar login
       if (connectionError) {
         setError(
           "Não foi possível conectar ao servidor. Verifique sua conexão de internet."
@@ -83,122 +69,37 @@ const Login = ({ onLogin }) => {
 
       console.log(`Tentando login para ${username} como ${userType}`);
 
-      // Usar o onLogin para autenticação com o Supabase
-      const result = await onLogin(username, password);
-
-      // Verificar resultado do login
-      if (!result || !result.success) {
-        const errorMessage =
-          result?.message ||
-          "Falha na autenticação. Verifique suas credenciais.";
-        console.error("Erro de login:", errorMessage);
-
-        setError(errorMessage);
-        setLoading(false);
-
-        // Adicionar vibração para feedback tátil em dispositivos móveis
-        if (window.navigator && window.navigator.vibrate) {
-          window.navigator.vibrate(200);
-        }
-      } else {
-        console.log("Login bem-sucedido para:", username);
-      }
-      // Se não houver erro, o redirecionamento será feito pelo App.jsx
-    } catch (error) {
-      console.error("Exceção durante login:", error);
-
-      // Mensagem de erro mais amigável baseada no tipo de erro
-      let errorMessage =
-        "Erro ao tentar login. Verifique sua conexão e tente novamente.";
-
-      if (
-        error.message?.includes("credentials") ||
-        error.message?.includes("password")
-      ) {
-        errorMessage = "Credenciais inválidas. Verifique seu email e senha.";
-      } else if (
-        error.message?.includes("network") ||
-        error.message?.includes("fetch")
-      ) {
-        errorMessage =
-          "Problema de conexão com o servidor. Verifique sua internet.";
-      } else if (error.message?.includes("too many")) {
-        errorMessage =
-          "Muitas tentativas de login. Tente novamente mais tarde.";
-      }
-
-      setError(errorMessage);
-      setLoading(false);
-    }
-  };
-
-  // Função para fazer login direto via Supabase
-  const handleDirectLogin = async () => {
-    try {
-      setLoading(true);
-      setError("");
-
-      if (!username || !password) {
-        setError("Por favor, preencha email e senha para login direto");
-        setLoading(false);
-        return;
-      }
-
-      console.log("Tentando login direto via Supabase...");
-      console.log("Email:", username);
-
-      // Autenticação simples direta com o Supabase
+      // Autenticação direta com o Supabase
       const { data, error } = await supabase.auth.signInWithPassword({
         email: username,
         password: password,
       });
 
       if (error) {
-        console.error("Erro no login direto:", error);
+        console.error("Erro de autenticação:", error);
         setError(`Erro: ${error.message}`);
         setLoading(false);
         return;
       }
 
-      if (data?.session) {
-        console.log("Login direto bem-sucedido!");
-        window.location.reload(); // Recarregar a página para atualizar o estado
-      } else {
-        setError("Login direto falhou: Nenhuma sessão retornada");
+      if (!data || !data.session) {
+        setError("Falha na autenticação. Nenhuma sessão criada.");
         setLoading(false);
+        return;
       }
+
+      console.log("Login bem-sucedido para:", username);
+
+      // Carregar página inicial após login
+      window.location.reload();
     } catch (error) {
-      console.error("Exceção durante login direto:", error);
-      setError(`Erro: ${error.message}`);
+      console.error("Exceção durante login:", error);
+
+      // Mensagem de erro mais amigável
+      let errorMessage =
+        "Erro ao tentar login. Verifique sua conexão e tente novamente.";
+      setError(errorMessage);
       setLoading(false);
-    }
-  };
-
-  // Função para resetar o cliente Supabase
-  const handleResetClient = async () => {
-    setResettingClient(true);
-    setResetMessage("");
-
-    try {
-      const result = await resetSupabaseClient();
-
-      if (result.success) {
-        setResetMessage(
-          "Cliente resetado com sucesso. Tente fazer login agora."
-        );
-        // Limpar os campos de entrada
-        setUsername("");
-        setPassword("");
-        setError("");
-      } else {
-        setResetMessage(
-          "Erro ao resetar cliente: " + (result.error || "Erro desconhecido")
-        );
-      }
-    } catch (error) {
-      setResetMessage("Exceção ao resetar cliente: " + error.message);
-    } finally {
-      setResettingClient(false);
     }
   };
 
@@ -210,7 +111,7 @@ const Login = ({ onLogin }) => {
           <h1>Fitness e Performance</h1>
         </div>
 
-        {connectionError && connectivityChecked && (
+        {connectionError && connectionChecked && (
           <div className="connection-error">
             <p>❌ Problema de conexão com o servidor detectado.</p>
             <button
@@ -241,7 +142,7 @@ const Login = ({ onLogin }) => {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="login-form">
+        <form onSubmit={handleLogin} className="login-form">
           <div className="form-group">
             <label htmlFor="username">Email</label>
             <input
@@ -301,56 +202,7 @@ const Login = ({ onLogin }) => {
               }`
             )}
           </button>
-
-          <button
-            type="button"
-            onClick={handleDirectLogin}
-            className="direct-login-button"
-            disabled={loading || connectionError}
-          >
-            Login direto (recomendado)
-          </button>
         </form>
-
-        <div className="reset-section">
-          <button
-            onClick={handleResetClient}
-            className="reset-button"
-            disabled={resettingClient}
-          >
-            {resettingClient
-              ? "Resetando..."
-              : "Problemas para entrar? Resetar"}
-          </button>
-
-          {resetMessage && <div className="reset-message">{resetMessage}</div>}
-
-          {domainInfo && (
-            <div className="domain-info">
-              <p>
-                <strong>Solução de problemas:</strong>
-              </p>
-              <p>
-                Domínio atual:{" "}
-                <strong>
-                  {typeof window !== "undefined"
-                    ? window.location.hostname
-                    : "desconhecido"}
-                </strong>
-              </p>
-              <p>
-                Ambiente:{" "}
-                <strong>
-                  {domainInfo.isProduction ? "Produção" : "Desenvolvimento"}
-                </strong>
-              </p>
-              <p>
-                Se estiver com problemas para entrar, utilize o botão "Login
-                direto".
-              </p>
-            </div>
-          )}
-        </div>
 
         <div className="login-footer">
           <p>© {new Date().getFullYear()} Iron House Fitness e Performance</p>

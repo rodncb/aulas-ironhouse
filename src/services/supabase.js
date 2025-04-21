@@ -1,89 +1,14 @@
 import { createClient } from "@supabase/supabase-js";
 
-// Configuração do cliente Supabase com chaves atualizadas
+// Configuração do cliente Supabase
 const supabaseUrl = "https://rnvsemzycvhuyeatjkaq.supabase.co";
 const supabaseAnonKey =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJudnNlbXp5Y3ZodXllYXRqa2FxIiwicm9sZSI6ImFub24iLCJpYXQiOjE2NzY1MDAxMTQsImV4cCI6MTk5MjA3NjExNH0.8TxLqnYMATIOkisR7HM5yJjkMO6C4kF_GCiLIL9BX4M";
 
-// Determina se estamos em produção baseado no domínio
-const isProduction =
-  typeof window !== "undefined" &&
-  (window.location.hostname === "ironhouse.facilitaai.com.br" ||
-    window.location.hostname === "www.ironhouse.facilitaai.com.br");
+// Criação do cliente Supabase - Utiliza a configuração mais simples possível
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-console.log(
-  "Ambiente detectado:",
-  isProduction ? "Produção" : "Desenvolvimento"
-);
-console.log(
-  "Hostname:",
-  typeof window !== "undefined" ? window.location.hostname : "indefinido"
-);
-
-// Criação do cliente Supabase com configuração simplificada
-const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    autoRefreshToken: true,
-    persistSession: true,
-    detectSessionInUrl: true,
-  },
-});
-
-console.log("Cliente Supabase configurado com configuração padrão");
-
-if (typeof window !== "undefined") {
-  // Observer para eventos de autenticação
-  supabase.auth.onAuthStateChange((event, session) => {
-    console.log(
-      "Evento Auth:",
-      event,
-      "Sessão:",
-      session ? "Presente" : "Ausente"
-    );
-
-    // Log adicional para depuração
-    if (session) {
-      console.log("Usuário autenticado:", {
-        id: session.user.id,
-        email: session.user.email,
-        role: session.user.user_metadata?.role || "desconhecido",
-      });
-    }
-  });
-
-  // Verificar e exibir token atual
-  supabase.auth.getSession().then(({ data, error }) => {
-    if (data?.session) {
-      console.log("Sessão existente detectada");
-    } else if (error) {
-      console.error("Erro ao verificar sessão:", error.message);
-    } else {
-      console.log("Nenhuma sessão encontrada");
-    }
-  });
-}
-
-// Função para recarregar o cache do schema do Supabase
-export async function reloadSupabaseSchemaCache() {
-  try {
-    await supabase.rpc("reload_schema_cache");
-    return true;
-  } catch (error) {
-    try {
-      const { error: sqlError } = await supabase.rpc("execute_sql", {
-        sql_query: "SELECT pg_reload_conf();",
-      });
-
-      if (sqlError) {
-        return false;
-      }
-
-      return true;
-    } catch {
-      return false;
-    }
-  }
-}
+console.log("Cliente Supabase inicializado com configuração padrão");
 
 // Função para testar a conexão com o Supabase
 export async function testConnection(tentativas = 3) {
@@ -156,19 +81,11 @@ export async function verifyRedirectURLs() {
     const currentOrigin = window.location.origin;
     console.log("Domínio atual:", currentOrigin);
 
-    // Verificar se o domínio atual está nas URLs de redirecionamento
-    console.log(
-      "Para que a autenticação funcione corretamente, certifique-se de que este domínio está configurado nas URLs de redirecionamento no Supabase Auth Settings."
-    );
-
     // Verificar se estamos em produção
-    if (isProduction) {
-      console.log(
-        "Ambiente de produção detectado. URLs de redirecionamento devem incluir:",
-        "https://ironhouse.facilitaai.com.br",
-        "https://www.ironhouse.facilitaai.com.br"
-      );
-    }
+    const isProduction =
+      typeof window !== "undefined" &&
+      (window.location.hostname === "ironhouse.facilitaai.com.br" ||
+        window.location.hostname === "www.ironhouse.facilitaai.com.br");
 
     return {
       currentOrigin,
@@ -200,6 +117,16 @@ export async function resetSupabaseClient() {
   } catch (error) {
     console.error("Erro ao resetar cliente Supabase:", error);
     return { success: false, error: error.message };
+  }
+}
+
+// Função para recarregar o cache do schema do Supabase
+export async function reloadSupabaseSchemaCache() {
+  try {
+    await supabase.rpc("reload_schema_cache");
+    return true;
+  } catch (error) {
+    return false;
   }
 }
 
