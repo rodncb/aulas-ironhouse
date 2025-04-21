@@ -3,20 +3,51 @@ import "../styles/Cadastro.css";
 
 const CadastroExercicio = () => {
   const [exercicios, setExercicios] = useState([
-    { id: 1, nome: "AB Butterfly Sit up", musculatura: "Abdômen" },
-    { id: 2, nome: "AB Remador", musculatura: "Abdômen" },
-    { id: 3, nome: "Abdutora Elástico", musculatura: "Glúteos" },
-    { id: 4, nome: "Abdução de ombro", musculatura: "Ombro" },
-    { id: 5, nome: "Afundo", musculatura: "Perna Anterior" },
+    {
+      id: 1,
+      nome: "AB Butterfly Sit up",
+      musculatura: "Abdômen",
+      aparelho: "Livre",
+    },
+    { id: 2, nome: "AB Remador", musculatura: "Abdômen", aparelho: "Máquina" },
+    {
+      id: 3,
+      nome: "Abdutora Elástico",
+      musculatura: "Glúteos",
+      aparelho: "Elástico",
+    },
+    {
+      id: 4,
+      nome: "Abdução de ombro",
+      musculatura: "Ombro",
+      aparelho: "Halter",
+    },
+    { id: 5, nome: "Afundo", musculatura: "Perna Anterior", aparelho: "Livre" },
     {
       id: 6,
       nome: "Afundo c/ tronco inclinado",
       musculatura: "Perna Posterior",
+      aparelho: "Livre",
     },
-    { id: 7, nome: "Afundo Cruzado", musculatura: "Perna Anterior" },
-    { id: 8, nome: "Agachamento", musculatura: "Perna Anterior" },
-    { id: 9, nome: "Agachamento cruzado", musculatura: "Perna Anterior" },
-    { id: 10, nome: "Arnold", musculatura: "Ombro" },
+    {
+      id: 7,
+      nome: "Afundo Cruzado",
+      musculatura: "Perna Anterior",
+      aparelho: "Livre",
+    },
+    {
+      id: 8,
+      nome: "Agachamento",
+      musculatura: "Perna Anterior",
+      aparelho: "Livre",
+    },
+    {
+      id: 9,
+      nome: "Agachamento cruzado",
+      musculatura: "Perna Anterior",
+      aparelho: "Livre",
+    },
+    { id: 10, nome: "Arnold", musculatura: "Ombro", aparelho: "Halter" },
   ]);
 
   const [musculaturas, setMusculaturas] = useState([
@@ -34,9 +65,21 @@ const CadastroExercicio = () => {
     { id: 12, nome: "Perna Posterior" },
   ]);
 
+  const [aparelhos, setAparelhos] = useState([
+    { id: 1, nome: "Livre" },
+    { id: 2, nome: "Máquina" },
+    { id: 3, nome: "Elástico" },
+    { id: 4, nome: "Halter" },
+    { id: 5, nome: "Barra" },
+    { id: 6, nome: "Smith" },
+    { id: 7, nome: "Corda" },
+    { id: 8, nome: "TRX" },
+  ]);
+
   const [novoExercicio, setNovoExercicio] = useState({
     nome: "",
     musculatura: "",
+    aparelho: "",
   });
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [searchTerm, setSearchTerm] = useState("");
@@ -53,7 +96,11 @@ const CadastroExercicio = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (novoExercicio.nome.trim() === "" || novoExercicio.musculatura === "")
+    if (
+      novoExercicio.nome.trim() === "" ||
+      novoExercicio.musculatura === "" ||
+      novoExercicio.aparelho === ""
+    )
       return;
 
     if (editando && exercicioEditando) {
@@ -63,12 +110,18 @@ const CadastroExercicio = () => {
               ...ex,
               nome: novoExercicio.nome,
               musculatura: novoExercicio.musculatura,
+              aparelho: novoExercicio.aparelho,
             }
           : ex
       );
       setExercicios(exerciciosAtualizados);
       setEditando(false);
       setExercicioEditando(null);
+      setNovoExercicio({
+        nome: "",
+        musculatura: "",
+        aparelho: "",
+      });
     } else {
       const newId = Math.max(...exercicios.map((e) => e.id), 0) + 1;
       setExercicios([
@@ -77,14 +130,15 @@ const CadastroExercicio = () => {
           id: newId,
           nome: novoExercicio.nome,
           musculatura: novoExercicio.musculatura,
+          aparelho: novoExercicio.aparelho,
         },
       ]);
+      setNovoExercicio({
+        nome: "",
+        musculatura: "",
+        aparelho: "",
+      });
     }
-
-    setNovoExercicio({
-      nome: "",
-      musculatura: "",
-    });
   };
 
   const handleDelete = (id) => {

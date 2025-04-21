@@ -1,0 +1,277 @@
+2025-04-15 19:26:58,796 [DEBUG] CloudFormation client initialized with endpoint https://cloudformation.sa-east-1.amazonaws.com
+2025-04-15 19:26:58,797 [DEBUG] SQS client initialized with endpoint https://sqs.sa-east-1.amazonaws.com
+2025-04-15 19:26:58,797 [DEBUG] CloudFormation client initialized with endpoint https://cloudformation.sa-east-1.amazonaws.com
+2025-04-15 19:26:58,797 [DEBUG] Enabled single threading mode.
+2025-04-15 19:26:58,797 [DEBUG] Creating /var/lib/cfn-hup/data
+2025-04-15 19:26:58,806 [INFO] No umask value specified in config file. Using the default one: 0o22
+2025-04-15 19:26:58,904 [INFO] Pid: 1807
+2025-04-15 19:26:59,338 [INFO] Refreshing listener credentials
+2025-04-15 19:26:59,478 [INFO] Scheduling next credential refresh in 1799.0 seconds
+2025-04-15 19:29:08,120 [INFO] Received command ElasticBeanstalkCommand-AWSEBAutoScalingGroup (invocation id: 4da73676-5876-4645-8e76-877aa44d5a8e)
+2025-04-15 19:29:08,120 [INFO] Running action for aws-eb-command-handler
+2025-04-15 19:29:56,560 [INFO] Action for aws-eb-command-handler succeeded, returning SUCCESS
+2025-04-15 19:32:17,052 [INFO] command processing is alive.
+2025-04-15 19:37:17,792 [INFO] command processing is alive.
+2025-04-15 19:42:18,507 [INFO] command processing is alive.
+2025-04-15 19:47:19,176 [INFO] command processing is alive.
+2025-04-15 19:52:19,901 [INFO] command processing is alive.
+2025-04-15 19:56:58,484 [INFO] Refreshing listener credentials
+2025-04-15 19:56:58,589 [INFO] Scheduling next credential refresh in 1799.0 seconds
+2025-04-15 19:57:20,618 [INFO] command processing is alive.
+2025-04-15 20:02:21,298 [INFO] command processing is alive.
+2025-04-15 20:07:21,981 [INFO] command processing is alive.
+2025-04-15 20:12:22,683 [INFO] command processing is alive.
+2025-04-15 20:17:23,386 [INFO] command processing is alive.
+2025-04-15 20:22:24,053 [INFO] command processing is alive.
+2025-04-15 20:26:57,590 [INFO] Refreshing listener credentials
+2025-04-15 20:26:57,703 [INFO] Scheduling next credential refresh in 1799.0 seconds
+2025-04-15 20:27:24,764 [INFO] command processing is alive.
+2025-04-15 20:32:25,403 [INFO] command processing is alive.
+2025-04-15 20:37:26,060 [INFO] command processing is alive.
+2025-04-15 20:42:26,672 [INFO] command processing is alive.
+2025-04-15 20:47:27,348 [INFO] command processing is alive.
+2025-04-15 20:52:28,035 [INFO] command processing is alive.
+2025-04-15 20:56:56,704 [INFO] Refreshing listener credentials
+2025-04-15 20:56:56,832 [INFO] Scheduling next credential refresh in 1799.0 seconds
+2025-04-15 20:57:28,733 [INFO] command processing is alive.
+2025-04-15 21:02:29,435 [INFO] command processing is alive.
+2025-04-15 21:07:30,379 [INFO] command processing is alive.
+2025-04-15 21:12:31,093 [INFO] command processing is alive.
+2025-04-15 21:17:31,815 [INFO] command processing is alive.
+2025-04-15 21:22:32,484 [INFO] command processing is alive.
+2025-04-15 21:26:55,832 [INFO] Refreshing listener credentials
+2025-04-15 21:26:55,980 [INFO] Scheduling next credential refresh in 1799.0 seconds
+2025-04-15 21:27:33,128 [INFO] command processing is alive.
+2025-04-15 21:32:33,804 [INFO] command processing is alive.
+2025-04-15 21:37:34,446 [INFO] command processing is alive.
+2025-04-15 21:42:35,132 [INFO] command processing is alive.
+2025-04-15 21:47:35,799 [INFO] command processing is alive.
+2025-04-15 21:52:36,482 [INFO] command processing is alive.
+2025-04-15 21:56:54,981 [INFO] Refreshing listener credentials
+2025-04-15 21:56:55,149 [INFO] Scheduling next credential refresh in 1799.0 seconds
+2025-04-15 21:57:37,159 [INFO] command processing is alive.
+2025-04-15 22:02:37,862 [INFO] command processing is alive.
+2025-04-15 22:07:38,575 [INFO] command processing is alive.
+2025-04-15 22:12:39,280 [INFO] command processing is alive.
+2025-04-15 22:17:39,936 [INFO] command processing is alive.
+2025-04-15 22:22:40,563 [INFO] command processing is alive.
+2025-04-15 22:26:54,150 [INFO] Refreshing listener credentials
+2025-04-15 22:26:54,244 [INFO] Scheduling next credential refresh in 1799.0 seconds
+2025-04-15 22:27:41,268 [INFO] command processing is alive.
+2025-04-15 22:32:42,016 [INFO] command processing is alive.
+2025-04-15 22:37:42,731 [INFO] command processing is alive.
+2025-04-15 22:42:43,440 [INFO] command processing is alive.
+2025-04-15 22:47:44,096 [INFO] command processing is alive.
+2025-04-15 22:52:44,733 [INFO] command processing is alive.
+2025-04-15 22:56:53,244 [INFO] Refreshing listener credentials
+2025-04-15 22:56:53,379 [INFO] Scheduling next credential refresh in 1799.0 seconds
+2025-04-15 22:57:45,397 [INFO] command processing is alive.
+2025-04-15 23:02:46,095 [INFO] command processing is alive.
+2025-04-15 23:07:46,741 [INFO] command processing is alive.
+2025-04-15 23:12:47,425 [INFO] command processing is alive.
+2025-04-15 23:17:48,034 [INFO] command processing is alive.
+2025-04-15 23:22:48,624 [INFO] command processing is alive.
+2025-04-15 23:26:52,380 [INFO] Refreshing listener credentials
+2025-04-15 23:26:52,494 [INFO] Scheduling next credential refresh in 1799.0 seconds
+2025-04-15 23:27:49,322 [INFO] command processing is alive.
+2025-04-15 23:32:49,992 [INFO] command processing is alive.
+2025-04-15 23:37:50,645 [INFO] command processing is alive.
+2025-04-15 23:42:51,362 [INFO] command processing is alive.
+2025-04-15 23:47:51,975 [INFO] command processing is alive.
+2025-04-15 23:52:52,730 [INFO] command processing is alive.
+2025-04-15 23:56:51,495 [INFO] Refreshing listener credentials
+2025-04-15 23:56:51,613 [INFO] Scheduling next credential refresh in 1799.0 seconds
+2025-04-15 23:57:53,401 [INFO] command processing is alive.
+2025-04-16 00:02:54,079 [INFO] command processing is alive.
+2025-04-16 00:07:54,693 [INFO] command processing is alive.
+2025-04-16 00:12:55,331 [INFO] command processing is alive.
+2025-04-16 00:17:55,982 [INFO] command processing is alive.
+2025-04-16 00:22:56,631 [INFO] command processing is alive.
+2025-04-16 00:26:50,613 [INFO] Refreshing listener credentials
+2025-04-16 00:26:50,714 [INFO] Scheduling next credential refresh in 1799.0 seconds
+2025-04-16 00:27:57,237 [INFO] command processing is alive.
+2025-04-16 00:32:57,843 [INFO] command processing is alive.
+2025-04-16 00:37:58,470 [INFO] command processing is alive.
+2025-04-16 00:42:59,025 [INFO] command processing is alive.
+2025-04-16 00:47:59,591 [INFO] command processing is alive.
+2025-04-16 00:53:00,202 [INFO] command processing is alive.
+2025-04-16 00:56:49,715 [INFO] Refreshing listener credentials
+2025-04-16 00:56:49,814 [INFO] Scheduling next credential refresh in 1799.0 seconds
+2025-04-16 00:58:00,843 [INFO] command processing is alive.
+2025-04-16 01:03:01,473 [INFO] command processing is alive.
+2025-04-16 01:08:02,103 [INFO] command processing is alive.
+2025-04-16 01:13:02,719 [INFO] command processing is alive.
+2025-04-16 01:18:03,279 [INFO] command processing is alive.
+2025-04-16 01:23:03,875 [INFO] command processing is alive.
+2025-04-16 01:26:48,814 [INFO] Refreshing listener credentials
+2025-04-16 01:26:48,922 [INFO] Scheduling next credential refresh in 1799.0 seconds
+2025-04-16 01:28:04,486 [INFO] command processing is alive.
+2025-04-16 01:33:05,101 [INFO] command processing is alive.
+2025-04-16 01:38:05,772 [INFO] command processing is alive.
+2025-04-16 01:43:06,354 [INFO] command processing is alive.
+2025-04-16 01:48:06,997 [INFO] command processing is alive.
+2025-04-16 01:53:07,661 [INFO] command processing is alive.
+2025-04-16 01:56:47,923 [INFO] Refreshing listener credentials
+2025-04-16 01:56:48,018 [INFO] Scheduling next credential refresh in 1799.0 seconds
+2025-04-16 01:58:08,299 [INFO] command processing is alive.
+2025-04-16 02:03:09,025 [INFO] command processing is alive.
+2025-04-16 02:08:09,647 [INFO] command processing is alive.
+2025-04-16 02:13:10,288 [INFO] command processing is alive.
+2025-04-16 02:18:10,901 [INFO] command processing is alive.
+2025-04-16 02:23:11,532 [INFO] command processing is alive.
+2025-04-16 02:26:47,018 [INFO] Refreshing listener credentials
+2025-04-16 02:26:47,118 [INFO] Scheduling next credential refresh in 1799.0 seconds
+2025-04-16 02:28:12,131 [INFO] command processing is alive.
+2025-04-16 02:33:12,793 [INFO] command processing is alive.
+2025-04-16 02:38:13,396 [INFO] command processing is alive.
+2025-04-16 02:43:14,039 [INFO] command processing is alive.
+2025-04-16 02:48:14,728 [INFO] command processing is alive.
+2025-04-16 02:53:15,389 [INFO] command processing is alive.
+2025-04-16 02:56:46,118 [INFO] Refreshing listener credentials
+2025-04-16 02:56:46,225 [INFO] Scheduling next credential refresh in 1799.0 seconds
+2025-04-16 02:58:16,077 [INFO] command processing is alive.
+2025-04-16 03:03:16,834 [INFO] command processing is alive.
+2025-04-16 03:08:17,476 [INFO] command processing is alive.
+2025-04-16 03:13:18,233 [INFO] command processing is alive.
+2025-04-16 03:18:18,867 [INFO] command processing is alive.
+2025-04-16 03:23:19,507 [INFO] command processing is alive.
+2025-04-16 03:26:45,226 [INFO] Refreshing listener credentials
+2025-04-16 03:26:45,327 [INFO] Scheduling next credential refresh in 1799.0 seconds
+2025-04-16 03:28:20,183 [INFO] command processing is alive.
+2025-04-16 03:33:20,868 [INFO] command processing is alive.
+2025-04-16 03:38:21,531 [INFO] command processing is alive.
+2025-04-16 03:43:22,351 [INFO] command processing is alive.
+2025-04-16 03:48:23,024 [INFO] command processing is alive.
+2025-04-16 03:53:23,767 [INFO] command processing is alive.
+2025-04-16 03:56:44,327 [INFO] Refreshing listener credentials
+2025-04-16 03:56:44,435 [INFO] Scheduling next credential refresh in 1799.0 seconds
+2025-04-16 03:58:24,411 [INFO] command processing is alive.
+2025-04-16 04:03:25,137 [INFO] command processing is alive.
+2025-04-16 04:08:25,820 [INFO] command processing is alive.
+2025-04-16 04:13:26,457 [INFO] command processing is alive.
+2025-04-16 04:18:27,152 [INFO] command processing is alive.
+2025-04-16 04:23:27,871 [INFO] command processing is alive.
+2025-04-16 04:26:43,435 [INFO] Refreshing listener credentials
+2025-04-16 04:26:43,543 [INFO] Scheduling next credential refresh in 1799.0 seconds
+2025-04-16 04:28:28,546 [INFO] command processing is alive.
+2025-04-16 04:33:29,189 [INFO] command processing is alive.
+2025-04-16 04:38:29,854 [INFO] command processing is alive.
+2025-04-16 04:43:30,557 [INFO] command processing is alive.
+2025-04-16 04:48:31,311 [INFO] command processing is alive.
+2025-04-16 04:53:32,057 [INFO] command processing is alive.
+2025-04-16 04:56:42,544 [INFO] Refreshing listener credentials
+2025-04-16 04:56:42,678 [INFO] Scheduling next credential refresh in 1799.0 seconds
+2025-04-16 04:58:32,774 [INFO] command processing is alive.
+2025-04-16 05:03:33,425 [INFO] command processing is alive.
+2025-04-16 05:08:34,115 [INFO] command processing is alive.
+2025-04-16 05:13:34,762 [INFO] command processing is alive.
+2025-04-16 05:18:35,422 [INFO] command processing is alive.
+2025-04-16 05:23:36,069 [INFO] command processing is alive.
+2025-04-16 05:26:41,678 [INFO] Refreshing listener credentials
+2025-04-16 05:26:41,771 [INFO] Scheduling next credential refresh in 1799.0 seconds
+2025-04-16 05:28:36,700 [INFO] command processing is alive.
+2025-04-16 05:33:37,304 [INFO] command processing is alive.
+2025-04-16 05:38:37,914 [INFO] command processing is alive.
+2025-04-16 05:43:38,529 [INFO] command processing is alive.
+2025-04-16 05:48:39,088 [INFO] command processing is alive.
+2025-04-16 05:53:39,729 [INFO] command processing is alive.
+2025-04-16 05:56:40,772 [INFO] Refreshing listener credentials
+2025-04-16 05:56:40,875 [INFO] Scheduling next credential refresh in 1799.0 seconds
+2025-04-16 05:58:40,332 [INFO] command processing is alive.
+2025-04-16 06:03:40,921 [INFO] command processing is alive.
+2025-04-16 06:08:41,553 [INFO] command processing is alive.
+2025-04-16 06:13:42,198 [INFO] command processing is alive.
+2025-04-16 06:18:42,781 [INFO] command processing is alive.
+2025-04-16 06:23:43,412 [INFO] command processing is alive.
+2025-04-16 06:26:39,875 [INFO] Refreshing listener credentials
+2025-04-16 06:26:39,982 [INFO] Scheduling next credential refresh in 1799.0 seconds
+2025-04-16 06:28:43,985 [INFO] command processing is alive.
+2025-04-16 06:33:44,572 [INFO] command processing is alive.
+2025-04-16 06:38:45,177 [INFO] command processing is alive.
+2025-04-16 06:43:45,778 [INFO] command processing is alive.
+2025-04-16 06:48:46,406 [INFO] command processing is alive.
+2025-04-16 06:53:46,995 [INFO] command processing is alive.
+2025-04-16 06:56:38,982 [INFO] Refreshing listener credentials
+2025-04-16 06:56:39,078 [INFO] Scheduling next credential refresh in 1799.0 seconds
+2025-04-16 06:58:47,643 [INFO] command processing is alive.
+2025-04-16 07:03:48,291 [INFO] command processing is alive.
+2025-04-16 07:08:48,909 [INFO] command processing is alive.
+2025-04-16 07:13:49,547 [INFO] command processing is alive.
+2025-04-16 07:18:50,168 [INFO] command processing is alive.
+2025-04-16 07:23:50,796 [INFO] command processing is alive.
+2025-04-16 07:26:38,078 [INFO] Refreshing listener credentials
+2025-04-16 07:26:38,183 [INFO] Scheduling next credential refresh in 1799.0 seconds
+2025-04-16 07:28:51,402 [INFO] command processing is alive.
+2025-04-16 07:33:51,978 [INFO] command processing is alive.
+2025-04-16 07:38:52,590 [INFO] command processing is alive.
+2025-04-16 07:43:53,161 [INFO] command processing is alive.
+2025-04-16 07:48:53,715 [INFO] command processing is alive.
+2025-04-16 07:53:54,337 [INFO] command processing is alive.
+2025-04-16 07:56:37,183 [INFO] Refreshing listener credentials
+2025-04-16 07:56:37,280 [INFO] Scheduling next credential refresh in 1799.0 seconds
+2025-04-16 07:58:54,959 [INFO] command processing is alive.
+2025-04-16 08:03:55,735 [INFO] command processing is alive.
+2025-04-16 08:08:56,418 [INFO] command processing is alive.
+2025-04-16 08:13:57,097 [INFO] command processing is alive.
+2025-04-16 08:18:57,726 [INFO] command processing is alive.
+2025-04-16 08:23:58,383 [INFO] command processing is alive.
+2025-04-16 08:26:36,281 [INFO] Refreshing listener credentials
+2025-04-16 08:26:36,389 [INFO] Scheduling next credential refresh in 1799.0 seconds
+2025-04-16 08:28:59,056 [INFO] command processing is alive.
+2025-04-16 08:33:59,737 [INFO] command processing is alive.
+2025-04-16 08:39:00,436 [INFO] command processing is alive.
+2025-04-16 08:44:01,147 [INFO] command processing is alive.
+2025-04-16 08:49:01,904 [INFO] command processing is alive.
+2025-04-16 08:54:02,664 [INFO] command processing is alive.
+2025-04-16 08:56:35,390 [INFO] Refreshing listener credentials
+2025-04-16 08:56:35,483 [INFO] Scheduling next credential refresh in 1799.0 seconds
+2025-04-16 08:59:03,331 [INFO] command processing is alive.
+2025-04-16 09:04:04,080 [INFO] command processing is alive.
+2025-04-16 09:09:04,760 [INFO] command processing is alive.
+2025-04-16 09:14:05,462 [INFO] command processing is alive.
+2025-04-16 09:19:06,204 [INFO] command processing is alive.
+2025-04-16 09:24:06,913 [INFO] command processing is alive.
+2025-04-16 09:26:34,483 [INFO] Refreshing listener credentials
+2025-04-16 09:26:34,618 [INFO] Scheduling next credential refresh in 1799.0 seconds
+2025-04-16 09:29:07,646 [INFO] command processing is alive.
+2025-04-16 09:34:08,333 [INFO] command processing is alive.
+2025-04-16 09:39:09,057 [INFO] command processing is alive.
+2025-04-16 09:44:09,815 [INFO] command processing is alive.
+2025-04-16 09:49:10,569 [INFO] command processing is alive.
+2025-04-16 09:54:11,314 [INFO] command processing is alive.
+2025-04-16 09:56:33,619 [INFO] Refreshing listener credentials
+2025-04-16 09:56:33,737 [INFO] Scheduling next credential refresh in 1799.0 seconds
+2025-04-16 09:59:12,112 [INFO] command processing is alive.
+2025-04-16 10:04:12,810 [INFO] command processing is alive.
+2025-04-16 10:09:13,508 [INFO] command processing is alive.
+2025-04-16 10:14:14,193 [INFO] command processing is alive.
+2025-04-16 10:19:15,016 [INFO] command processing is alive.
+2025-04-16 10:24:15,866 [INFO] command processing is alive.
+2025-04-16 10:26:32,738 [INFO] Refreshing listener credentials
+2025-04-16 10:26:32,831 [INFO] Scheduling next credential refresh in 1799.0 seconds
+2025-04-16 10:29:16,667 [INFO] command processing is alive.
+2025-04-16 10:34:17,522 [INFO] command processing is alive.
+2025-04-16 10:39:18,261 [INFO] command processing is alive.
+2025-04-16 10:44:18,990 [INFO] command processing is alive.
+2025-04-16 10:49:19,731 [INFO] command processing is alive.
+2025-04-16 10:54:20,516 [INFO] command processing is alive.
+2025-04-16 10:56:31,831 [INFO] Refreshing listener credentials
+2025-04-16 10:56:31,964 [INFO] Scheduling next credential refresh in 1799.0 seconds
+2025-04-16 10:59:21,297 [INFO] command processing is alive.
+2025-04-16 11:04:22,248 [INFO] command processing is alive.
+2025-04-16 11:09:23,050 [INFO] command processing is alive.
+2025-04-16 11:14:23,871 [INFO] command processing is alive.
+2025-04-16 11:19:24,610 [INFO] command processing is alive.
+2025-04-16 11:24:25,238 [INFO] command processing is alive.
+2025-04-16 11:26:30,965 [INFO] Refreshing listener credentials
+2025-04-16 11:26:31,091 [INFO] Scheduling next credential refresh in 1799.0 seconds
+2025-04-16 11:29:25,921 [INFO] command processing is alive.
+2025-04-16 11:34:26,667 [INFO] command processing is alive.
+2025-04-16 11:35:55,313 [INFO] Received command ElasticBeanstalkCommand-AWSEBAutoScalingGroup (invocation id: f01dc540-88d7-4ef7-8b09-e73ea61c3e2b)
+2025-04-16 11:35:55,313 [INFO] Running action for aws-eb-command-handler
+2025-04-16 11:35:57,081 [INFO] Action for aws-eb-command-handler succeeded, returning SUCCESS
+2025-04-16 11:36:24,534 [INFO] Received command ElasticBeanstalkCommand-AWSEBAutoScalingGroup (invocation id: 103b4056-0e91-4cf7-b75c-d9d5eabe85ea)
+2025-04-16 11:36:24,534 [INFO] Running action for aws-eb-command-handler
+2025-04-16 11:36:25,718 [INFO] Action for aws-eb-command-handler succeeded, returning SUCCESS
+2025-04-16 11:38:00,468 [INFO] Received command ElasticBeanstalkCommand-AWSEBAutoScalingGroup (invocation id: b65a40ae-92d5-4fa3-926a-cb78ebe3f3a9)
+2025-04-16 11:38:00,468 [INFO] Running action for aws-eb-command-handler

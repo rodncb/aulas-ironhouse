@@ -1,0 +1,29 @@
+branch-defaults:
+  main:
+    environment: ironhouse-api
+    group_suffix: null
+global:
+  application_name: ironhouse-backend
+  branch: null
+  default_ec2_keyname: null
+  default_platform: Node.js 18
+  default_region: sa-east-1
+  include_git_submodules: true
+  instance_profile: null
+  platform_name: null
+  platform_version: null
+  profile: null
+  repository: null
+  sc: git
+  workspace_type: Application
+option_settings:
+  aws:autoscaling:launchconfiguration:
+    InstanceType: t2.micro
+  aws:elasticbeanstalk:application:environment:
+    JWT_SECRET: f6df91ca8c6fb3d7b76863dd77fsecc7c28321d7896a73fc89637f5a6c21
+    MONGODB_URI: mongodb+srv://rodncb:xxkPSIme4RSWz0Wr@cluster0.ffkqtjd.mongodb.net/ironhouse?retryWrites=true&w=majority&appName=Cluster0
+    NODE_ENV: production
+    PORT: 3000
+  aws:elasticbeanstalk:container:nodejs:
+    NodeCommand: npm run start:backend
+    ProxyServer: nginx

@@ -205,3 +205,61 @@ a:hover {
 .sidebar-overlay {
   background-color: rgba(0, 0, 0, 0.7);
 }
+
+/* Estilos para o botão de recarregar cache do esquema */
+.cache-error-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background-color: #fff3cd;
+  border: 1px solid #ffeeba;
+  border-radius: 6px;
+  padding: 15px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 300px;
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.reload-cache-btn {
+  padding: 8px 16px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  width: 100%;
+  margin-bottom: 10px;
+  transition: background-color 0.2s;
+}
+
+.reload-cache-btn:hover {
+  background-color: #0056b3;
+}
+
+.reload-cache-btn:disabled {
+  background-color: #6c757d;
+  cursor: not-allowed;
+}
+
+.cache-message {
+  font-size: 14px;
+  text-align: center;
+  color: #333;
+  width: 100%;
+}

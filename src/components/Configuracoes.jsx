@@ -1,140 +1,92 @@
 import React, { useState } from "react";
 import "../styles/Cadastros.css";
-
-const USUARIOS_KEY = "usuariosSistema";
-
-// Carregar usuários do localStorage ou mock inicial
-function getUsuarios() {
-  const local = localStorage.getItem(USUARIOS_KEY);
-  if (local) return JSON.parse(local);
-  // Mock inicial
-  return [
-    { id: 1, email: "admin@example.com", role: "admin", nome: "Administrador" },
-    {
-      id: 2,
-      email: "professor@example.com",
-      role: "professor",
-      nome: "Professor",
-    },
-  ];
-}
+import {
+  criarProfessorCorreto,
+  verificarProfessor,
+} from "../services/resetProfessor";
 
 export default function Configuracoes() {
-  const [usuarios, setUsuarios] = useState(getUsuarios());
-  const [novo, setNovo] = useState({ nome: "", email: "", role: "professor" });
-  const [erro, setErro] = useState("");
+  const [message, setMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Salvar no localStorage sempre que houver alteração
-  const salvarUsuarios = (lista) => {
-    setUsuarios(lista);
-    localStorage.setItem(USUARIOS_KEY, JSON.stringify(lista));
-  };
+  const handleResetProfessor = async () => {
+    try {
+      setIsLoading(true);
+      setMessage("Verificando se o professor já existe...");
 
-  const handleChange = (e) => {
-    setNovo({ ...novo, [e.target.name]: e.target.value });
-  };
+      // Primeiro verificar se o professor já existe
+      const verificacao = await verificarProfessor();
 
-  const handleAdd = (e) => {
-    e.preventDefault();
-    setErro("");
-    if (!novo.nome.trim() || !novo.email.trim()) {
-      setErro("Preencha nome e email.");
-      return;
-    }
-    if (usuarios.some((u) => u.email === novo.email)) {
-      setErro("Já existe um usuário com este email.");
-      return;
-    }
-    const novoUsuario = {
-      ...novo,
-      id: Date.now(),
-    };
-    salvarUsuarios([...usuarios, novoUsuario]);
-    setNovo({ nome: "", email: "", role: "professor" });
-  };
+      if (verificacao.success) {
+        setMessage(
+          "O usuário professor já existe! Você pode fazer login com prof@ironhouse.com e a senha padrão."
+        );
+        return;
+      }
 
-  const handleRemove = (id) => {
-    if (window.confirm("Tem certeza que deseja remover este usuário?")) {
-      salvarUsuarios(usuarios.filter((u) => u.id !== id));
+      // Se não existir, criar um novo
+      setMessage("Criando novo usuário professor...");
+      const resultado = await criarProfessorCorreto();
+
+      if (resultado.success) {
+        setMessage(
+          `Usuário professor criado com sucesso!\n` +
+            `Email: ${resultado.data.email}\n` +
+            `Senha: ${resultado.data.senha}\n` +
+            `IMPORTANTE: Faça login com estas credenciais e altere a senha após o primeiro acesso.`
+        );
+      } else {
+        setMessage(`Erro ao criar usuário: ${resultado.error}`);
+      }
+    } catch (error) {
+      setMessage(`Erro inesperado: ${error.message}`);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="cadastros-container">
-      <div className="apple-back-button-container">
+    <div className="container-cadastro">
+      <h2>Configurações de Usuários</h2>
+
+      {message && (
+        <div className={isLoading ? "message loading" : "message"}>
+          {message.split("\n").map((line, i) => (
+            <p key={i}>{line}</p>
+          ))}
+        </div>
+      )}
+
+      <div className="actions">
         <button
-          className="apple-back-button"
-          onClick={() => {
-            window.dispatchEvent(
-              new CustomEvent("navegarPara", {
-                detail: { secao: "geral" },
-              })
-            );
-          }}
+          onClick={handleResetProfessor}
+          className="btn-resetar"
+          disabled={isLoading}
         >
-          <span className="apple-back-arrow">←</span> Voltar
+          {isLoading ? "Processando..." : "Resetar Usuário Professor"}
         </button>
       </div>
-      <h2 className="page-title">Gerenciamento de Usuários</h2>
-      <form
-        className="cadastro-form"
-        onSubmit={handleAdd}
-        style={{ marginBottom: 24 }}
-      >
-        <div className="form-fields">
-          <input
-            type="text"
-            name="nome"
-            value={novo.nome}
-            onChange={handleChange}
-            placeholder="Nome"
-            required
-          />
-          <input
-            type="email"
-            name="email"
-            value={novo.email}
-            onChange={handleChange}
-            placeholder="E-mail"
-            required
-          />
-          <select name="role" value={novo.role} onChange={handleChange}>
-            <option value="professor">Professor</option>
-            <option value="admin">Administrador</option>
-          </select>
-          <button type="submit" className="btn-cadastrar">
-            Adicionar
-          </button>
-        </div>
-        {erro && <div style={{ color: "#f44336", marginTop: 8 }}>{erro}</div>}
-      </form>
-      <table className="data-table">
-        <thead>
-          <tr>
-            <th>Nome</th>
-            <th>Email</th>
-            <th>Papel</th>
-            <th>Ações</th>
-          </tr>
-        </thead>
-        <tbody>
-          {usuarios.map((u) => (
-            <tr key={u.id}>
-              <td>{u.nome}</td>
-              <td>{u.email}</td>
-              <td>{u.role === "admin" ? "Administrador" : "Professor"}</td>
-              <td>
-                <button
-                  className="btn-excluir"
-                  onClick={() => handleRemove(u.id)}
-                >
-                  Remover
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+
+      <h3>Gerenciamento de Usuários</h3>
+      <p className="info-text">
+        Os usuários agora são gerenciados diretamente através do Supabase:
+      </p>
+      <ol className="info-list">
+        <li>Acesse o dashboard do Supabase do projeto</li>
+        <li>Navegue até a seção "Authentication" para criar novos usuários</li>
+        <li>
+          Após criar um usuário, configure seu perfil na tabela "profiles"
+        </li>
+        <li>
+          Configure a função (role) como "admin" ou "professor" conforme
+          necessário
+        </li>
+      </ol>
+
+      <p className="info-text">
+        <strong>Nota:</strong> Usuários criados no antigo sistema local não
+        funcionarão com o novo sistema de autenticação.
+      </p>
     </div>
   );
 }

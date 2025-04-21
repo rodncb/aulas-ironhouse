@@ -11,12 +11,13 @@
   margin-bottom: 20px;
   display: flex;
   justify-content: flex-start;
+  gap: 10px;
 }
 
 .alunos-content {
   background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   padding: 20px;
   min-height: 300px;
 }
@@ -28,76 +29,231 @@
   height: 200px;
   color: #777;
   font-size: 1.1rem;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  margin: 20px 0;
+  padding: 40px;
+  text-align: center;
+  border: 1px dashed #ddd;
 }
 
+/* Ajustes no layout da lista de alunos */
 .lista-alunos {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(4, 1fr); /* Exibe 4 alunos por linha */
+  gap: 16px;
+  margin: 0 auto;
 }
 
 .card-aluno {
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  padding: 16px;
+  border: 1px solid var(--border-color, #e0e0e0);
+  border-radius: 12px;
+  padding: 15px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  transition: box-shadow 0.3s;
+  justify-content: space-between;
+  gap: 12px;
+  transition: all 0.3s ease;
+  background-color: #fff;
+  position: relative;
+  overflow: hidden;
+  height: 100%;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
 }
 
 .card-aluno:hover {
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-3px);
+}
+
+.card-aluno::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 6px;
+  height: 100%;
+  background-color: var(--primary, #337ab7);
+  border-radius: 12px 0 0 12px;
 }
 
 .aluno-info h3 {
   font-size: 1.2rem;
   margin-bottom: 10px;
+  color: #333;
+  border-bottom: 1px solid #f0f0f0;
+  padding-bottom: 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .aluno-detalhes {
   display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
+  flex-direction: column;
+  gap: 6px;
 }
 
 .aluno-detalhes p {
-  font-size: 0.9rem;
+  font-size: 0.95rem;
+  color: #555;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.aluno-detalhes .ultimo-treino {
+  margin-top: 5px;
+  font-style: italic;
   color: #666;
-}
-
-.status-verde {
-  color: var(--success);
-  font-weight: 500;
-}
-
-.status-amarelo {
-  color: var(--warning);
-  font-weight: 500;
-}
-
-.status-vermelho {
-  color: var(--danger);
-  font-weight: 500;
 }
 
 .aluno-actions {
   display: flex;
-  justify-content: flex-end;
+  justify-content: center;
+  margin-top: auto;
 }
 
 .btn-treino {
-  background-color: var(--primary);
+  background-color: var(--primary, #337ab7);
   color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
+  width: 100%;
+  text-align: center;
+  font-size: 0.95rem;
+}
+
+.btn-treino:hover {
+  background-color: var(--primary-dark, #286090);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.alunos-contagem {
+  color: #666;
+  font-size: 0.9rem;
+  margin-bottom: 15px;
+  font-style: italic;
+  text-align: right;
+}
+
+/* Responsividade */
+@media (max-width: 1200px) {
+  .lista-alunos {
+    grid-template-columns: repeat(
+      3,
+      1fr
+    ); /* 3 alunos por linha em telas médias */
+  }
+}
+
+@media (max-width: 992px) {
+  .lista-alunos {
+    grid-template-columns: repeat(
+      2,
+      1fr
+    ); /* 2 alunos por linha em telas menores */
+  }
+}
+
+@media (max-width: 576px) {
+  .lista-alunos {
+    grid-template-columns: 1fr; /* 1 aluno por linha em telas muito pequenas */
+  }
+
+  .card-aluno {
+    padding: 12px;
+  }
+
+  .aluno-info h3 {
+    font-size: 1.1rem;
+  }
+}
+
+.status-verde {
+  color: var(--success, #4caf50);
+  font-weight: 600;
+  display: inline-block;
+  padding: 3px 8px;
+  background-color: rgba(76, 175, 80, 0.1);
+  border-radius: 4px;
+}
+
+.status-amarelo {
+  color: var(--warning, #ff9800);
+  font-weight: 600;
+  display: inline-block;
+  padding: 3px 8px;
+  background-color: rgba(255, 152, 0, 0.1);
+  border-radius: 4px;
+}
+
+.status-vermelho {
+  color: var(--danger, #f44336);
+  font-weight: 600;
+  display: inline-block;
+  padding: 3px 8px;
+  background-color: rgba(244, 67, 54, 0.1);
+  border-radius: 4px;
+}
+
+.aluno-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+  gap: 10px;
+}
+
+.btn-treino {
+  background-color: var(--primary, #337ab7);
+  color: white;
+  border: none;
+  padding: 12px 18px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
+  flex: 1;
+  text-align: center;
+  font-size: 1.05rem;
+}
+
+.btn-treino:hover {
+  background-color: var(--primary-dark, #286090);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.btn-remover {
+  background-color: var(--danger, #f44336);
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
+  flex: 1;
+  text-align: center;
+}
+
+.btn-remover:hover {
+  background-color: var(--danger-dark, #d32f2f);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 /* Novos estilos para o painel de seleção de alunos */
 .selecao-aluno-panel {
   background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  border-radius: 12px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
   margin-top: 20px;
-  padding: 20px;
+  padding: 25px;
 }
 
 .selecao-aluno-content {
@@ -107,37 +263,63 @@
 }
 
 .selecao-aluno-content h2 {
-  font-size: 1.2rem;
+  font-size: 1.3rem;
   color: #333;
   margin: 0;
+  position: relative;
+  padding-bottom: 10px;
+}
+
+.selecao-aluno-content h2::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 50px;
+  height: 3px;
+  background-color: var(--primary, #337ab7);
+  border-radius: 3px;
 }
 
 .select-aluno {
-  padding: 10px;
+  padding: 12px 15px;
   border: 1px solid #ddd;
-  border-radius: 4px;
+  border-radius: 6px;
   font-size: 1rem;
   width: 100%;
+  transition: all 0.2s;
+  background-color: #f9f9f9;
+}
+
+.select-aluno:focus {
+  border-color: var(--primary, #337ab7);
+  box-shadow: 0 0 0 3px rgba(51, 122, 183, 0.1);
+  outline: none;
+  background-color: #fff;
 }
 
 .btn-adicionar-verde {
   background-color: #4caf50;
   color: white;
   border: none;
-  border-radius: 4px;
-  padding: 10px 15px;
+  border-radius: 6px;
+  padding: 12px 20px;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
   cursor: pointer;
   font-size: 1rem;
+  font-weight: 500;
   align-self: flex-start;
-  transition: background-color 0.3s;
+  transition: all 0.3s;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
 .btn-adicionar-verde:hover {
   background-color: #388e3c;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
 .icon-user {
@@ -148,38 +330,284 @@
   background-color: #5b7bec;
   color: white;
   border: none;
-  border-radius: 4px;
-  padding: 10px 15px;
+  border-radius: 6px;
+  padding: 12px 20px;
   display: flex;
   align-items: center;
   gap: 8px;
   cursor: pointer;
   font-size: 1rem;
-  transition: background-color 0.3s;
+  font-weight: 500;
+  transition: all 0.3s;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
 .btn-adicionar:hover {
   background-color: #4a69d2;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
 .selecao-actions {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-top: 10px;
+  margin-top: 20px;
+  gap: 15px;
 }
 
 .btn-salvar {
   background-color: #337ab7;
   color: white;
   border: none;
-  border-radius: 4px;
-  padding: 10px 15px;
+  border-radius: 6px;
+  padding: 12px 25px;
   cursor: pointer;
   font-size: 1rem;
-  transition: background-color 0.3s;
+  font-weight: 500;
+  transition: all 0.3s;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  min-width: 120px;
 }
 
 .btn-salvar:hover {
   background-color: #286090;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Estilos para formulário de anotações e lesões por aluno */
+.aluno-formulario {
+  margin-top: 15px;
+  padding: 15px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  border: 1px solid #eee;
+}
+
+.aluno-formulario h4 {
+  margin-top: 0;
+  margin-bottom: 10px;
+  color: #333;
+  font-size: 1.1rem;
+}
+
+.formulario-campo {
+  margin-bottom: 15px;
+}
+
+.formulario-campo label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 500;
+  color: #555;
+}
+
+.formulario-campo textarea,
+.formulario-campo input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  resize: vertical;
+  min-height: 80px;
+  background-color: #fff;
+  transition: all 0.2s;
+}
+
+.formulario-campo input {
+  min-height: auto;
+}
+
+.formulario-campo textarea:focus,
+.formulario-campo input:focus {
+  border-color: var(--primary, #337ab7);
+  box-shadow: 0 0 0 3px rgba(51, 122, 183, 0.1);
+  outline: none;
+}
+
+.btn-salvar-anotacoes {
+  background-color: #337ab7;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 10px 16px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
+  display: block;
+  width: 100%;
+  text-align: center;
+  margin-top: 5px;
+}
+
+.btn-salvar-anotacoes:hover {
+  background-color: #286090;
+}
+
+.label-lesao {
+  display: block;
+  padding: 5px 0;
+  border-radius: 4px;
+  margin-bottom: 5px;
+  color: #555;
+}
+
+.texto-info {
+  font-size: 0.9rem;
+  color: #666;
+  margin: 5px 0 10px;
+  font-style: italic;
+}
+
+/* Estilos para a seção de anotações da aula */
+.aula-anotacoes-section {
+  background-color: #fff;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+}
+
+.anotacoes-wrapper {
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.anotacoes-wrapper.saving {
+  background-color: rgba(240, 247, 255, 0.5);
+  box-shadow: 0 0 5px rgba(0, 108, 224, 0.3);
+}
+
+.anotacoes-textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-size: 14px;
+  line-height: 1.5;
+  resize: vertical;
+  background-color: #fffef0;
+  border-left: 4px solid #f8d775;
+  transition: all 0.2s ease-in-out;
+}
+
+.anotacoes-textarea:focus {
+  outline: none;
+  border-left: 4px solid #ffc107;
+  box-shadow: 0 0 5px rgba(255, 193, 7, 0.4);
+}
+
+.anotacoes-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 8px;
+  padding: 0 2px;
+}
+
+.save-status {
+  color: #666;
+  font-style: italic;
+}
+
+.saving-indicator {
+  color: #0066cc;
+  font-weight: 500;
+}
+
+.btn-salvar-anotacoes {
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  padding: 6px 15px;
+  font-size: 13px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.btn-salvar-anotacoes:hover {
+  background-color: #3e8e41;
+}
+
+.btn-anotacoes {
+  background-color: #ffc107;
+  color: #333;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 16px;
+  margin-left: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  transition: all 0.3s ease;
+}
+
+.btn-anotacoes:hover {
+  background-color: #ffb300;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+/* Responsividade */
+@media (max-width: 992px) {
+  .lista-alunos {
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .alunos-container {
+    padding: 15px;
+  }
+
+  .lista-alunos {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 15px;
+  }
+
+  .card-aluno {
+    padding: 15px;
+  }
+
+  .selecao-aluno-panel {
+    padding: 20px;
+  }
+
+  .btn-adicionar-verde,
+  .btn-salvar {
+    padding: 10px 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .alunos-container {
+    padding: 10px;
+  }
+
+  .lista-alunos {
+    grid-template-columns: 1fr;
+  }
+
+  .aluno-actions {
+    flex-direction: column;
+  }
+
+  .selecao-actions {
+    flex-direction: column;
+  }
+
+  .btn-salvar,
+  .btn-adicionar-verde {
+    width: 100%;
+  }
+
+  .selecao-aluno-panel {
+    padding: 15px;
+  }
+
+  .aluno-formulario {
+    padding: 12px;
+  }
 }

@@ -1,38 +1,17 @@
 import React, { useState, useEffect, useRef } from "react";
 import "../styles/GerenciamentoProfessores.css";
 import { voltarPagina, getStatusLabel } from "../lib/utils"; // Importar funções utilitárias
+import professoresService from "../services/professores.service"; // Importação do serviço de professores
+import { aulasService } from "../services/aulas.service"; // Importação do serviço de aulas
 
 const GerenciamentoProfessores = (props) => {
   const [showModal, setShowModal] = useState(false);
   const [modoEdicao, setModoEdicao] = useState(false);
   const [professorEditando, setProfessorEditando] = useState(null);
   const [activeDropdown, setActiveDropdown] = useState(null);
-  const [professores, setProfessores] = useState([
-    {
-      id: 1,
-      nome: "Carlos Silva",
-      idade: 35,
-      especialidade: "Musculação",
-      experiencia: "5 anos",
-      historicoAulas: [],
-    },
-    {
-      id: 2,
-      nome: "Amanda Oliveira",
-      idade: 30,
-      especialidade: "Pilates",
-      experiencia: "3 anos",
-      historicoAulas: [],
-    },
-    {
-      id: 3,
-      nome: "Ricardo Santos",
-      idade: 40,
-      especialidade: "Funcional",
-      experiencia: "7 anos",
-      historicoAulas: [],
-    },
-  ]);
+  const [professores, setProfessores] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const [itemsPerPage, setItemsPerPage] = useState(100);
   const [searchTerm, setSearchTerm] = useState("");
@@ -53,51 +32,39 @@ const GerenciamentoProfessores = (props) => {
   // Referência para o dropdown
   const dropdownRef = useRef({});
 
-  // Carregar professores do localStorage ao montar o componente
+  // Carregar professores do serviço ao montar o componente
   useEffect(() => {
-    const professoresSalvos = localStorage.getItem("todosProfessores");
-    if (professoresSalvos) {
-      setProfessores(JSON.parse(professoresSalvos));
-    } else {
-      // Se não existir, salva a lista inicial
-      localStorage.setItem("todosProfessores", JSON.stringify(professores));
-    }
-
-    // Carregar histórico de aulas do localStorage
-    const historicoSalvo = localStorage.getItem("historicoAulas");
-    if (historicoSalvo) {
-      setHistoricoAulas(JSON.parse(historicoSalvo));
-    }
+    carregarProfessores();
   }, []);
 
-  // Escutar por atualizações do histórico de aulas
+  // Função para carregar os professores
+  const carregarProfessores = async () => {
+    try {
+      setLoading(true);
+      const data = await professoresService.getAll();
+      setProfessores(data);
+    } catch (err) {
+      setError("Erro ao carregar professores: " + err.message);
+      console.error("Erro ao carregar professores:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Carregar histórico de aulas
   useEffect(() => {
-    const handleHistoricoUpdate = (event) => {
-      // Atualiza os professores quando o histórico de aulas mudar
-      const { professores: professoresAtualizados } = event.detail;
-      if (professoresAtualizados) {
-        setProfessores(professoresAtualizados);
-      }
-
-      // Atualiza o histórico de aulas
-      const historicoSalvo = localStorage.getItem("historicoAulas");
-      if (historicoSalvo) {
-        setHistoricoAulas(JSON.parse(historicoSalvo));
-      }
-    };
-
-    window.addEventListener(
-      "atualizarHistoricoProfessores",
-      handleHistoricoUpdate
-    );
-
-    return () => {
-      window.removeEventListener(
-        "atualizarHistoricoProfessores",
-        handleHistoricoUpdate
-      );
-    };
+    carregarHistoricoAulas();
   }, []);
+
+  // Função para carregar o histórico de aulas
+  const carregarHistoricoAulas = async () => {
+    try {
+      const aulas = await aulasService.getAllAulas();
+      setHistoricoAulas(aulas);
+    } catch (err) {
+      console.error("Erro ao carregar histórico de aulas:", err);
+    }
+  };
 
   // Adicionar useEffect para fechar o dropdown quando clicar fora
   useEffect(() => {
@@ -127,41 +94,39 @@ const GerenciamentoProfessores = (props) => {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (novoProfessor.nome.trim() === "" || !novoProfessor.idade) return;
 
     if (modoEdicao && professorEditando) {
       // Modo de edição - atualizar professor existente
-      const professoresAtualizados = professores.map((professor) =>
-        professor.id === professorEditando.id
-          ? {
-              ...professor,
-              nome: novoProfessor.nome,
-              idade: parseInt(novoProfessor.idade),
-              especialidade: novoProfessor.especialidade,
-              experiencia: novoProfessor.experiencia,
-              formacao: novoProfessor.formacao,
-            }
-          : professor
-      );
+      const professorAtualizado = {
+        ...professorEditando,
+        nome: novoProfessor.nome,
+        idade: parseInt(novoProfessor.idade),
+        especialidade: novoProfessor.especialidade,
+        experiencia: novoProfessor.experiencia,
+        formacao: novoProfessor.formacao,
+      };
 
-      setProfessores(professoresAtualizados);
-      localStorage.setItem(
-        "todosProfessores",
-        JSON.stringify(professoresAtualizados)
-      );
-
-      // Disparar evento para atualizar outros componentes
-      const event = new CustomEvent("atualizarHistoricoProfessores", {
-        detail: { professores: professoresAtualizados },
-      });
-      window.dispatchEvent(event);
+      try {
+        await professoresService.update(
+          professorEditando.id,
+          professorAtualizado
+        );
+        const professoresAtualizados = professores.map((professor) =>
+          professor.id === professorEditando.id
+            ? professorAtualizado
+            : professor
+        );
+        setProfessores(professoresAtualizados);
+      } catch (err) {
+        setError("Erro ao atualizar professor: " + err.message);
+        console.error("Erro ao atualizar professor:", err);
+      }
     } else {
       // Modo de cadastro - criar novo professor
-      const newId = Math.max(...professores.map((p) => p.id), 0) + 1;
       const novoProfessorCompleto = {
-        id: newId,
         nome: novoProfessor.nome,
         idade: parseInt(novoProfessor.idade),
         especialidade: novoProfessor.especialidade,
@@ -170,18 +135,16 @@ const GerenciamentoProfessores = (props) => {
         historicoAulas: [],
       };
 
-      const professoresAtualizados = [...professores, novoProfessorCompleto];
-      setProfessores(professoresAtualizados);
-      localStorage.setItem(
-        "todosProfessores",
-        JSON.stringify(professoresAtualizados)
-      );
-
-      // Disparar evento para atualizar outros componentes
-      const event = new CustomEvent("atualizarHistoricoProfessores", {
-        detail: { professores: professoresAtualizados },
-      });
-      window.dispatchEvent(event);
+      try {
+        const professorCriado = await professoresService.create(
+          novoProfessorCompleto
+        );
+        const professoresAtualizados = [...professores, professorCriado];
+        setProfessores(professoresAtualizados);
+      } catch (err) {
+        setError("Erro ao criar professor: " + err.message);
+        console.error("Erro ao criar professor:", err);
+      }
     }
 
     // Resetar formulário e fechar modal
@@ -197,19 +160,15 @@ const GerenciamentoProfessores = (props) => {
     setShowModal(false);
   };
 
-  const handleDelete = (id) => {
-    const professoresAtualizados = professores.filter((p) => p.id !== id);
-    setProfessores(professoresAtualizados);
-    localStorage.setItem(
-      "todosProfessores",
-      JSON.stringify(professoresAtualizados)
-    );
-
-    // Disparar evento para atualizar outros componentes
-    const event = new CustomEvent("atualizarHistoricoProfessores", {
-      detail: { professores: professoresAtualizados },
-    });
-    window.dispatchEvent(event);
+  const handleDelete = async (id) => {
+    try {
+      await professoresService.remove(id);
+      const professoresAtualizados = professores.filter((p) => p.id !== id);
+      setProfessores(professoresAtualizados);
+    } catch (err) {
+      setError("Erro ao excluir professor: " + err.message);
+      console.error("Erro ao excluir professor:", err);
+    }
 
     setActiveDropdown(null); // Fecha o dropdown após excluir
   };

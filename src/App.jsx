@@ -13,6 +13,9 @@ import HistoricoAlunos from "./components/HistoricoAlunos";
 import CadastroExercicio from "./components/CadastroExercicio";
 import Configuracoes from "./components/Configuracoes";
 import { useAuth } from "./hooks/useAuth";
+import { reloadSupabaseSchemaCache } from "./services/supabase";
+import DetalheAluno from "./components/DetalheAluno";
+import EditarAluno from "./components/EditarAluno";
 
 const App = () => {
   // Usando o hook de autenticação
@@ -28,6 +31,11 @@ const App = () => {
   const [alunosEmAulaApp, setAlunosEmAulaApp] = useState([]);
   // Estado para controlar se o sidebar está colapsado
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
+  // Removemos os estados relacionados ao botão de recarga de cache
+  // const [mostrarBotaoRecarregarCache, setMostrarBotaoRecarregarCache] = useState(false);
+  // const [recarregandoCache, setRecarregandoCache] = useState(false);
+  // const [mensagemCache, setMensagemCache] = useState("");
 
   // Verificar se há um usuário no localStorage ao carregar
   useEffect(() => {
@@ -104,12 +112,37 @@ const App = () => {
   };
 
   // Função para lidar com o logout
-  const handleLogout = () => {
-    signOut();
+  const handleLogout = async () => {
+    try {
+      // Limpar estados locais relacionados ao usuário e autenticação
+      setCurrentUser(null);
+      setIsAuthenticated(false);
+      setUserRole(null);
+      setActiveSection("geral");
+
+      // Chamar o método de signOut do hook de autenticação
+      await signOut();
+    } catch (error) {
+      // Forçar limpeza local mesmo com erro
+      setIsAuthenticated(false);
+      setCurrentUser(null);
+      setUserRole(null);
+    }
   };
 
   // Função para atualizar os alunos em aula
   const atualizarAlunosEmAula = (alunos) => {
+    // Evitar atualizações desnecessárias comparando os IDs dos alunos
+    if (alunos.length === alunosEmAulaApp.length) {
+      const idsAtuais = new Set(alunosEmAulaApp.map((a) => a.id));
+      const todosIguais = alunos.every((aluno) => idsAtuais.has(aluno.id));
+
+      if (todosIguais) {
+        return;
+      }
+    }
+
+    // Se chegou aqui, é porque há diferença entre os arrays
     setAlunosEmAulaApp(alunos);
   };
 
@@ -162,6 +195,49 @@ const App = () => {
     return false;
   };
 
+  // Removemos a função handleReloadSchemaCache que não será mais utilizada
+  /*
+  const handleReloadSchemaCache = async () => {
+    setRecarregandoCache(true);
+    setMensagemCache("");
+
+    try {
+      const sucesso = await reloadSupabaseSchemaCache();
+
+      if (sucesso) {
+        setMensagemCache("Cache recarregado com sucesso!");
+        setTimeout(() => {
+          setMensagemCache("");
+          setMostrarBotaoRecarregarCache(false);
+        }, 3000);
+      } else {
+        setMensagemCache("Falha ao recarregar o cache. Tente novamente.");
+      }
+    } catch (error) {
+      console.error("Erro no processo de recarga do cache:", error);
+      setMensagemCache("Erro inesperado ao recarregar o cache.");
+    } finally {
+      setRecarregandoCache(false);
+    }
+  };
+  */
+
+  // Removemos o listener para erros de schema cache
+  /*
+  useEffect(() => {
+    const handleSchemaCacheError = () => {
+      setMostrarBotaoRecarregarCache(true);
+      setMensagemCache("Erro de cache do esquema detectado");
+    };
+
+    window.addEventListener("schema-cache-error", handleSchemaCacheError);
+
+    return () => {
+      window.removeEventListener("schema-cache-error", handleSchemaCacheError);
+    };
+  }, []);
+  */
+
   // Renderiza o componente apropriado com base na seção ativa
   const renderContent = () => {
     // Verificar novamente se o usuário pode acessar esta seção
@@ -171,6 +247,22 @@ const App = () => {
         <Geral
           alunosEmAula={alunosEmAulaApp}
           atualizarAlunosEmAula={atualizarAlunosEmAula}
+        />
+      );
+    }
+
+    // Verificar se a seção ativa começa com "detalhe-aluno/" ou "editar-aluno/"
+    if (activeSection.startsWith("detalhe-aluno/")) {
+      const alunoId = activeSection.split("/")[1];
+      return <DetalheAluno alunoId={alunoId} />;
+    }
+
+    if (activeSection.startsWith("editar-aluno/")) {
+      const editAlunoId = activeSection.split("/")[1];
+      return (
+        <EditarAluno
+          alunoId={editAlunoId}
+          setActiveSection={setActiveSection}
         />
       );
     }
@@ -234,7 +326,10 @@ const App = () => {
         onLogout={handleLogout}
       />
       <main className={`main-content ${sidebarCollapsed ? "expanded" : ""}`}>
-        <div className="content-wrapper">{renderContent()}</div>
+        <div className="content-wrapper">
+          {/* Removemos o botão de recarregar cache */}
+          {renderContent()}
+        </div>
       </main>
     </div>
   );

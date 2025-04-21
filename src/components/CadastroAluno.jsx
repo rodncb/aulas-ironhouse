@@ -3,49 +3,13 @@ import "../styles/Cadastro.css";
 import "../styles/CadastroAluno.css";
 import "../styles/Modal.css";
 import { voltarPagina, getStatusLabel } from "../lib/utils"; // Importar funções utilitárias
+import alunosService from "../services/alunos.service"; // Importar serviço de alunos
 
 const CadastroAluno = () => {
   const [showModal, setShowModal] = useState(false);
-  const [alunos, setAlunos] = useState([
-    {
-      id: 1,
-      nome: "Adriano Faria de Souza 12 check",
-      idade: 43,
-      historicoAulas: [],
-    },
-    {
-      id: 2,
-      nome: "Adriano Laranjo 8 Checkins",
-      idade: 37,
-      historicoAulas: [],
-    },
-    { id: 3, nome: "Adriano Silva 8 check", idade: 39, historicoAulas: [] },
-    { id: 4, nome: "Agnella Massara Premium", idade: 46, historicoAulas: [] },
-    {
-      id: 5,
-      nome: "Alessandra Cunha 16 Checkins",
-      idade: 46,
-      historicoAulas: [],
-    },
-    {
-      id: 6,
-      nome: "Alessandra Maria Sales 16 check",
-      idade: 46,
-      historicoAulas: [],
-    },
-    {
-      id: 7,
-      nome: "Alexandre Buscher 12 Checkins",
-      idade: 36,
-      historicoAulas: [],
-    },
-    {
-      id: 8,
-      nome: "Alexandre Teixeira (drinho)",
-      idade: 36,
-      historicoAulas: [],
-    },
-  ]);
+  const [alunos, setAlunos] = useState([]);
+  const [loading, setLoading] = useState(true); // Estado para controlar carregamento
+  const [error, setError] = useState(null); // Estado para controlar erros
 
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [searchTerm, setSearchTerm] = useState("");
@@ -53,17 +17,37 @@ const CadastroAluno = () => {
     nome: "",
     idade: "",
     lesao: "Não",
+    tipoLesao: "",
     objetivo: "",
-    historicoAulas: [],
+    plano: "8 Check-in", // Valor padrão para o novo campo de plano
+    nivel: "Iniciante", // Valor padrão para o novo campo de nível
+    observacoes: "", // Campo adicionado para observações
   });
   const [alunoHistorico, setAlunoHistorico] = useState(null);
 
-  // Carregar alunos do localStorage ao montar o componente
+  // Carregar alunos do Supabase ao montar o componente
   useEffect(() => {
-    const alunosSalvos = localStorage.getItem("todosAlunos");
-    if (alunosSalvos) {
-      setAlunos(JSON.parse(alunosSalvos));
-    }
+    const fetchAlunos = async () => {
+      try {
+        setLoading(true);
+        const alunosData = await alunosService.getAll();
+        setAlunos(alunosData);
+        setError(null);
+      } catch (err) {
+        console.error("Erro ao carregar alunos:", err);
+        setError("Não foi possível carregar os alunos. Tente novamente.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAlunos();
+
+    // Código antigo usando localStorage
+    // const alunosSalvos = localStorage.getItem("todosAlunos");
+    // if (alunosSalvos) {
+    //   setAlunos(JSON.parse(alunosSalvos));
+    // }
   }, []);
 
   // Escutar por atualizações do histórico de aulas
@@ -91,53 +75,106 @@ const CadastroAluno = () => {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (novoAluno.nome.trim() === "" || !novoAluno.idade) return;
 
-    const newId = Math.max(...alunos.map((a) => a.id), 0) + 1;
-    const alunosAtualizados = [
-      ...alunos,
-      {
-        id: newId,
+    try {
+      setLoading(true);
+
+      // Criar novo aluno no Supabase
+      const novoAlunoData = {
         nome: novoAluno.nome,
         idade: parseInt(novoAluno.idade),
         lesao: novoAluno.lesao,
+        tipoLesao: novoAluno.tipoLesao,
         objetivo: novoAluno.objetivo,
-        historicoAulas: [],
-      },
-    ];
+        plano: novoAluno.plano,
+        nivel: novoAluno.nivel,
+        observacoes: novoAluno.observacoes, // Incluir observações
+      };
 
-    setAlunos(alunosAtualizados);
-    localStorage.setItem("todosAlunos", JSON.stringify(alunosAtualizados));
+      const alunoSalvo = await alunosService.createAluno(novoAlunoData);
 
-    // Disparar evento para atualizar outros componentes
-    const event = new CustomEvent("atualizarHistoricoAlunos", {
-      detail: { alunos: alunosAtualizados },
-    });
-    window.dispatchEvent(event);
+      // Atualizar o estado local com o novo aluno retornado pelo Supabase
+      const alunosAtualizados = [...alunos, alunoSalvo];
+      setAlunos(alunosAtualizados);
 
-    setNovoAluno({
-      nome: "",
-      idade: "",
-      lesao: "Não",
-      objetivo: "",
-      historicoAulas: [],
-    });
+      // Código antigo usando localStorage
+      // const newId = Math.max(...alunos.map((a) => a.id), 0) + 1;
+      // const alunosAtualizados = [
+      //   ...alunos,
+      //   {
+      //     id: newId,
+      //     nome: novoAluno.nome,
+      //     idade: parseInt(novoAluno.idade),
+      //     lesao: novoAluno.lesao,
+      //     tipoLesao: novoAluno.tipoLesao,
+      //     objetivo: novoAluno.objetivo,
+      //     plano: novoAluno.plano,
+      //     nivel: novoAluno.nivel,
+      //     historicoAulas: [],
+      //   },
+      // ];
+      // setAlunos(alunosAtualizados);
+      // localStorage.setItem("todosAlunos", JSON.stringify(alunosAtualizados));
 
-    setShowModal(false);
+      // Disparar evento para atualizar outros componentes
+      const event = new CustomEvent("atualizarHistoricoAlunos", {
+        detail: { alunos: alunosAtualizados },
+      });
+      window.dispatchEvent(event);
+
+      setNovoAluno({
+        nome: "",
+        idade: "",
+        lesao: "Não",
+        tipoLesao: "",
+        objetivo: "",
+        plano: "8 Check-in",
+        nivel: "Iniciante",
+        observacoes: "", // Resetar observações
+      });
+
+      setShowModal(false);
+      setError(null);
+    } catch (err) {
+      console.error("Erro ao adicionar aluno:", err);
+      setError("Não foi possível adicionar o aluno. Tente novamente.");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleDelete = (id) => {
-    const alunosAtualizados = alunos.filter((a) => a.id !== id);
-    setAlunos(alunosAtualizados);
-    localStorage.setItem("todosAlunos", JSON.stringify(alunosAtualizados));
+  const handleDelete = async (id) => {
+    try {
+      setLoading(true);
 
-    // Disparar evento para atualizar outros componentes
-    const event = new CustomEvent("atualizarHistoricoAlunos", {
-      detail: { alunos: alunosAtualizados },
-    });
-    window.dispatchEvent(event);
+      // Excluir aluno no Supabase
+      await alunosService.deleteAluno(id);
+
+      // Atualizar estado local
+      const alunosAtualizados = alunos.filter((a) => a.id !== id);
+      setAlunos(alunosAtualizados);
+
+      // Código antigo usando localStorage
+      // const alunosAtualizados = alunos.filter((a) => a.id !== id);
+      // setAlunos(alunosAtualizados);
+      // localStorage.setItem("todosAlunos", JSON.stringify(alunosAtualizados));
+
+      // Disparar evento para atualizar outros componentes
+      const event = new CustomEvent("atualizarHistoricoAlunos", {
+        detail: { alunos: alunosAtualizados },
+      });
+      window.dispatchEvent(event);
+
+      setError(null);
+    } catch (err) {
+      console.error("Erro ao excluir aluno:", err);
+      setError("Não foi possível excluir o aluno. Tente novamente.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleVerHistorico = (aluno) => {
@@ -171,6 +208,12 @@ const CadastroAluno = () => {
 
   return (
     <div className="cadastro-container">
+      {/* Exibir mensagem de erro, se houver */}
+      {error && <div className="error-message">{error}</div>}
+
+      {/* Exibir indicador de carregamento */}
+      {loading && <div className="loading-indicator">Carregando...</div>}
+
       <div className="voltar-container">
         <button className="btn-voltar" onClick={voltarPagina}>
           Voltar
@@ -180,7 +223,11 @@ const CadastroAluno = () => {
       <h1>Aluno</h1>
 
       <div className="actions-container">
-        <button className="btn-cadastrar" onClick={openModal}>
+        <button
+          className="btn-cadastrar"
+          onClick={openModal}
+          disabled={loading}
+        >
           Cadastrar
         </button>
 
@@ -227,6 +274,7 @@ const CadastroAluno = () => {
                     <button
                       className="btn-excluir"
                       onClick={() => handleDelete(item.id)}
+                      disabled={loading}
                     >
                       Excluir
                     </button>
@@ -287,11 +335,22 @@ const CadastroAluno = () => {
                   onChange={handleChange}
                 >
                   <option value="Não">Não</option>
-                  <option value="Sim - Controlada">Sim - Controlada</option>
-                  <option value="Sim - Em tratamento">
-                    Sim - Em tratamento
+                  <option value="Sim - Lesao Moderada">
+                    Sim - Lesão Moderada
                   </option>
+                  <option value="Sim - Lesao Grave">Sim - Lesão Grave</option>
                 </select>
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="tipoLesao">Tipo de Lesão</label>
+                <input
+                  type="text"
+                  id="tipoLesao"
+                  name="tipoLesao"
+                  value={novoAluno.tipoLesao}
+                  onChange={handleChange}
+                />
               </div>
 
               <div className="form-group">
@@ -302,6 +361,47 @@ const CadastroAluno = () => {
                   value={novoAluno.objetivo}
                   onChange={handleChange}
                   rows="5"
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="plano">Plano</label>
+                <select
+                  id="plano"
+                  name="plano"
+                  value={novoAluno.plano}
+                  onChange={handleChange}
+                >
+                  <option value="8 Check-in">8 Check-in</option>
+                  <option value="12 Check-in">12 Check-in</option>
+                  <option value="16 Check-in">16 Check-in</option>
+                  <option value="Premium">Premium</option>
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="nivel">Nível</label>
+                <select
+                  id="nivel"
+                  name="nivel"
+                  value={novoAluno.nivel}
+                  onChange={handleChange}
+                >
+                  <option value="Iniciante">Iniciante</option>
+                  <option value="Intermediário">Intermediário</option>
+                  <option value="Avançado">Avançado</option>
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="observacoes">Observações</label>
+                <textarea
+                  id="observacoes"
+                  name="observacoes"
+                  value={novoAluno.observacoes}
+                  onChange={handleChange}
+                  rows="3"
+                  placeholder="Observações adicionais sobre o aluno..."
                 />
               </div>
 

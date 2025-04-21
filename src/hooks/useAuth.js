@@ -1,105 +1,146 @@
 import { useState, useEffect } from "react";
+import authService from "../services/auth.service";
+import supabase from "../services/supabase";
 
-// Definindo os tipos de usuário
-// 'admin' | 'professor'
+// Função auxiliar para buscar o perfil e a role
+const fetchUserProfile = async (userId) => {
+  if (!userId) return { role: null };
+
+  try {
+    const { data: profile, error } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", userId)
+      .single();
+
+    if (error) {
+      return { role: null };
+    }
+
+    return { role: profile?.role };
+  } catch (fetchError) {
+    return { role: null };
+  }
+};
 
 export function useAuth() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Verificar se há um usuário no localStorage
-    const savedUser = localStorage.getItem("currentUser");
-    const savedRole = localStorage.getItem("userRole");
+    let isMounted = true;
 
-    if (savedUser && savedRole) {
-      setUser({
-        ...JSON.parse(savedUser),
-        role: savedRole,
+    const updateUserState = async (session) => {
+      if (!isMounted) return;
+
+      if (session?.user) {
+        setLoading(true);
+        const { role } = await fetchUserProfile(session.user.id);
+        if (!isMounted) return;
+
+        const userData = {
+          id: session.user.id,
+          email: session.user.email,
+          nome: session.user.user_metadata?.nome || "Usuário",
+          role: role,
+        };
+
+        setUser(userData);
+        setLoading(false);
+      } else {
+        setUser(null);
+        setLoading(false);
+      }
+    };
+
+    supabase.auth
+      .getSession()
+      .then(({ data: { session } }) => {
+        updateUserState(session);
+      })
+      .catch(() => {
+        if (isMounted) {
+          setUser(null);
+          setLoading(false);
+        }
       });
-    }
 
-    setLoading(false);
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      async (_event, session) => {
+        updateUserState(session);
+      }
+    );
+
+    return () => {
+      isMounted = false;
+      authListener?.subscription?.unsubscribe();
+    };
   }, []);
 
   const signIn = async (email, password) => {
-    // Simular autenticação baseada em localStorage (será substituída pelo Supabase depois)
-    // Neste exemplo simulado, usamos email como nome de usuário para simplicidade
-    const mockUsers = [
-      {
-        id: 1,
-        email: "admin@example.com",
-        password: "admin123",
-        role: "admin",
-        nome: "Administrador",
-      },
-      {
-        id: 2,
-        email: "professor@example.com",
-        password: "prof123",
-        role: "professor",
-        nome: "Professor",
-      },
-    ];
+    try {
+      setLoading(true);
+      const result = await authService.login(email, password);
 
-    const foundUser = mockUsers.find(
-      (u) => u.email === email && u.password === password
-    );
+      if (result.success && result.data?.user) {
+        return { success: true, data: result.data };
+      }
 
-    if (foundUser) {
-      const userToSave = {
-        id: foundUser.id,
-        email: foundUser.email,
-        nome: foundUser.nome,
+      return {
+        success: false,
+        message:
+          result.error || "Erro ao fazer login. Verifique suas credenciais.",
       };
-
-      localStorage.setItem("currentUser", JSON.stringify(userToSave));
-      localStorage.setItem("userRole", foundUser.role);
-
-      setUser({
-        ...userToSave,
-        role: foundUser.role,
-      });
-
-      return { error: null, data: { user: userToSave } };
+    } catch (error) {
+      return {
+        success: false,
+        message: error.message || "Erro de autenticação",
+      };
+    } finally {
+      setLoading(false);
     }
-
-    return { error: { message: "Credenciais inválidas" }, data: null };
   };
 
-  const signOut = () => {
-    localStorage.removeItem("currentUser");
-    localStorage.removeItem("userRole");
-    setUser(null);
+  const signOut = async () => {
+    try {
+      // Define user como null antes de chamar o logout para garantir atualização imediata da UI
+      setUser(null);
+
+      // Chama o serviço de logout
+      const { error } = await authService.logout();
+      if (error) {
+        throw new Error(error.message);
+      }
+    } catch (error) {
+      // Mesmo com erro, garantimos que o estado local é limpo
+      setUser(null);
+    }
   };
 
-  // Função para verificar se o usuário tem permissão específica
   const hasPermission = (requiredRole) => {
     if (!user) return false;
 
-    // Administradores têm acesso a tudo
     if (user.role === "admin") return true;
 
-    // Verifica se o usuário tem o papel específico necessário
     return user.role === requiredRole;
   };
 
-  // Verificar se pode acessar uma determinada rota
   const canAccess = (route) => {
     if (!user) return false;
 
-    // Administradores têm acesso a todas as rotas
     if (user.role === "admin") return true;
 
-    // Rotas acessíveis para professores
     if (user.role === "professor") {
       const allowedRoutes = [
         "/geral",
         "/alunos/visualizar",
         "/cadastro/exercicios",
+        "/alunos_historico",
       ];
 
-      return allowedRoutes.some((r) => route.startsWith(r));
+      return allowedRoutes.some(
+        (r) => route === r || route.startsWith(r + "/")
+      );
     }
 
     return false;

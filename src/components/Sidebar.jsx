@@ -57,6 +57,20 @@ function Sidebar({
     }
   };
 
+  // Função para lidar com o clique no botão de logout
+  const handleLogout = (e) => {
+    e.preventDefault();
+    console.log("Logout solicitado pelo Sidebar");
+    if (onLogout) {
+      onLogout();
+    }
+  };
+
+  // Determinar o nome de exibição do usuário
+  const displayName = currentUser
+    ? currentUser.email || currentUser.nome || "Usuário"
+    : "Usuário";
+
   return (
     <>
       {/* Overlay para dispositivos móveis */}
@@ -86,12 +100,9 @@ function Sidebar({
 
         {currentUser && (
           <div className="user-info">
-            <div className="user-avatar">
-              <FontAwesomeIcon icon={faUser} />
-            </div>
             {!collapsed && (
               <>
-                <span className="user-name">{currentUser.nome}</span>
+                <span className="user-name">{displayName}</span>
                 <span className="user-role">
                   {userRole === "admin" ? "Administrador" : "Professor"}
                 </span>
@@ -154,6 +165,7 @@ function Sidebar({
                 <FontAwesomeIcon icon={faUser} className="sidebar-icon" />
                 {!collapsed && <span>Professores</span>}
               </div>
+              {/* Remover ou comentar a seção de Configurações
               <div
                 className={getClassName("configuracoes")}
                 onClick={() => handleSectionChange("configuracoes")}
@@ -161,13 +173,14 @@ function Sidebar({
                 <FontAwesomeIcon icon={faCog} className="sidebar-icon" />
                 {!collapsed && <span>Configurações</span>}
               </div>
+              */}
             </>
           )}
         </div>
 
         {/* Botão de logout */}
         <div className="sidebar-footer">
-          <div className="sidebar-item logout" onClick={onLogout}>
+          <div className="sidebar-item logout" onClick={handleLogout}>
             <FontAwesomeIcon icon={faSignOutAlt} className="sidebar-icon" />
             {!collapsed && <span>Sair</span>}
           </div>

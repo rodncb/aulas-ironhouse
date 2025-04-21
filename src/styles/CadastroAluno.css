@@ -23,8 +23,11 @@
   border-radius: 8px;
   width: 600px;
   max-width: 90%;
+  max-height: 90vh;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .modal-header {
@@ -55,6 +58,8 @@
 
 .aluno-form {
   padding: 20px;
+  overflow-y: auto;
+  max-height: calc(90vh - 70px);
 }
 
 .form-group {
@@ -79,8 +84,22 @@
 }
 
 .form-group textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-size: 1rem;
   resize: vertical;
-  min-height: 100px;
+  min-height: 120px;
+  font-family: inherit;
+  line-height: 1.5;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.form-group textarea:focus {
+  border-color: #80bdff;
+  outline: 0;
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
 }
 
 .form-actions {
@@ -307,7 +326,16 @@
 @media (max-width: 480px) {
   .modal-aluno {
     width: 95%;
-    margin: 10px;
+    max-height: 85vh;
+  }
+
+  .aluno-form {
+    padding: 15px;
+    max-height: calc(85vh - 60px);
+  }
+
+  .form-group textarea {
+    min-height: 100px;
   }
 
   .aluno-info-resumo p {

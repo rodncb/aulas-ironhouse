@@ -70,14 +70,17 @@
   font-size: 0.8rem;
 }
 
+/* Ajustes na seção de informações do usuário */
 .user-info {
   padding: 1rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   display: flex;
-  align-items: center;
+  flex-direction: column; /* Organiza elementos em coluna para dar mais espaço */
+  align-items: flex-start; /* Alinha à esquerda */
   gap: 0.75rem;
 }
 
+/* O avatar fica em sua própria linha para dar mais espaço ao texto */
 .user-avatar {
   width: 2.5rem;
   height: 2.5rem;
@@ -89,18 +92,30 @@
   flex-shrink: 0;
 }
 
+/* Container para o nome e função */
+.user-details {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+/* Modificações para o nome do usuário (email) */
 .user-name {
   font-weight: 500;
   font-size: 0.9rem;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  word-break: break-word; /* Permite quebrar emails longos */
+  white-space: normal; /* Permite múltiplas linhas */
+  overflow-wrap: break-word; /* Garante que palavras longas possam quebrar */
+  line-height: 1.2; /* Espaçamento entre linhas adequado */
+  max-width: 100%; /* Usa toda a largura disponível */
 }
 
 .user-role {
   font-size: 0.8rem;
   opacity: 0.7;
   display: block;
+  margin-top: 0.2rem; /* Pequeno espaçamento entre o nome e a função */
 }
 
 .sidebar-menu {

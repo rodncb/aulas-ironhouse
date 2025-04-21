@@ -3,6 +3,8 @@ import "../styles/GerenciamentoAlunos.css";
 import "../styles/Modal.css"; // Adicionando o CSS da modal
 import { useAuth } from "../hooks/useAuth";
 import Geral from "./Geral";
+import alunosService from "../services/alunos.service"; // Importar serviço de alunos
+import aulasService from "../services/aulas.service"; // Importar serviço de aulas
 
 const HistoricoAlunos = () => {
   const [alunos, setAlunos] = useState([]);
@@ -12,32 +14,88 @@ const HistoricoAlunos = () => {
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const { user } = useAuth();
   const [modalAula, setModalAula] = useState(null);
+  const [aulaExpandida, setAulaExpandida] = useState(null);
+  const [loading, setLoading] = useState(true); // Estado para controlar carregamento
+  const [error, setError] = useState(null); // Estado para controlar erros
 
   useEffect(() => {
-    // Carregar alunos do localStorage
-    const alunosSalvos = localStorage.getItem("alunos");
-    if (alunosSalvos) {
-      setAlunos(JSON.parse(alunosSalvos));
-    }
+    // Carregar alunos do Supabase
+    const fetchAlunos = async () => {
+      try {
+        setLoading(true);
+        const alunosData = await alunosService.getAll();
+        setAlunos(alunosData);
+        setError(null);
+      } catch (err) {
+        console.error("Erro ao carregar alunos:", err);
+        setError("Não foi possível carregar os alunos. Tente novamente.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAlunos();
+
+    // Código antigo usando localStorage
+    // const alunosSalvos = localStorage.getItem("alunos");
+    // if (alunosSalvos) {
+    //   setAlunos(JSON.parse(alunosSalvos));
+    // }
   }, []);
 
-  const handleAlunoSelect = (aluno) => {
-    setAlunoSelecionado(aluno);
+  const handleAlunoSelect = async (aluno) => {
+    try {
+      setLoading(true);
 
-    // Buscar histórico de aulas do aluno
-    const historicoAulas = localStorage.getItem("historicoAulas");
-    if (historicoAulas) {
-      const todasAulas = JSON.parse(historicoAulas);
+      // Buscar todas as aulas do Supabase
+      const todasAulas = await aulasService.getAll();
+
       // Filtrar apenas as aulas que este aluno participou
       const aulasDoAluno = todasAulas.filter(
         (aula) => aula.alunos && aula.alunos.some((a) => a.id === aluno.id)
       );
+
       setHistoricoAulas(aulasDoAluno);
-      // Se houver pelo menos uma aula, abrir o modal da última aula automaticamente
-      if (aulasDoAluno.length > 0) {
-        setModalAula(aulasDoAluno[aulasDoAluno.length - 1]);
-      }
+      setAlunoSelecionado(aluno);
+      setAulaExpandida(null);
+      setError(null);
+
+      // Código antigo usando localStorage
+      // Buscar informações completas do aluno, incluindo objetivo e lesão
+      // const alunosCompletos = JSON.parse(localStorage.getItem("alunos") || "[]");
+      // const alunoCompleto =
+      //   alunosCompletos.find((a) => a.id === aluno.id) || aluno;
+      //
+      // setAlunoSelecionado({
+      //   ...aluno,
+      //   objetivo: alunoCompleto.objetivo || "",
+      //   lesao: alunoCompleto.lesao || "Não",
+      // });
+      //
+      // setAulaExpandida(null);
+      //
+      // // Buscar histórico de aulas do aluno
+      // const historicoAulas = localStorage.getItem("historicoAulas");
+      // if (historicoAulas) {
+      //   const todasAulas = JSON.parse(historicoAulas);
+      //   // Filtrar apenas as aulas que este aluno participou
+      //   const aulasDoAluno = todasAulas.filter(
+      //     (aula) => aula.alunos && aula.alunos.some((a) => a.id === aluno.id)
+      //   );
+      //   setHistoricoAulas(aulasDoAluno);
+      // }
+    } catch (err) {
+      console.error("Erro ao buscar histórico de aulas:", err);
+      setError(
+        "Não foi possível carregar o histórico de aulas. Tente novamente."
+      );
+    } finally {
+      setLoading(false);
     }
+  };
+
+  const verDetalhesAula = (aula) => {
+    setAulaExpandida(aula.id === aulaExpandida ? null : aula.id);
   };
 
   const formatarData = (dataString) => {
@@ -72,6 +130,12 @@ const HistoricoAlunos = () => {
       <p className="instrucao">
         Selecione um aluno para visualizar seu histórico de aulas.
       </p>
+
+      {/* Exibir mensagem de erro, se houver */}
+      {error && <div className="error-message">{error}</div>}
+
+      {/* Exibir indicador de carregamento */}
+      {loading && <div className="loading-indicator">Carregando...</div>}
 
       <div className="list-controls">
         <div className="show-entries">
@@ -117,6 +181,7 @@ const HistoricoAlunos = () => {
                   <button
                     className="btn-visualizar"
                     onClick={() => handleAlunoSelect(aluno)}
+                    disabled={loading}
                   >
                     Ver Histórico
                   </button>
@@ -131,50 +196,105 @@ const HistoricoAlunos = () => {
         <div className="historico-container">
           <h2>Histórico de Aulas de {alunoSelecionado.nome}</h2>
 
+          <div className="info-aluno-detalhes">
+            <div className="dados-pessoais">
+              <p>
+                <strong>Idade:</strong> {alunoSelecionado.idade} anos
+              </p>
+              <p>
+                <strong>Lesão:</strong> {alunoSelecionado.lesao || "Não"}
+              </p>
+              <p>
+                <strong>Objetivo:</strong>{" "}
+                {alunoSelecionado.objetivo || "Não especificado"}
+              </p>
+            </div>
+
+            <div className="resumo-historico">
+              <p>
+                <strong>Total de aulas:</strong> {historicoAulas.length}
+              </p>
+              <p>
+                <strong>Aulas realizadas:</strong>{" "}
+                {
+                  historicoAulas.filter((aula) => aula.status === "realizada")
+                    .length
+                }
+              </p>
+              <p>
+                <strong>Aulas canceladas:</strong>{" "}
+                {
+                  historicoAulas.filter((aula) => aula.status === "cancelada")
+                    .length
+                }
+              </p>
+              <p>
+                <strong>Aulas atuais:</strong>{" "}
+                {
+                  historicoAulas.filter((aula) => aula.status === "atual")
+                    .length
+                }
+              </p>
+            </div>
+          </div>
+
           {historicoAulas.length > 0 ? (
-            <table className="data-table historico-table">
-              <thead>
-                <tr>
-                  <th>Data</th>
-                  <th>Professor</th>
-                  <th>Status</th>
-                  <th>Exercícios</th>
-                  <th>Ações</th>
-                </tr>
-              </thead>
-              <tbody>
-                {historicoAulas.map((aula) => (
-                  <tr key={aula.id} className={`aula-${aula.status}`}>
-                    <td>{formatarData(aula.data)}</td>
-                    <td>
+            <div className="historico-aulas-lista">
+              {historicoAulas.map((aula) => (
+                <div key={aula.id} className={`aula-card aula-${aula.status}`}>
+                  <div
+                    className="aula-header"
+                    onClick={() => verDetalhesAula(aula)}
+                  >
+                    <div className="aula-data">{formatarData(aula.data)}</div>
+                    <div className="aula-professor">
+                      Professor:{" "}
                       {aula.professor ? aula.professor.nome : "Não definido"}
-                    </td>
-                    <td>{getStatusLabel(aula.status)}</td>
-                    <td>
-                      {aula.exercicios ? aula.exercicios.length : 0} exercícios
-                    </td>
-                    <td>
-                      <button
-                        className="btn-detalhes"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setModalAula(aula);
-                        }}
-                      >
-                        Ver Detalhes
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                    </div>
+                    <div className="aula-status">
+                      Status: {getStatusLabel(aula.status)}
+                    </div>
+                    <div className="aula-toggle">
+                      {aulaExpandida === aula.id ? "▲" : "▼"}
+                    </div>
+                  </div>
+                  {aulaExpandida === aula.id && (
+                    <div className="aula-detalhes">
+                      <div className="aula-exercicios">
+                        <h4>Exercícios</h4>
+                        {aula.exercicios && aula.exercicios.length > 0 ? (
+                          <ul>
+                            {aula.exercicios.map((exercicio) => (
+                              <li key={exercicio.id}>{exercicio.nome}</li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <p>Nenhum exercício registrado.</p>
+                        )}
+                      </div>
+                      <div className="aula-notas">
+                        <h4>Anotações</h4>
+                        <p>{aula.anotacoes || "Nenhuma anotação."}</p>
+                      </div>
+                      {aula.lesoes && (
+                        <div className="aula-lesoes">
+                          <h4>Lesões/Restrições</h4>
+                          <p>{aula.lesoes}</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
           ) : (
-            <p className="sem-historico">
-              Nenhuma aula encontrada para este aluno.
-            </p>
+            <div className="sem-registros">
+              Nenhuma aula registrada para este aluno.
+            </div>
           )}
         </div>
       )}
+
       {/* Modal de detalhes da aula (visualização apenas) */}
       {modalAula && (
         <div className="modal-backdrop" onClick={() => setModalAula(null)}>
@@ -196,6 +316,18 @@ const HistoricoAlunos = () => {
                   ? modalAula.professor.nome
                   : "Não definido"}
               </p>
+
+              {modalAula.anotacoes && (
+                <p>
+                  <strong>Anotações:</strong> {modalAula.anotacoes}
+                </p>
+              )}
+
+              {modalAula.lesoes && (
+                <p>
+                  <strong>Lesões/Restrições:</strong> {modalAula.lesoes}
+                </p>
+              )}
             </div>
             <div className="detalhes-alunos">
               <h3>Alunos Presentes</h3>

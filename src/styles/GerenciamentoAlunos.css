@@ -73,6 +73,11 @@
   width: 100%;
   border-collapse: collapse;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  overflow: visible !important;
+}
+
+.data-table tbody tr {
+  overflow: visible !important;
 }
 
 .data-table th {
@@ -87,6 +92,7 @@
 .data-table td {
   padding: 10px 15px;
   border-bottom: 1px solid #ddd;
+  position: static;
 }
 
 .data-table tr:hover {
@@ -97,24 +103,25 @@
   position: fixed;
   top: 0;
   left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.7);
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
   display: flex;
-  justify-content: center;
   align-items: center;
+  justify-content: center;
   z-index: 1000;
 }
 
 .modal-aluno {
   background-color: white;
   border-radius: 8px;
-  width: 600px;
-  max-width: 90%;
-  max-height: 85vh;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-  overflow-y: auto;
-  position: relative;
+  width: 90%;
+  max-width: 600px;
+  max-height: 90vh;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .modal-header {
@@ -122,11 +129,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 15px 20px;
-  border-bottom: 1px solid #e9ecef;
-  position: sticky;
-  top: 0;
-  background-color: white;
-  z-index: 10;
+  border-bottom: 1px solid #eee;
 }
 
 .modal-header h2 {
@@ -140,147 +143,165 @@
   border: none;
   font-size: 1.8rem;
   cursor: pointer;
-  color: #aaa;
-  height: 40px;
-  width: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  transition: background-color 0.2s;
+  color: #999;
 }
 
 .close-btn:hover {
   color: #333;
-  background-color: #f1f1f1;
-}
-
-.modal-body {
-  padding: 15px 20px;
-  overflow-y: auto;
-  overflow-x: hidden;
-  max-height: calc(85vh - 60px);
 }
 
 .aluno-form {
   padding: 20px;
+  overflow-y: auto;
+  max-height: calc(90vh - 60px);
 }
 
 .form-group {
-  margin-bottom: 20px;
+  margin-bottom: 15px;
 }
 
 .form-group label {
   display: block;
-  margin-bottom: 8px;
+  margin-bottom: 5px;
   font-weight: 500;
-  color: #333;
+  color: #555;
 }
 
 .form-group input,
-.form-group select,
-.form-group textarea {
+.form-group select {
   width: 100%;
   padding: 10px;
-  border: 1px solid #ced4da;
+  border: 1px solid #ddd;
   border-radius: 4px;
   font-size: 1rem;
 }
 
+.form-group input:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
 .form-group textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
   resize: vertical;
-  min-height: 100px;
+  min-height: 80px;
+}
+
+.form-group textarea:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
 }
 
 .form-actions {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
-  margin-top: 30px;
+  margin-top: 20px;
 }
 
 .btn-cancelar {
-  background-color: #6c757d;
-  color: white;
+  padding: 10px 15px;
+  background-color: #f2f2f2;
   border: none;
   border-radius: 4px;
-  padding: 10px 20px;
   cursor: pointer;
-  font-size: 1rem;
+  font-weight: 500;
+  color: #555;
 }
 
 .btn-cancelar:hover {
-  background-color: #5a6268;
+  background-color: #e6e6e6;
 }
 
 .btn-salvar {
-  background-color: #4caf50;
-  color: white;
+  padding: 10px 15px;
+  background-color: #007bff;
   border: none;
   border-radius: 4px;
-  padding: 10px 20px;
   cursor: pointer;
-  font-size: 1rem;
+  font-weight: 500;
+  color: white;
 }
 
 .btn-salvar:hover {
-  background-color: #388e3c;
+  background-color: #0069d9;
 }
 
-/* Estilos do dropdown */
+/* Redefina completamente os estilos do dropdown */
+
 .dropdown {
   position: relative;
   display: inline-block;
 }
 
 .dropdown-btn {
-  background-color: #3498db;
+  background-color: #6c757d;
   color: white;
-  padding: 8px 16px;
-  font-size: 14px;
+  padding: 8px 12px;
+  font-size: 18px;
   border: none;
-  border-radius: 4px;
   cursor: pointer;
-  transition: background-color 0.3s;
-  min-width: 44px;
-  min-height: 35px;
+  border-radius: 4px;
+  width: 40px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .dropdown-btn:hover {
-  background-color: #2980b9;
+  background-color: #5a6268;
 }
 
+/* Nova abordagem para o dropdown-content */
 .dropdown-content {
   display: none;
-  position: absolute;
-  right: 0;
-  top: 100%;
-  margin-top: 5px;
-  background-color: #f9f9f9;
-  min-width: 160px;
-  box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
-  z-index: 1060;
-  border-radius: 4px;
-  overflow: hidden;
 }
 
-.dropdown.active .dropdown-content {
+.dropdown-content.active {
+  /* Mudança radical: posição fixa */
   display: block;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 200px;
+  background-color: #ffffff;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+  border-radius: 8px;
+  padding: 10px 0;
+  z-index: 9999; /* Valor extremamente alto */
+  border: 3px solid #007bff; /* Borda azul clara para destaque */
+}
+
+/* Adicione um título ao dropdown para melhor visibilidade */
+.dropdown-content.active::before {
+  content: "Menu de Ações";
+  display: block;
+  text-align: center;
+  font-weight: bold;
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+  margin-bottom: 5px;
 }
 
 .dropdown-content button {
   width: 100%;
   padding: 12px 16px;
   text-align: left;
-  background-color: transparent;
-  color: #333;
+  background: none;
   border: none;
   border-bottom: 1px solid #eee;
   cursor: pointer;
-  transition: background-color 0.2s;
+  font-size: 16px;
+  font-weight: 500;
 }
 
 .dropdown-content button:last-child {
@@ -291,87 +312,32 @@
   background-color: #f1f1f1;
 }
 
-/* Overlay para mobile */
-#dropdown-overlay {
-  display: block;
-  background-color: rgba(0, 0, 0, 0.5);
-  transition: opacity 0.3s ease;
-  z-index: 1050;
+/* Adicione um overlay para escurecer o fundo quando o dropdown estiver ativo */
+.acoes {
+  position: relative;
+}
+
+/* Quando qualquer dropdown estiver ativo, adicione um overlay escuro */
+body.dropdown-active::after {
+  content: "";
   position: fixed;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 9000;
 }
 
-/* Estilos para dispositivos móveis */
-@media (max-width: 768px) {
-  .dropdown-content {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 90%;
-    max-width: 300px;
-    background-color: white;
-    border-radius: 8px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-    animation: fade-in 0.2s ease-out;
-    z-index: 1060;
-  }
-
-  @keyframes fade-in {
-    from {
-      opacity: 0;
-      transform: translate(-50%, -45%);
-    }
-    to {
-      opacity: 1;
-      transform: translate(-50%, -50%);
-    }
-  }
-
-  .dropdown-content::before {
-    content: "Ações";
-    display: block;
-    padding: 15px;
-    font-weight: bold;
-    text-align: center;
-    background-color: #f7f7f7;
-    border-bottom: 1px solid #eee;
-  }
-
-  .dropdown-content button {
-    padding: 16px;
-    font-size: 16px;
-    text-align: left;
-    border-bottom: 1px solid #eee;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .dropdown-content button svg {
-    font-size: 18px;
-  }
-
-  .excluir-btn {
-    color: #d9534f !important;
-  }
-
-  /* Estilo específico para o botão de ações em mobile */
-  .dropdown-btn {
-    width: 44px;
-    height: 44px;
-    font-size: 16px;
-    padding: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
+/* Botões especiais */
+.dropdown-content .btn-ativar {
+  color: #28a745;
+}
+.dropdown-content .btn-inativar {
+  color: #dc3545;
 }
 
-/* Estilo para células da tabela */
+/* Estilos para células da tabela */
 .data-table td,
 .data-table th {
   vertical-align: middle;
@@ -437,8 +403,13 @@
 }
 
 .status-atual {
-  background-color: #ffc107;
-  color: #000;
+  background-color: #d4edda;
+  color: #155724;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 0.8em;
+  font-weight: bold;
+  border: 1px solid #c3e6cb;
 }
 
 .status-realizada {
@@ -447,8 +418,13 @@
 }
 
 .status-cancelada {
-  background-color: #dc3545;
-  color: white;
+  background-color: #f8d7da;
+  color: #721c24;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 0.8em;
+  font-weight: bold;
+  border: 1px solid #f5c6cb;
 }
 
 /* Estilos para exibição do professor no histórico */
@@ -672,60 +648,205 @@
   .exercicio-detalhe-item {
     margin-bottom: 10px;
   }
+
+  .aluno-form {
+    max-height: calc(100vh - 60px);
+    padding: 15px;
+  }
 }
 
 /* Estilos para botões de ações na tabela */
 .acoes {
   display: flex;
   flex-wrap: nowrap;
-  gap: 6px;
+  gap: 8px;
   justify-content: center;
   align-items: center;
+  white-space: nowrap;
+  padding: 5px 10px;
 }
 
-.btn-editar,
-.btn-excluir,
-.btn-historico {
-  padding: 6px 8px;
+/* Estilo base para todos os botões de ação */
+.btn-acao {
+  font-size: 0.8rem;
+  padding: 8px 10px;
+  border: none;
   border-radius: 4px;
   cursor: pointer;
-  font-size: 0.9rem;
+  display: inline-block;
+  text-align: center;
   font-weight: 500;
-  border: none;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  transition: all 0.2s ease;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  width: 78px; /* Ajuste fino na largura */
-  min-width: 78px;
-  max-width: 78px;
+  transition: all 0.2s;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
   white-space: nowrap;
-  justify-content: center;
-  flex: 0 0 78px;
+  flex-shrink: 0;
+  width: 100px; /* Largura fixa para todos os botões */
+  height: 36px; /* Altura fixa para todos os botões */
 }
 
-.btn-editar svg,
-.btn-excluir svg,
-.btn-historico svg {
-  font-size: 14px;
-  width: 14px;
-  height: 14px;
-  margin-right: 2px;
+/* Estilos específicos para cada tipo de botão */
+.btn-detalhes {
+  background-color: #4285f4; /* Azul Google */
+  color: white;
 }
 
-/* Responsividade para mobile */
+.btn-detalhes:hover {
+  background-color: #2b6ed6;
+  transform: translateY(-2px);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+}
+
+.btn-editar {
+  background-color: #ff9800; /* Laranja */
+  color: white;
+}
+
+.btn-editar:hover {
+  background-color: #e68a00;
+  transform: translateY(-2px);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+}
+
+.btn-ativar {
+  background-color: #4caf50; /* Verde */
+  color: white;
+}
+
+.btn-ativar:hover {
+  background-color: #3d8b40;
+  transform: translateY(-2px);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+}
+
+.btn-inativar {
+  background-color: #f44336; /* Vermelho */
+  color: white;
+}
+
+.btn-inativar:hover {
+  background-color: #d32f2f;
+  transform: translateY(-2px);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+}
+
+/* Responsividade */
 @media (max-width: 768px) {
   .acoes {
     flex-direction: column;
-    width: 100%;
+    gap: 5px;
   }
 
-  .btn-editar,
-  .btn-excluir,
-  .btn-historico {
+  .btn-acao {
     width: 100%;
-    min-height: 44px;
-    justify-content: center;
+    padding: 8px;
   }
+}
+
+@media (max-width: 480px) {
+  /* Para telas muito pequenas, ajustar ainda mais o tamanho dos botões */
+  .btn-acao {
+    font-size: 0.75rem;
+    padding: 6px;
+    width: 90px;
+    height: 32px;
+  }
+
+  .data-table th:nth-child(4), /* Coluna de ações */
+  .data-table td:nth-child(4) {
+    padding: 5px;
+  }
+}
+
+.aula-anotacoes {
+  background-color: #f9f9f9;
+  padding: 15px;
+  border-radius: 6px;
+  border-left: 4px solid #d32f2f;
+  margin-bottom: 20px;
+}
+
+.aula-anotacoes h3 {
+  margin-top: 0;
+  color: #333;
+  font-size: 1.1rem;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 8px;
+  margin-bottom: 10px;
+}
+
+.anotacoes-content {
+  padding: 10px;
+  background-color: #fff;
+  border-radius: 4px;
+  border: 1px solid #e6e6e6;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.anotacoes-content p {
+  margin: 0;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+.avaliacoes-alunos {
+  background-color: #f5f5f5;
+  padding: 15px;
+  border-radius: 6px;
+  border-left: 4px solid #4caf50;
+  margin-bottom: 20px;
+}
+
+.avaliacoes-alunos h3 {
+  margin-top: 0;
+  color: #333;
+  font-size: 1.1rem;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 8px;
+  margin-bottom: 10px;
+}
+
+.lista-avaliacoes {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.avaliacao-item {
+  padding: 10px;
+  background-color: #fff;
+  border-radius: 4px;
+  margin-bottom: 8px;
+  border: 1px solid #e6e6e6;
+}
+
+.avaliacao-aluno-nome {
+  margin-bottom: 5px;
+}
+
+.avaliacao-aluno-detalhes p {
+  margin: 0;
+  color: #555;
+}
+
+/* Estilos para indicar lesão */
+.data-table tbody tr.lesao-grave {
+  background-color: #fdeaea; /* Vermelho claro */
+  border-left: 4px solid #e74c3c; /* Vermelho */
+  color: #e74c3c; /* Texto em vermelho */
+  font-weight: 500; /* Texto um pouco mais forte */
+}
+
+.data-table tbody tr.lesao-grave:hover {
+  background-color: #f9d5d1; /* Vermelho um pouco mais escuro no hover */
+}
+
+.data-table tbody tr.lesao-moderada {
+  background-color: #fff9e6; /* Amarelo claro */
+  border-left: 4px solid #f1c40f; /* Amarelo */
+  color: #b7950b; /* Texto em amarelo escuro para melhor legibilidade */
+  font-weight: 500; /* Texto um pouco mais forte */
+}
+
+.data-table tbody tr.lesao-moderada:hover {
+  background-color: #fef3cd; /* Amarelo um pouco mais escuro no hover */
 }

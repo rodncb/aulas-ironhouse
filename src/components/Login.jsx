@@ -7,36 +7,46 @@ const Login = ({ onLogin }) => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  // Preencher os campos com as credenciais padrão para facilitar
-  const preencherCredenciaisPadrao = (tipo) => {
-    if (tipo === "professor") {
-      setUsername("professor@example.com");
-      setPassword("prof123");
-    } else {
-      setUsername("admin@example.com");
-      setPassword("admin123");
-    }
-  };
-
-  // Atualiza as credenciais quando o tipo de usuário é alterado
+  // Atualiza o tipo de usuário quando alterado
   const handleUserTypeChange = (tipo) => {
     setUserType(tipo);
-    preencherCredenciaisPadrao(tipo);
+    setError("");
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    setLoading(true);
 
     // Validação básica
     if (!username || !password) {
       setError("Por favor, preencha todos os campos");
+      setLoading(false);
       return;
     }
 
-    // Chamar o onLogin corretamente
-    onLogin(username, password);
+    try {
+      // Usar o onLogin que agora utiliza o Supabase
+      const result = await onLogin(username, password);
+
+      // Se temos um erro explícito, mostrar
+      if (!result || !result.success) {
+        setError(
+          result?.message ||
+            "Falha na autenticação. Verifique suas credenciais."
+        );
+        setLoading(false);
+        return;
+      }
+    } catch (error) {
+      setError(
+        "Erro ao tentar login. Verifique sua conexão e tente novamente."
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -52,6 +62,7 @@ const Login = ({ onLogin }) => {
             className={`toggle-btn ${userType === "professor" ? "active" : ""}`}
             onClick={() => handleUserTypeChange("professor")}
             type="button"
+            disabled={loading}
           >
             Professor
           </button>
@@ -59,6 +70,7 @@ const Login = ({ onLogin }) => {
             className={`toggle-btn ${userType === "admin" ? "active" : ""}`}
             onClick={() => handleUserTypeChange("admin")}
             type="button"
+            disabled={loading}
           >
             Administrador
           </button>
@@ -68,15 +80,14 @@ const Login = ({ onLogin }) => {
           <div className="form-group">
             <label htmlFor="username">Email</label>
             <input
-              type="text"
+              type="email"
               id="username"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              placeholder={
-                userType === "professor"
-                  ? "professor@example.com"
-                  : "admin@example.com"
-              }
+              placeholder="Digite seu email"
+              disabled={loading}
+              required
+              autoComplete="username"
             />
           </div>
 
@@ -88,14 +99,20 @@ const Login = ({ onLogin }) => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Digite sua senha"
+              autoComplete="current-password"
+              disabled={loading}
+              required
             />
           </div>
 
           {error && <div className="error-message">{error}</div>}
 
-          <button type="submit" className="login-button">
-            Entrar como{" "}
-            {userType === "professor" ? "Professor" : "Administrador"}
+          <button type="submit" className="login-button" disabled={loading}>
+            {loading
+              ? "Entrando..."
+              : `Entrar como ${
+                  userType === "professor" ? "Professor" : "Administrador"
+                }`}
           </button>
         </form>
 
