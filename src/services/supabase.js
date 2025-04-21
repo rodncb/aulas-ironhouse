@@ -1,5 +1,4 @@
 import { createClient } from "@supabase/supabase-js";
-import { BrowserCookieAuthStorageAdapter } from "@supabase/auth-helpers-shared";
 
 // Configuração do cliente Supabase com chaves atualizadas
 const supabaseUrl = "https://rnvsemzycvhuyeatjkaq.supabase.co";
@@ -21,41 +20,18 @@ console.log(
   typeof window !== "undefined" ? window.location.hostname : "indefinido"
 );
 
-// Opções para o cliente Supabase, usando apenas cookies (sem localStorage)
-const options = {
+// Criação do cliente Supabase com configuração simplificada
+const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: true,
-    // Utiliza BrowserCookieAuthStorageAdapter para armazenar a sessão em cookies
-    storage: new BrowserCookieAuthStorageAdapter({
-      name: "sb-auth-token",
-      domain: isProduction ? "facilitaai.com.br" : undefined,
-      path: "/",
-      secure: true,
-      sameSite: "Lax",
-    }),
   },
-  global: {
-    headers: {
-      "X-Client-Info": "ironhouse-webapp",
-    },
-  },
-};
+});
 
-console.log(
-  "Configuração de armazenamento: Usando apenas cookies (sem localStorage)"
-);
+console.log("Cliente Supabase configurado com configuração padrão");
 
-// Inicializa o cliente Supabase
-const supabase = createClient(supabaseUrl, supabaseAnonKey, options);
-
-// Debug de autenticação
 if (typeof window !== "undefined") {
-  console.log("Ambiente:", isProduction ? "Produção" : "Desenvolvimento");
-  console.log("Supabase client inicializado com:", { url: supabaseUrl });
-  console.log("Cookies utilizados para autenticação");
-
   // Observer para eventos de autenticação
   supabase.auth.onAuthStateChange((event, session) => {
     console.log(
@@ -213,22 +189,12 @@ export async function verifyRedirectURLs() {
 // Função para verificar e resetar as configurações do cliente Supabase
 export async function resetSupabaseClient() {
   try {
-    console.log("Limpando cookies e sessão...");
+    console.log("Limpando sessão...");
 
-    // Limpar todas as sessões e cookies
-    await supabase.auth.signOut({ scope: "global" });
+    // Limpar todas as sessões
+    await supabase.auth.signOut();
 
-    // Limpar cookies manualmente (para casos em que o signOut não limpa tudo)
-    document.cookie.split(";").forEach(function (c) {
-      document.cookie = c
-        .replace(/^ +/, "")
-        .replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
-    });
-
-    console.log("Configuração do cliente Supabase resetada.");
-
-    // Recarregar a página para limpar qualquer estado residual
-    window.location.reload();
+    console.log("Cliente Supabase resetado.");
 
     return { success: true };
   } catch (error) {

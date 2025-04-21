@@ -145,8 +145,9 @@ const Login = ({ onLogin }) => {
       }
 
       console.log("Tentando login direto via Supabase...");
+      console.log("Email:", username);
 
-      // Usar diretamente o cliente Supabase para autenticação
+      // Autenticação simples direta com o Supabase
       const { data, error } = await supabase.auth.signInWithPassword({
         email: username,
         password: password,
@@ -154,7 +155,7 @@ const Login = ({ onLogin }) => {
 
       if (error) {
         console.error("Erro no login direto:", error);
-        setError(`Login direto falhou: ${error.message}`);
+        setError(`Erro: ${error.message}`);
         setLoading(false);
         return;
       }
@@ -168,7 +169,7 @@ const Login = ({ onLogin }) => {
       }
     } catch (error) {
       console.error("Exceção durante login direto:", error);
-      setError(`Erro no login direto: ${error.message}`);
+      setError(`Erro: ${error.message}`);
       setLoading(false);
     }
   };
@@ -307,7 +308,7 @@ const Login = ({ onLogin }) => {
             className="direct-login-button"
             disabled={loading || connectionError}
           >
-            Login direto via Supabase
+            Login direto (recomendado)
           </button>
         </form>
 
@@ -327,7 +328,15 @@ const Login = ({ onLogin }) => {
           {domainInfo && (
             <div className="domain-info">
               <p>
-                Domínio atual: <strong>{domainInfo.currentOrigin}</strong>
+                <strong>Solução de problemas:</strong>
+              </p>
+              <p>
+                Domínio atual:{" "}
+                <strong>
+                  {typeof window !== "undefined"
+                    ? window.location.hostname
+                    : "desconhecido"}
+                </strong>
               </p>
               <p>
                 Ambiente:{" "}
@@ -336,7 +345,8 @@ const Login = ({ onLogin }) => {
                 </strong>
               </p>
               <p>
-                Autenticação: <strong>Usando Cookies (sem localStorage)</strong>
+                Se estiver com problemas para entrar, utilize o botão "Login
+                direto".
               </p>
             </div>
           )}
