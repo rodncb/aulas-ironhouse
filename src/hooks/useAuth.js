@@ -7,7 +7,7 @@ const fetchUserProfile = async (userId) => {
   if (!userId) return { role: null };
 
   try {
-    // Tenta obter a role SOMENTE dos metadados do usuário
+    // 1. Tenta obter a role dos metadados do usuário
     const { data: userData } = await supabase.auth.getUser();
     const roleFromMetadata = userData?.user?.user_metadata?.role;
 
@@ -16,14 +16,32 @@ const fetchUserProfile = async (userId) => {
       return { role: roleFromMetadata };
     }
 
-    // Se não encontrou nos metadados, retorna null (ou um padrão, se preferir)
-    console.warn(
-      "Role não encontrada nos user_metadata para o usuário:",
-      userId
-    );
-    return { role: null }; // Não tenta mais buscar na tabela 'profiles'
+    // 2. Se não encontrou nos metadados, busca na tabela profiles
+    console.log("Role não encontrada nos metadados, buscando na tabela profiles...");
+    const { data: profile, error } = await supabase
+      .from("profiles") // Consulta a tabela 'profiles'
+      .select("role")
+      .eq("id", userId) // Filtra pelo ID do usuário
+      .single();
+
+    if (error) {
+      // Loga o erro, mas não impede o fluxo necessariamente
+      // Pode ser que o perfil ainda não exista, o que é tratado como 'professor' no fallback do signIn
+      console.error("Erro ao buscar perfil na tabela profiles:", error.message);
+      return { role: null }; // Retorna null se houve erro na busca
+    }
+
+    if (profile?.role) {
+      console.log("Role encontrada na tabela profiles:", profile.role);
+      return { role: profile.role };
+    }
+
+    // Se não encontrou em nenhum lugar
+    console.warn("Role não encontrada nem nos metadados nem na tabela profiles para o usuário:", userId);
+    return { role: null };
+
   } catch (fetchError) {
-    console.error("Exceção ao buscar perfil (metadados):", fetchError);
+    console.error("Exceção ao buscar perfil (metadados ou profiles):", fetchError);
     return { role: null };
   }
 };
