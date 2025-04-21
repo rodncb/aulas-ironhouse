@@ -7,27 +7,23 @@ const fetchUserProfile = async (userId) => {
   if (!userId) return { role: null };
 
   try {
-    // Primeiro, tenta obter a role dos metadados do usuário
+    // Tenta obter a role SOMENTE dos metadados do usuário
     const { data: userData } = await supabase.auth.getUser();
-    if (userData?.user?.user_metadata?.role) {
-      return { role: userData.user.user_metadata.role };
+    const roleFromMetadata = userData?.user?.user_metadata?.role;
+
+    if (roleFromMetadata) {
+      console.log("Role encontrada nos metadados:", roleFromMetadata);
+      return { role: roleFromMetadata };
     }
 
-    // Se não encontrou nos metadados, busca na tabela profiles
-    const { data: profile, error } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", userId)
-      .single();
-
-    if (error) {
-      console.error("Erro ao buscar perfil:", error.message);
-      return { role: null };
-    }
-
-    return { role: profile?.role };
+    // Se não encontrou nos metadados, retorna null (ou um padrão, se preferir)
+    console.warn(
+      "Role não encontrada nos user_metadata para o usuário:",
+      userId
+    );
+    return { role: null }; // Não tenta mais buscar na tabela 'profiles'
   } catch (fetchError) {
-    console.error("Exceção ao buscar perfil:", fetchError);
+    console.error("Exceção ao buscar perfil (metadados):", fetchError);
     return { role: null };
   }
 };
