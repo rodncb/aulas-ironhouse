@@ -12,11 +12,10 @@ const Login = ({ onLogin }) => {
   // Atualiza o tipo de usuário quando alterado
   const handleUserTypeChange = (tipo) => {
     setUserType(tipo);
-    setError("");
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    e.preventDefault(); // Impede o refresh padrão do formulário
     setError("");
     setLoading(true);
 
@@ -28,23 +27,19 @@ const Login = ({ onLogin }) => {
     }
 
     try {
-      // Usar o onLogin que agora utiliza o Supabase
+      // Usar o onLogin para autenticação com o Supabase
       const result = await onLogin(username, password);
-
-      // Se temos um erro explícito, mostrar
+      
+      // Se não tiver success, mostrar erro
       if (!result || !result.success) {
-        setError(
-          result?.message ||
-            "Falha na autenticação. Verifique suas credenciais."
-        );
+        setError(result?.error || "Falha na autenticação. Verifique suas credenciais.");
         setLoading(false);
-        return;
       }
+      // Se não houver erro, o redirecionamento será feito pelo App.jsx
+      
     } catch (error) {
-      setError(
-        "Erro ao tentar login. Verifique sua conexão e tente novamente."
-      );
-    } finally {
+      console.error("Erro de login:", error);
+      setError("Erro ao tentar login. Verifique sua conexão e tente novamente.");
       setLoading(false);
     }
   };
@@ -80,14 +75,13 @@ const Login = ({ onLogin }) => {
           <div className="form-group">
             <label htmlFor="username">Email</label>
             <input
-              type="email"
+              type="email" 
               id="username"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               placeholder="Digite seu email"
-              disabled={loading}
-              required
               autoComplete="username"
+              disabled={loading}
             />
           </div>
 
@@ -101,7 +95,6 @@ const Login = ({ onLogin }) => {
               placeholder="Digite sua senha"
               autoComplete="current-password"
               disabled={loading}
-              required
             />
           </div>
 

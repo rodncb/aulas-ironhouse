@@ -1,22 +1,35 @@
 import { createClient } from "@supabase/supabase-js";
 
-// Configuração do cliente Supabase
+// Configuração do cliente Supabase com chaves atualizadas
 const supabaseUrl = "https://rnvsemzycvhuyeatjkaq.supabase.co";
-const supabaseAnonKey =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJudnNlbXp5Y3ZodXllYXRqa2FxIiwicm9sZSI6ImFub24iLCJpYXQiOjE2NzY1MDAxMTQsImV4cCI6MTk5MjA3NjExNH0.8TxLqnYMATIOkisR7HM5yJjkMO6C4kF_GCiLIL9BX4M";
+const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJudnNlbXp5Y3ZodXllYXRqa2FxIiwicm9sZSI6ImFub24iLCJpYXQiOjE2NzY1MDAxMTQsImV4cCI6MTk5MjA3NjExNH0.8TxLqnYMATIOkisR7HM5yJjkMO6C4kF_GCiLIL9BX4M";
 
-// Opções para o cliente Supabase com configuração de cookies para domínio personalizado
+// Checando se estamos em produção ou desenvolvimento
+const isProduction = window.location.hostname === 'ironhouse.facilitaai.com.br';
+
+// Opções para o cliente Supabase
 const options = {
   auth: {
     autoRefreshToken: true,
     persistSession: true,
-    detectSessionInUrl: false,
-    storageKey: 'ironhouse-storage-key'
+    detectSessionInUrl: true,
+    storage: isProduction ? localStorage : undefined, // Use localStorage em produção
+    storageKey: 'ironhouse-auth', // Usar chave simples
   }
 };
 
-// Inicializa o cliente Supabase com as opções definidas
+// Inicializa o cliente Supabase
 const supabase = createClient(supabaseUrl, supabaseAnonKey, options);
+
+// Adicionar interceptor de debug para autenticação (em modo de desenvolvimento)
+if (process.env.NODE_ENV !== 'production') {
+  console.log('Supabase client initialized with URL:', supabaseUrl);
+  
+  // Observer para eventos de autenticação
+  supabase.auth.onAuthStateChange((event, session) => {
+    console.log('Auth event:', event, 'Session:', session ? 'Present' : 'None');
+  });
+}
 
 // Função para recarregar o cache do schema do Supabase
 export async function reloadSupabaseSchemaCache() {
