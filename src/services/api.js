@@ -1,5 +1,5 @@
 // Importando o cliente Supabase
-import supabase from "./supabase";
+import { supabase } from "./supabase";
 
 // Utilitário para tratamento de erros
 const handleResponse = async (response) => {

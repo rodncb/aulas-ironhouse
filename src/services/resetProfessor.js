@@ -1,4 +1,4 @@
-import supabase from "./supabase";
+import { supabase } from "./supabase";
 
 /**
  * Função para criar um novo usuário professor com o email prof@ironhouse.com

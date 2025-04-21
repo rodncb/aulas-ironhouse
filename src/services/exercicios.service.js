@@ -1,4 +1,4 @@
-import supabase from "./supabase";
+import { supabase } from "./supabase";
 
 const exerciciosService = {
   // Criar um novo exercício

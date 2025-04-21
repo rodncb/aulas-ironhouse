@@ -1,4 +1,4 @@
-import supabase from "./supabase";
+import { supabase } from "./supabase";
 
 /**
  * Função temporária para criar um novo usuário admin no Supabase

@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import authService from "../services/auth.service";
-import supabase from "../services/supabase";
+import { supabase } from "../services/supabase";
 
 // Função auxiliar para buscar o perfil e a role
 const fetchUserProfile = async (userId) => {
@@ -36,9 +36,17 @@ export function useAuth() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [sessionChecked, setSessionChecked] = useState(false);
+  const authListenerRef = useRef(null); // Ref para controlar a inscrição do listener
+  const isUpdatingRef = useRef(false); // Ref para evitar atualizações simultâneas
 
   // Função memoizada para atualizar o estado do usuário
   const updateUserState = useCallback(async (session) => {
+    // Evita múltiplas atualizações simultâneas
+    if (isUpdatingRef.current) {
+      console.log("Já existe uma atualização em andamento, ignorando...");
+      return;
+    }
+
     if (!session?.user) {
       setUser(null);
       setLoading(false);
@@ -46,9 +54,10 @@ export function useAuth() {
     }
 
     try {
+      isUpdatingRef.current = true;
       // Busca informações adicionais do perfil
       const { role } = await fetchUserProfile(session.user.id);
-      
+
       // Prepara dados do usuário com fallbacks para valores indefinidos
       const userData = {
         id: session.user.id,
@@ -60,26 +69,34 @@ export function useAuth() {
 
       // Atualiza o estado
       setUser(userData);
-      console.log("Estado de usuário atualizado:", userData.email, userData.role);
+      console.log(
+        "Estado de usuário atualizado:",
+        userData.email,
+        userData.role
+      );
     } catch (error) {
       console.error("Erro ao atualizar estado do usuário:", error);
     } finally {
       setLoading(false);
+      isUpdatingRef.current = false;
     }
   }, []);
 
   // Efeito para verificar e configurar a sessão
   useEffect(() => {
     let isMounted = true;
-    
+
     // Função para verificar a sessão existente
     const checkExistingSession = async () => {
+      // Se já estiver verificando outra sessão, encerra
+      if (isUpdatingRef.current) return;
+
       try {
         setLoading(true);
         console.log("Verificando sessão existente...");
-        
+
         const { data, error } = await supabase.auth.getSession();
-        
+
         if (error) {
           console.error("Erro ao buscar sessão:", error.message);
           if (isMounted) {
@@ -91,7 +108,7 @@ export function useAuth() {
 
         if (data?.session) {
           console.log("Sessão encontrada, atualizando usuário");
-          if (isMounted) {
+          if (isMounted && !isUpdatingRef.current) {
             await updateUserState(data.session);
           }
         } else {
@@ -116,29 +133,37 @@ export function useAuth() {
 
     checkExistingSession();
 
-    // Configura o listener para mudanças no estado de autenticação
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log("Evento de autenticação:", event);
-        
-        if (isMounted) {
+    // Configura o listener para mudanças no estado de autenticação apenas uma vez
+    if (!authListenerRef.current) {
+      const { data: authListener } = supabase.auth.onAuthStateChange(
+        async (event, session) => {
+          console.log("Evento de autenticação:", event);
+
+          if (!isMounted) return;
+
           if (session) {
             console.log("Sessão atualizada");
-            await updateUserState(session);
+            if (!isUpdatingRef.current) {
+              await updateUserState(session);
+            }
           } else {
             console.log("Sessão encerrada");
             setUser(null);
             setLoading(false);
           }
         }
-      }
-    );
+      );
+
+      authListenerRef.current = authListener;
+    }
 
     // Limpeza quando o componente é desmontado
     return () => {
       isMounted = false;
-      if (authListener?.subscription?.unsubscribe) {
-        authListener.subscription.unsubscribe();
+      // Só desinscreve se o listener existir
+      if (authListenerRef.current?.subscription?.unsubscribe) {
+        authListenerRef.current.subscription.unsubscribe();
+        authListenerRef.current = null;
       }
     };
   }, [updateUserState]);
@@ -148,14 +173,15 @@ export function useAuth() {
     try {
       setLoading(true);
       console.log("Tentando fazer login para:", email);
-      
+
       const result = await authService.login(email, password);
 
       if (!result.success) {
         console.error("Falha no login:", result.error || "Erro desconhecido");
         return {
           success: false,
-          message: result.error || "Erro ao fazer login. Verifique suas credenciais.",
+          message:
+            result.error || "Erro ao fazer login. Verifique suas credenciais.",
         };
       }
 
@@ -167,8 +193,11 @@ export function useAuth() {
           nome: result.data.user.nome || "Usuário",
           role: result.data.user.role || "professor",
         });
-        
-        console.log("Login bem-sucedido, usuário definido:", result.data.user.email);
+
+        console.log(
+          "Login bem-sucedido, usuário definido:",
+          result.data.user.email
+        );
         return { success: true, data: result.data };
       }
 
@@ -188,7 +217,7 @@ export function useAuth() {
   const signOut = async () => {
     try {
       console.log("Iniciando processo de logout");
-      
+
       // Define user como null antes de chamar o logout para garantir atualização imediata da UI
       setUser(null);
 
@@ -198,7 +227,7 @@ export function useAuth() {
         console.error("Erro durante logout:", error);
         throw new Error(error);
       }
-      
+
       console.log("Logout concluído com sucesso");
     } catch (error) {
       console.error("Exceção durante logout:", error);

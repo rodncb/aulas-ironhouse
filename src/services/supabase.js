@@ -3,12 +3,16 @@ import { createClient } from "@supabase/supabase-js";
 // Configuração do cliente Supabase
 const supabaseUrl = "https://rnvsemzycvhuyeatjkaq.supabase.co";
 const supabaseAnonKey =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJudnNlbXp5Y3ZodXllYXRqa2FxIiwicm9sZSI6ImFub24iLCJpYXQiOjE2NzY1MDAxMTQsImV4cCI6MTk5MjA3NjExNH0.8TxLqnYMATIOkisR7HM5yJjkMO6C4kF_GCiLIL9BX4M";
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJudnNlbXp5Y3ZodXllYXRqa2FxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ4MDk0NTAsImV4cCI6MjA2MDM4NTQ1MH0.d2GTmTBAUIINoL52Ylz4tXsnhPLBTynOtvKlVa5sy60";
 
-// Criação do cliente Supabase - Utiliza a configuração mais simples possível
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Criação do cliente Supabase com opções extras para melhor gerenciamento de sessão
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  autoRefreshToken: true,
+  persistSession: true,
+  detectSessionInUrl: true,
+});
 
-console.log("Cliente Supabase inicializado com configuração padrão");
+console.log("Cliente Supabase inicializado com configuração aprimorada");
 
 // Função para testar a conexão com o Supabase
 export async function testConnection(tentativas = 3) {
@@ -47,6 +51,7 @@ export async function testConnection(tentativas = 3) {
 // Configura o listener para eventos de autenticação
 export function setupAuthListener(callback) {
   return supabase.auth.onAuthStateChange((event, session) => {
+    console.log(`Auth event: ${event}`, session ? "Com sessão" : "Sem sessão");
     callback(event, session);
   });
 }
@@ -108,10 +113,11 @@ export async function resetSupabaseClient() {
   try {
     console.log("Limpando sessão...");
 
-    // Limpar todas as sessões
-    await supabase.auth.signOut();
+    // Limpar sessão atual
+    const { error } = await supabase.auth.signOut({ scope: "local" });
+    if (error) throw error;
 
-    console.log("Cliente Supabase resetado.");
+    console.log("Cliente Supabase resetado com sucesso");
 
     return { success: true };
   } catch (error) {
@@ -129,9 +135,3 @@ export async function reloadSupabaseSchemaCache() {
     return false;
   }
 }
-
-// Exporta o cliente Supabase
-export { supabase };
-
-// Export default para manter compatibilidade
-export default supabase;

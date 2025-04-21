@@ -1,4 +1,4 @@
-import supabase from "./supabase";
+import { supabase } from "./supabase";
 
 const migracaoService = {
   async migrarTodosDados() {

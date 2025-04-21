@@ -1,4 +1,4 @@
-import supabase from "./supabase";
+import { supabase } from "./supabase";
 
 // Sistema de autenticação com Supabase
 const authService = {

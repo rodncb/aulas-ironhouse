@@ -1,162 +1,132 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import "../styles/Login.css";
 import logoCompleta from "../assets/logo_completa.png";
-import { supabase } from "../services/supabase";
+import { supabase } from "../services/supabase"; // Corrigido a importação para incluir as chaves
+import { useNavigate } from "react-router-dom";
 
 const Login = ({ onLogin }) => {
-  const [userType, setUserType] = useState("professor"); // 'professor' ou 'admin'
-  const [username, setUsername] = useState("");
+  const [userType, setUserType] = useState("professor");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [connectionError, setConnectionError] = useState(false);
-  const [connectionChecked, setConnectionChecked] = useState(false);
+  const navigate = useNavigate();
 
-  // Verificar conectividade com Supabase ao carregar o componente
-  useEffect(() => {
-    const checkSupabaseConnection = async () => {
-      try {
-        const { data, error } = await supabase
-          .from("alunos")
-          .select("count")
-          .limit(1);
-
-        if (error) {
-          console.error("Erro de conexão com Supabase:", error.message);
-          setConnectionError(true);
-        } else {
-          console.log("Conexão com Supabase verificada com sucesso");
-          setConnectionError(false);
-        }
-      } catch (err) {
-        console.error("Exceção ao verificar conexão:", err.message);
-        setConnectionError(true);
-      } finally {
-        setConnectionChecked(true);
-      }
-    };
-
-    checkSupabaseConnection();
-  }, []);
-
-  // Atualiza o tipo de usuário quando alterado
   const handleUserTypeChange = (tipo) => {
     setUserType(tipo);
-    setError(""); // Limpar mensagens de erro ao trocar tipo de usuário
+    setError("");
   };
 
-  // Login direto com Supabase
   const handleLogin = async (e) => {
     e.preventDefault();
     setError("");
     setLoading(true);
 
-    // Validação básica
-    if (!username || !password) {
-      setError("Por favor, preencha todos os campos");
-      setLoading(false);
-      return;
-    }
-
     try {
-      if (connectionError) {
-        setError(
-          "Não foi possível conectar ao servidor. Verifique sua conexão de internet."
-        );
+      // Verificação de campos
+      if (!email || !password) {
+        setError("Por favor, preencha todos os campos");
         setLoading(false);
         return;
       }
 
-      console.log(`Tentando login para ${username} como ${userType}`);
+      console.log(`Tentando login para ${email} como ${userType}`);
 
-      // Autenticação direta com o Supabase
+      // Autenticação com o Supabase
       const { data, error } = await supabase.auth.signInWithPassword({
-        email: username,
+        email: email,
         password: password,
       });
 
       if (error) {
-        console.error("Erro de autenticação:", error);
-        setError(`Erro: ${error.message}`);
+        console.error("Erro de autenticação:", error.message);
+        setError("Email ou senha incorretos. Tente novamente.");
         setLoading(false);
         return;
       }
 
-      if (!data || !data.session) {
-        setError("Falha na autenticação. Nenhuma sessão criada.");
+      // Verificar o tipo de usuário (professor ou admin)
+      const { data: userData, error: userError } = await supabase
+        .from("usuarios")
+        .select("tipo, nome")
+        .eq("email", email)
+        .single();
+
+      if (userError || !userData) {
+        console.error("Erro ao obter tipo de usuário:", userError?.message);
+        setError("Erro ao verificar perfil de usuário.");
+        await supabase.auth.signOut();
         setLoading(false);
         return;
       }
 
-      console.log("Login bem-sucedido para:", username);
+      // Verificar se o tipo de usuário corresponde ao selecionado
+      if (userData.tipo !== userType) {
+        setError(
+          `Este usuário não é um ${
+            userType === "professor" ? "professor" : "administrador"
+          }. Selecione o tipo correto.`
+        );
+        await supabase.auth.signOut();
+        setLoading(false);
+        return;
+      }
 
-      // Carregar página inicial após login
-      window.location.reload();
-    } catch (error) {
-      console.error("Exceção durante login:", error);
+      // Login bem-sucedido
+      console.log("Login bem-sucedido:", userData);
 
-      // Mensagem de erro mais amigável
-      let errorMessage =
-        "Erro ao tentar login. Verifique sua conexão e tente novamente.";
-      setError(errorMessage);
+      // Chamar a função de callback com os dados do usuário logado
+      onLogin({
+        id: data.user.id,
+        email: data.user.email,
+        nome: userData.nome,
+        tipo: userData.tipo,
+      });
+
+      // Redirecionar para a página apropriada
+      setLoading(false);
+      navigate(userType === "admin" ? "/admin" : "/professor");
+    } catch (err) {
+      console.error("Exceção no login:", err.message);
+      setError("Ocorreu um erro inesperado. Tente novamente mais tarde.");
       setLoading(false);
     }
   };
 
   return (
     <div className="login-container">
-      <div className="login-card">
-        <div className="login-logo">
-          <img src={logoCompleta} alt="Iron House" />
-          <h1>Fitness e Performance</h1>
+      <div className="login-box">
+        <div className="login-header">
+          <img src={logoCompleta} alt="IronHouse Logo" className="login-logo" />
+          <h2>Entrar</h2>
         </div>
 
-        {connectionError && connectionChecked && (
-          <div className="connection-error">
-            <p>❌ Problema de conexão com o servidor detectado.</p>
-            <button
-              onClick={() => window.location.reload()}
-              className="reload-btn"
-            >
-              Tentar novamente
-            </button>
-          </div>
-        )}
-
-        <div className="user-type-toggle">
+        <div className="user-type-selector">
           <button
-            className={`toggle-btn ${userType === "professor" ? "active" : ""}`}
+            className={userType === "professor" ? "active" : ""}
             onClick={() => handleUserTypeChange("professor")}
-            type="button"
-            disabled={loading}
           >
             Professor
           </button>
           <button
-            className={`toggle-btn ${userType === "admin" ? "active" : ""}`}
+            className={userType === "admin" ? "active" : ""}
             onClick={() => handleUserTypeChange("admin")}
-            type="button"
-            disabled={loading}
           >
             Administrador
           </button>
         </div>
 
-        <form onSubmit={handleLogin} className="login-form">
+        <form onSubmit={handleLogin}>
           <div className="form-group">
-            <label htmlFor="username">Email</label>
+            <label htmlFor="email">Email</label>
             <input
               type="email"
-              id="username"
-              value={username}
-              onChange={(e) => {
-                setUsername(e.target.value);
-                setError(""); // Limpa o erro quando o usuário começa a digitar
-              }}
-              placeholder="Digite seu email"
-              autoComplete="username"
+              id="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="seu@email.com"
               disabled={loading}
-              required
+              autoComplete="email"
             />
           </div>
 
@@ -166,55 +136,19 @@ const Login = ({ onLogin }) => {
               type="password"
               id="password"
               value={password}
-              onChange={(e) => {
-                setPassword(e.target.value);
-                setError(""); // Limpa o erro quando o usuário começa a digitar
-              }}
-              placeholder="Digite sua senha"
-              autoComplete="current-password"
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="********"
               disabled={loading}
-              required
+              autoComplete="current-password"
             />
           </div>
 
-          {error && (
-            <div className="error-message">
-              <span role="img" aria-label="Error">
-                ⚠️
-              </span>{" "}
-              {error}
-            </div>
-          )}
+          {error && <div className="error-message">{error}</div>}
 
-          <button
-            type="submit"
-            className={`login-button ${loading ? "loading" : ""}`}
-            disabled={loading || connectionError}
-          >
-            {loading ? (
-              <span className="loading-text">
-                <span className="loading-spinner"></span>
-                Entrando...
-              </span>
-            ) : (
-              `Entrar como ${
-                userType === "professor" ? "Professor" : "Administrador"
-              }`
-            )}
+          <button type="submit" className="login-button" disabled={loading}>
+            {loading ? "Entrando..." : "Entrar"}
           </button>
         </form>
-
-        <div className="login-footer">
-          <p>© {new Date().getFullYear()} Iron House Fitness e Performance</p>
-          <div className="connection-status">
-            <span
-              className={`status-indicator ${
-                connectionError ? "offline" : "online"
-              }`}
-            ></span>
-            {connectionError ? "Offline" : "Online"}
-          </div>
-        </div>
       </div>
     </div>
   );
