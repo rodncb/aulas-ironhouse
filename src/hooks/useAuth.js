@@ -169,44 +169,70 @@ export function useAuth() {
   }, [updateUserState]);
 
   // Função para fazer login
-  const signIn = async (email, password) => {
+  const signIn = async (email, password, expectedUserType) => {
+    // Adiciona expectedUserType
     try {
       setLoading(true);
-      console.log("Tentando fazer login para:", email);
+      console.log(
+        `Tentando fazer login para: ${email} como ${expectedUserType}`
+      );
 
-      const result = await authService.login(email, password);
+      // 1. Autentica com Supabase
+      const authResult = await authService.login(email, password);
 
-      if (!result.success) {
-        console.error("Falha no login:", result.error || "Erro desconhecido");
+      if (!authResult.success || !authResult.data?.user) {
+        console.error(
+          "Falha na autenticação:",
+          authResult.error || "Usuário não retornado"
+        );
         return {
           success: false,
-          message:
-            result.error || "Erro ao fazer login. Verifique suas credenciais.",
+          error: authResult.error || "Email ou senha incorretos.",
         };
       }
 
-      // Atualiza o estado se o login for bem-sucedido
-      if (result.data?.user) {
-        setUser({
-          id: result.data.user.id,
-          email: result.data.user.email,
-          nome: result.data.user.nome || "Usuário",
-          role: result.data.user.role || "professor",
-        });
+      // 2. Busca o perfil/role do usuário autenticado
+      const { role: actualRole } = await fetchUserProfile(
+        authResult.data.user.id
+      );
+      const finalRole =
+        authResult.data.user.user_metadata?.role || actualRole || "professor"; // Lógica de fallback
 
-        console.log(
-          "Login bem-sucedido, usuário definido:",
-          result.data.user.email
+      // 3. Verifica se o tipo de usuário bate com o esperado
+      if (finalRole !== expectedUserType) {
+        console.warn(
+          `Tipo de usuário incorreto. Esperado: ${expectedUserType}, Obtido: ${finalRole}`
         );
-        return { success: true, data: result.data };
+        // Desloga o usuário que acabou de logar com tipo errado
+        await authService.logout();
+        return {
+          success: false,
+          error: `Este usuário não é um ${expectedUserType}. Selecione o tipo correto.`,
+        };
       }
 
-      return { success: true, data: result.data };
+      // 4. Se tudo deu certo, atualiza o estado do usuário
+      const userData = {
+        id: authResult.data.user.id,
+        email: authResult.data.user.email,
+        nome: authResult.data.user.user_metadata?.nome || "Usuário",
+        role: finalRole,
+      };
+
+      setUser(userData);
+      console.log(
+        "Login bem-sucedido e tipo verificado:",
+        userData.email,
+        userData.role
+      );
+      return { success: true, data: userData }; // Retorna os dados do usuário
     } catch (error) {
       console.error("Exceção ao fazer login:", error);
+      // Tenta deslogar em caso de exceção inesperada após autenticação parcial
+      await authService.logout().catch(() => {}); // Ignora erros no logout aqui
       return {
         success: false,
-        message: error.message || "Erro de autenticação",
+        error: error.message || "Erro inesperado durante o login.",
       };
     } finally {
       setLoading(false);

@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import "../styles/Login.css";
 import logoCompleta from "../assets/logo_completa.png";
-import { supabase } from "../services/supabase"; // Corrigido a importação para incluir as chaves
 import { useNavigate } from "react-router-dom";
 
 const Login = ({ onLogin }) => {
@@ -23,7 +22,6 @@ const Login = ({ onLogin }) => {
     setLoading(true);
 
     try {
-      // Verificação de campos
       if (!email || !password) {
         setError("Por favor, preencha todos os campos");
         setLoading(false);
@@ -32,64 +30,27 @@ const Login = ({ onLogin }) => {
 
       console.log(`Tentando login para ${email} como ${userType}`);
 
-      // Autenticação com o Supabase
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: email,
-        password: password,
-      });
+      // Chama a função handleLogin passada pelo App.jsx (que usa useAuth.signIn)
+      const result = await onLogin(email, password, userType); // Passa userType também
 
-      if (error) {
-        console.error("Erro de autenticação:", error.message);
-        setError("Email ou senha incorretos. Tente novamente.");
-        setLoading(false);
-        return;
-      }
-
-      // Verificar o tipo de usuário (professor ou admin)
-      const { data: userData, error: userError } = await supabase
-        .from("usuarios")
-        .select("tipo, nome")
-        .eq("email", email)
-        .single();
-
-      if (userError || !userData) {
-        console.error("Erro ao obter tipo de usuário:", userError?.message);
-        setError("Erro ao verificar perfil de usuário.");
-        await supabase.auth.signOut();
-        setLoading(false);
-        return;
-      }
-
-      // Verificar se o tipo de usuário corresponde ao selecionado
-      if (userData.tipo !== userType) {
+      if (!result || !result.success) {
+        console.error("Falha no login reportada pelo App:", result?.error);
         setError(
-          `Este usuário não é um ${
-            userType === "professor" ? "professor" : "administrador"
-          }. Selecione o tipo correto.`
+          result?.error || "Email ou senha incorretos. Tente novamente."
         );
-        await supabase.auth.signOut();
         setLoading(false);
         return;
       }
 
-      // Login bem-sucedido
-      console.log("Login bem-sucedido:", userData);
-
-      // Chamar a função de callback com os dados do usuário logado
-      onLogin({
-        id: data.user.id,
-        email: data.user.email,
-        nome: userData.nome,
-        tipo: userData.tipo,
-      });
-
-      // Redirecionar para a página apropriada
-      setLoading(false);
-      navigate(userType === "admin" ? "/admin" : "/professor");
+      // A verificação de tipo e o redirecionamento agora são tratados pelo App.jsx / useAuth
+      console.log("Login bem-sucedido, App.jsx cuidará do redirecionamento.");
+      // O redirecionamento será feito pelo App.jsx após o estado do usuário ser atualizado pelo useAuth
+      // navigate(userType === "admin" ? "/admin" : "/professor"); // REMOVIDO
     } catch (err) {
       console.error("Exceção no login:", err.message);
       setError("Ocorreu um erro inesperado. Tente novamente mais tarde.");
-      setLoading(false);
+    } finally {
+      setLoading(false); // Garante que loading seja false no final
     }
   };
 

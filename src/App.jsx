@@ -100,28 +100,32 @@ const App = () => {
     };
   }, []);
 
-  // Função para lidar com o login
-  const handleLogin = async (email, password) => {
+  // Função para lidar com o login (recebe userType do componente Login)
+  const handleLogin = async (email, password, userType) => {
     try {
-      const result = await signIn(email, password);
+      // Chama o signIn do useAuth, passando o userType esperado
+      const result = await signIn(email, password, userType);
 
       if (!result || !result.success) {
         console.error(
-          "Erro durante login:",
-          result?.message || "Falha na autenticação"
+          "Erro durante login (App.jsx):",
+          result?.error || "Falha na autenticação"
         );
+        // Retorna o erro para ser exibido no componente Login
         return {
           success: false,
           error:
-            result?.message ||
-            "Credenciais inválidas. Verifique seu email e senha.",
+            result?.error ||
+            "Credenciais inválidas ou tipo de usuário incorreto.",
         };
       }
 
-      // Login bem-sucedido
+      // Login bem-sucedido, o estado do usuário já foi atualizado pelo useAuth
+      // O useEffect que depende de [user, loading] cuidará de atualizar isAuthenticated e redirecionar
+      console.log("Login bem-sucedido (App.jsx), estado será atualizado.");
       return { success: true, data: result.data };
     } catch (error) {
-      console.error("Exceção durante login:", error);
+      console.error("Exceção durante login (App.jsx):", error);
       return {
         success: false,
         error: "Erro ao processar login. Tente novamente mais tarde.",
@@ -324,6 +328,7 @@ const App = () => {
 
   // Se não estiver autenticado, mostra a tela de login
   if (!isAuthenticated) {
+    // Passa a função handleLogin atualizada para o componente Login
     return <Login onLogin={handleLogin} />;
   }
 
