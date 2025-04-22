@@ -42,24 +42,31 @@ function GerenciamentoAlunos({ setActiveSection }) {
   const carregarAlunos = async () => {
     try {
       setLoading(true);
+      console.log("Iniciando carregamento de alunos..."); // Log Adicionado
 
       // Forçar atualização do cache antes de carregar
-      await reloadSupabaseSchemaCache();
+      // await reloadSupabaseSchemaCache(); // Chamada removida temporariamente
 
+      console.log("Buscando alunos no Supabase..."); // Log Adicionado
       const { data, error } = await supabase
         .from("alunos")
         .select("*")
         .order("nome");
 
-      if (error) throw error;
+      if (error) {
+        console.error("Erro Supabase ao carregar alunos:", error); // Log de erro detalhado
+        throw error;
+      }
 
-      console.log("Alunos carregados:", data);
-      setAlunos(data);
+      console.log(`Alunos carregados com sucesso: ${data?.length} registros.`); // Log de sucesso
+      setAlunos(data || []); // Garante que alunos seja sempre um array
       setError(null);
     } catch (err) {
-      console.error("Erro ao carregar alunos:", err);
+      console.error("Erro geral ao carregar alunos:", err); // Log de erro geral
       setError("Erro ao carregar alunos: " + err.message);
+      setAlunos([]); // Define como array vazio em caso de erro
     } finally {
+      console.log("Finalizando carregamento de alunos."); // Log Adicionado
       setLoading(false);
     }
   };
