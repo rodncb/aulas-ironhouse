@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import "../styles/Login.css";
 import logoCompleta from "../assets/logo_completa.png";
-import { useNavigate } from "react-router-dom";
+// import { useNavigate } from "react-router-dom"; // Não está sendo usado
 
 const Login = ({ onLogin }) => {
   const [userType, setUserType] = useState("professor");
@@ -9,7 +9,7 @@ const Login = ({ onLogin }) => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
+  // const navigate = useNavigate(); // Não está sendo usado
 
   const handleUserTypeChange = (tipo) => {
     setUserType(tipo);
@@ -56,28 +56,34 @@ const Login = ({ onLogin }) => {
 
   return (
     <div className="login-container">
-      <div className="login-box">
-        <div className="login-header">
-          <img src={logoCompleta} alt="IronHouse Logo" className="login-logo" />
-          <h2>Entrar</h2>
+      {/* Mudança 1: login-box -> login-card */}
+      <div className="login-card">
+        {/* Mudança 5: Ajuste na estrutura do logo */}
+        <div className="login-logo">
+          <img src={logoCompleta} alt="IronHouse Logo" />
+          {/* Removido h1 que não está no CSS original */}
         </div>
 
-        <div className="user-type-selector">
+        {/* Mudança 2: user-type-selector -> user-type-toggle */}
+        <div className="user-type-toggle">
+          {/* Mudança 3: Adiciona className="toggle-btn" */}
           <button
-            className={userType === "professor" ? "active" : ""}
+            className={`toggle-btn ${userType === "professor" ? "active" : ""}`}
             onClick={() => handleUserTypeChange("professor")}
           >
             Professor
           </button>
+          {/* Mudança 3: Adiciona className="toggle-btn" */}
           <button
-            className={userType === "admin" ? "active" : ""}
+            className={`toggle-btn ${userType === "admin" ? "active" : ""}`}
             onClick={() => handleUserTypeChange("admin")}
           >
             Administrador
           </button>
         </div>
 
-        <form onSubmit={handleLogin}>
+        {/* Mudança 4: Adiciona className="login-form" */}
+        <form className="login-form" onSubmit={handleLogin}>
           <div className="form-group">
             <label htmlFor="email">Email</label>
             <input
@@ -107,9 +113,17 @@ const Login = ({ onLogin }) => {
           {error && <div className="error-message">{error}</div>}
 
           <button type="submit" className="login-button" disabled={loading}>
-            {loading ? "Entrando..." : "Entrar"}
+            {loading ? (
+              <span className="loading-text">
+                <span className="loading-spinner"></span>
+                Entrando...
+              </span>
+            ) : (
+              "Entrar"
+            )}
           </button>
         </form>
+        {/* Elementos como login-footer, recovery-options etc. não estão no JSX atual */}
       </div>
     </div>
   );
