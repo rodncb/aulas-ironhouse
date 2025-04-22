@@ -17,7 +17,9 @@ const fetchUserProfile = async (userId) => {
     }
 
     // 2. Se não encontrou nos metadados, busca na tabela profiles
-    console.log("Role não encontrada nos metadados, buscando na tabela profiles...");
+    console.log(
+      "Role não encontrada nos metadados, buscando na tabela profiles..."
+    );
     const { data: profile, error } = await supabase
       .from("profiles") // Consulta a tabela 'profiles'
       .select("role")
@@ -37,11 +39,16 @@ const fetchUserProfile = async (userId) => {
     }
 
     // Se não encontrou em nenhum lugar
-    console.warn("Role não encontrada nem nos metadados nem na tabela profiles para o usuário:", userId);
+    console.warn(
+      "Role não encontrada nem nos metadados nem na tabela profiles para o usuário:",
+      userId
+    );
     return { role: null };
-
   } catch (fetchError) {
-    console.error("Exceção ao buscar perfil (metadados ou profiles):", fetchError);
+    console.error(
+      "Exceção ao buscar perfil (metadados ou profiles):",
+      fetchError
+    );
     return { role: null };
   }
 };
