@@ -129,7 +129,7 @@ export async function resetSupabaseClient() {
 // Função para recarregar o cache do schema do Supabase
 export async function reloadSupabaseSchemaCache() {
   console.log("Tentando recarregar o cache do schema Supabase...");
-  
+
   try {
     // Primeira tentativa usando RPC
     try {
@@ -140,32 +140,40 @@ export async function reloadSupabaseSchemaCache() {
       console.warn("Falha ao recarregar cache via RPC:", rpcError);
       // Continuar com métodos alternativos
     }
-    
+
     // Segunda tentativa: fazer uma consulta simples em cada tabela principal
     // para forçar a atualização do cache de schema
     try {
       console.log("Tentando recarregar cache com consultas simples...");
-      
+
       // Lista das tabelas principais da aplicação
-      const tabelas = ['alunos', 'professores', 'aulas', 'exercicios', 'aula_alunos'];
-      
+      const tabelas = [
+        "alunos",
+        "professores",
+        "aulas",
+        "exercicios",
+        "aula_alunos",
+      ];
+
       // Executar consultas simples
-      const promises = tabelas.map(tabela => 
-        supabase.from(tabela).select('id').limit(1)
+      const promises = tabelas.map((tabela) =>
+        supabase.from(tabela).select("id").limit(1)
       );
-      
+
       await Promise.allSettled(promises);
       console.log("Consultas simples concluídas para recarregar cache.");
-      
+
       // Fazer uma consulta específica para garantir que a coluna 'exercicios' da tabela 'aulas' esteja no cache
-      await supabase.from('aulas').select('id, exercicios').limit(1);
-      
+      await supabase.from("aulas").select("id, exercicios").limit(1);
+
       return true;
     } catch (queryError) {
       console.warn("Falha ao recarregar cache via consultas:", queryError);
     }
-    
-    console.error("Falha em todas as tentativas de recarregar o cache do schema.");
+
+    console.error(
+      "Falha em todas as tentativas de recarregar o cache do schema."
+    );
     return false;
   } catch (error) {
     console.error("Erro ao recarregar cache do schema:", error);

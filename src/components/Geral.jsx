@@ -838,7 +838,6 @@ const Geral = ({ alunosEmAula, atualizarAlunosEmAula }) => {
       const novaAulaVazia = {
         data: dataFormatada,
         alunos: [], // Garantir que a nova aula começa sem alunos
-        totalAlunos: 0,
         total_alunos: 0,
         exercicios: [],
         status: "atual",

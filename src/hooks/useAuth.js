@@ -171,7 +171,10 @@ export function useAuth() {
             try {
               await updateUserState(session);
             } catch (error) {
-              console.error("Erro ao atualizar estado do usuário após evento:", error);
+              console.error(
+                "Erro ao atualizar estado do usuário após evento:",
+                error
+              );
               // Garantir que o estado de carregamento seja definido como falso mesmo em caso de erro
               setLoading(false);
             }

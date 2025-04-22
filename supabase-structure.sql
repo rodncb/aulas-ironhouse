@@ -39,6 +39,7 @@ CREATE TABLE public.alunos (
   plano TEXT DEFAULT '8 Check-in' CHECK (plano IN ('8 Check-in', '12 Check-in', '16 Check-in', 'Premium')),
   nivel TEXT DEFAULT 'Iniciante' CHECK (nivel IN ('Iniciante', 'Intermediário', 'Avançado')),
   observacoes TEXT,
+  status TEXT DEFAULT 'ativo' CHECK (status IN ('ativo', 'inativo')), -- Adicionada coluna status
   created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
 );
@@ -76,6 +77,24 @@ CREATE TABLE public.aula_alunos (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
   UNIQUE(aula_id, aluno_id)
 );
+
+-- Criar a tabela profiles se não existir (Melhor abordagem)
+CREATE TABLE IF NOT EXISTS public.profiles (
+  id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  role TEXT NOT NULL CHECK (role IN ('admin', 'professor')),
+  nome TEXT, -- Coluna nome adicionada aqui
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+);
+-- Habilitar RLS na tabela profiles
+ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+-- Sincronizar usuários existentes que não estão em profiles
+INSERT INTO public.profiles (id, role, nome)
+SELECT au.id,
+       COALESCE(au.raw_user_meta_data->>'role', 'professor') as role,
+       au.raw_user_meta_data->>'nome' as nome -- Agora esta linha funcionará
+FROM auth.users au
+LEFT JOIN public.profiles p ON au.id = p.id
+WHERE p.id IS NULL;
 
 -- Função para criar uma aula e associar alunos em uma transação
 CREATE OR REPLACE FUNCTION public.criar_aula(

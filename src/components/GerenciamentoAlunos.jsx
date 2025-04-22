@@ -44,8 +44,29 @@ function GerenciamentoAlunos({ setActiveSection }) {
       setLoading(true);
       console.log("Iniciando carregamento de alunos..."); // Log Adicionado
 
-      // Forçar atualização do cache antes de carregar
-      // await reloadSupabaseSchemaCache(); // Chamada removida temporariamente
+      // Primeiro, vamos verificar se o usuário está autenticado
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (session) {
+        console.log("Usuário autenticado:", session.user.email);
+        console.log("ID do usuário:", session.user.id);
+
+        // Vamos verificar a role na tabela profiles
+        const { data: profileData, error: profileError } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", session.user.id)
+          .single();
+
+        if (profileError) {
+          console.error("Erro ao buscar perfil:", profileError);
+        } else {
+          console.log("Perfil do usuário:", profileData);
+        }
+      } else {
+        console.error("Usuário não está autenticado");
+      }
 
       console.log("Buscando alunos no Supabase..."); // Log Adicionado
       const { data, error } = await supabase
