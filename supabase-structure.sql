@@ -190,9 +190,89 @@ ALTER TABLE public.exercicios ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.aulas ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.aula_alunos ENABLE ROW LEVEL SECURITY;
 
--- Criar políticas de acesso
-CREATE POLICY "Permitir acesso total a usuários autenticados" ON public.professores FOR ALL TO authenticated USING (true);
-CREATE POLICY "Permitir acesso total a usuários autenticados" ON public.alunos FOR ALL TO authenticated USING (true);
-CREATE POLICY "Permitir acesso total a usuários autenticados" ON public.exercicios FOR ALL TO authenticated USING (true);
-CREATE POLICY "Permitir acesso total a usuários autenticados" ON public.aulas FOR ALL TO authenticated USING (true);
-CREATE POLICY "Permitir acesso total a usuários autenticados" ON public.aula_alunos FOR ALL TO authenticated USING (true);
+-- Remover políticas antigas e permissivas (se existirem)
+DROP POLICY IF EXISTS "Permitir acesso total a usuários autenticados" ON public.professores;
+DROP POLICY IF EXISTS "Permitir acesso total a usuários autenticados" ON public.alunos;
+DROP POLICY IF EXISTS "Permitir acesso total a usuários autenticados" ON public.exercicios;
+DROP POLICY IF EXISTS "Permitir acesso total a usuários autenticados" ON public.aulas;
+DROP POLICY IF EXISTS "Permitir acesso total a usuários autenticados" ON public.aula_alunos;
+
+-- Função auxiliar para verificar role (assume tabela 'profiles' com colunas 'id' e 'role')
+CREATE OR REPLACE FUNCTION public.check_user_role(required_roles TEXT[])
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public -- Garante que a tabela profiles seja encontrada
+AS $$
+BEGIN
+  RETURN EXISTS (
+    SELECT 1
+    FROM profiles
+    WHERE id = auth.uid() AND role = ANY(required_roles)
+  );
+END;
+$$;
+
+-- Políticas para a tabela 'professores' (Apenas Admins podem gerenciar)
+CREATE POLICY "Permitir leitura de professores para admins" ON public.professores
+  FOR SELECT USING (check_user_role(ARRAY['admin']));
+CREATE POLICY "Permitir criação de professores para admins" ON public.professores
+  FOR INSERT WITH CHECK (check_user_role(ARRAY['admin']));
+CREATE POLICY "Permitir atualização de professores para admins" ON public.professores
+  FOR UPDATE USING (check_user_role(ARRAY['admin']));
+CREATE POLICY "Permitir exclusão de professores para admins" ON public.professores
+  FOR DELETE USING (check_user_role(ARRAY['admin']));
+
+-- Políticas para a tabela 'alunos' (Admins e Professores podem gerenciar)
+CREATE POLICY "Permitir leitura de alunos para admins/professores" ON public.alunos
+  FOR SELECT USING (check_user_role(ARRAY['admin', 'professor']));
+CREATE POLICY "Permitir criação de alunos para admins/professores" ON public.alunos
+  FOR INSERT WITH CHECK (check_user_role(ARRAY['admin', 'professor']));
+CREATE POLICY "Permitir atualização de alunos para admins/professores" ON public.alunos
+  FOR UPDATE USING (check_user_role(ARRAY['admin', 'professor']));
+CREATE POLICY "Permitir exclusão de alunos para admins/professores" ON public.alunos
+  FOR DELETE USING (check_user_role(ARRAY['admin', 'professor']));
+
+-- Políticas para a tabela 'exercicios' (Admins e Professores podem gerenciar)
+CREATE POLICY "Permitir leitura de exercicios para admins/professores" ON public.exercicios
+  FOR SELECT USING (check_user_role(ARRAY['admin', 'professor']));
+CREATE POLICY "Permitir criação de exercicios para admins/professores" ON public.exercicios
+  FOR INSERT WITH CHECK (check_user_role(ARRAY['admin', 'professor']));
+CREATE POLICY "Permitir atualização de exercicios para admins/professores" ON public.exercicios
+  FOR UPDATE USING (check_user_role(ARRAY['admin', 'professor']));
+CREATE POLICY "Permitir exclusão de exercicios para admins/professores" ON public.exercicios
+  FOR DELETE USING (check_user_role(ARRAY['admin', 'professor']));
+
+-- Políticas para a tabela 'aulas' (Admins e Professores podem gerenciar)
+CREATE POLICY "Permitir leitura de aulas para admins/professores" ON public.aulas
+  FOR SELECT USING (check_user_role(ARRAY['admin', 'professor']));
+CREATE POLICY "Permitir criação de aulas para admins/professores" ON public.aulas
+  FOR INSERT WITH CHECK (check_user_role(ARRAY['admin', 'professor']));
+CREATE POLICY "Permitir atualização de aulas para admins/professores" ON public.aulas
+  FOR UPDATE USING (check_user_role(ARRAY['admin', 'professor']));
+CREATE POLICY "Permitir exclusão de aulas para admins/professores" ON public.aulas
+  FOR DELETE USING (check_user_role(ARRAY['admin', 'professor']));
+
+-- Políticas para a tabela 'aula_alunos' (Admins e Professores podem gerenciar)
+CREATE POLICY "Permitir leitura de aula_alunos para admins/professores" ON public.aula_alunos
+  FOR SELECT USING (check_user_role(ARRAY['admin', 'professor']));
+CREATE POLICY "Permitir criação de aula_alunos para admins/professores" ON public.aula_alunos
+  FOR INSERT WITH CHECK (check_user_role(ARRAY['admin', 'professor']));
+CREATE POLICY "Permitir atualização de aula_alunos para admins/professores" ON public.aula_alunos
+  FOR UPDATE USING (check_user_role(ARRAY['admin', 'professor']));
+CREATE POLICY "Permitir exclusão de aula_alunos para admins/professores" ON public.aula_alunos
+  FOR DELETE USING (check_user_role(ARRAY['admin', 'professor']));
+
+-- Políticas para a tabela 'profiles' (Usuário pode ver/atualizar seu próprio perfil, admin pode ver todos)
+-- Certifique-se que a tabela profiles existe e tem RLS ativado
+-- ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY; -- Descomente se necessário
+DROP POLICY IF EXISTS "Permitir leitura do próprio perfil" ON public.profiles;
+DROP POLICY IF EXISTS "Permitir atualização do próprio perfil" ON public.profiles;
+DROP POLICY IF EXISTS "Permitir leitura de todos perfis para admin" ON public.profiles;
+
+CREATE POLICY "Permitir leitura do próprio perfil" ON public.profiles
+  FOR SELECT USING (id = auth.uid());
+CREATE POLICY "Permitir atualização do próprio perfil" ON public.profiles
+  FOR UPDATE USING (id = auth.uid());
+CREATE POLICY "Permitir leitura de todos perfis para admin" ON public.profiles
+  FOR SELECT USING (check_user_role(ARRAY['admin']));
