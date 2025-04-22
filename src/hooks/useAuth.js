@@ -113,6 +113,7 @@ export function useAuth() {
       if (isUpdatingRef.current) return;
 
       try {
+        isUpdatingRef.current = true; // Marcar que está atualizando
         setLoading(true);
         console.log("Verificando sessão existente...");
 
@@ -124,12 +125,13 @@ export function useAuth() {
             setUser(null);
             setLoading(false);
           }
+          isUpdatingRef.current = false; // Certifique-se de limpar mesmo em caso de erro
           return;
         }
 
         if (data?.session) {
           console.log("Sessão encontrada, atualizando usuário");
-          if (isMounted && !isUpdatingRef.current) {
+          if (isMounted) {
             await updateUserState(data.session);
           }
         } else {
@@ -146,8 +148,10 @@ export function useAuth() {
           setLoading(false);
         }
       } finally {
+        // Garantir que estas flags sejam atualizadas independentemente do resultado
         if (isMounted) {
           setSessionChecked(true);
+          isUpdatingRef.current = false; // Limpar a flag sempre
         }
       }
     };
@@ -164,8 +168,12 @@ export function useAuth() {
 
           if (session) {
             console.log("Sessão atualizada");
-            if (!isUpdatingRef.current) {
+            try {
               await updateUserState(session);
+            } catch (error) {
+              console.error("Erro ao atualizar estado do usuário após evento:", error);
+              // Garantir que o estado de carregamento seja definido como falso mesmo em caso de erro
+              setLoading(false);
             }
           } else {
             console.log("Sessão encerrada");
