@@ -601,10 +601,22 @@ const Geral = ({ alunosEmAula, atualizarAlunosEmAula }) => {
       };
 
       try {
+        // --- DEBUG LOGGING ---
+        console.log("Tentando adicionar aluno:");
+        console.log(
+          "  Aula ID:",
+          aulaAlvo ? aulaAlvo.id : "aulaAlvo é nulo/undefined"
+        );
+        console.log(
+          "  Aluno ID:",
+          alunoCompleto ? alunoCompleto.id : "alunoCompleto é nulo/undefined"
+        );
+        // --- FIM DEBUG LOGGING ---
+
         // Adicionar o aluno à aula alvo usando o service dedicado
         const aulaAtualizadaBackend = await aulasService.adicionarAluno(
-          aulaAlvo.id,
-          alunoCompleto.id
+          aulaAlvo.id, // <--- ID da aula (UUID)
+          alunoCompleto.id // <--- ID do aluno (UUID)
         );
 
         // Atualizar o estado local APÓS sucesso no backend
@@ -729,7 +741,6 @@ const Geral = ({ alunosEmAula, atualizarAlunosEmAula }) => {
           anotacoes: anotacoes || "",
           status: "atual", // Nova aula sempre começa como 'atual'
           created_at: new Date().toISOString(),
-          total_alunos: alunosNaAula.length, // Adicionado para consistência
         };
         aulaData = await aulasService.create(aulaData);
       }
@@ -790,7 +801,6 @@ const Geral = ({ alunosEmAula, atualizarAlunosEmAula }) => {
           exercicios: [...exerciciosSelecionados],
           anotacoes: anotacoes || aulaAtual.anotacoes || "",
           status: finalizar ? "realizada" : "atual",
-          total_alunos: alunosNaAula.length, // Garantir que o contador esteja correto
         };
 
         // Atualizar no Supabase
@@ -810,7 +820,6 @@ const Geral = ({ alunosEmAula, atualizarAlunosEmAula }) => {
           anotacoes: anotacoes || "",
           status: finalizar ? "realizada" : "atual",
           dataCriacao: new Date().toISOString(),
-          total_alunos: alunosNaAula.length, // Garantir que o contador esteja correto
         };
 
         // Criar no Supabase
@@ -1443,34 +1452,53 @@ const Geral = ({ alunosEmAula, atualizarAlunosEmAula }) => {
         const newUltimosTreinosMap = { ...ultimosTreinosMap }; // Copia o estado atual
         let updated = false;
         for (const aluno of alunosNaAula) {
-          // Busca apenas se ainda não tiver a informação ou se precisar atualizar
-          // Neste caso, vamos buscar sempre que alunosNaAula mudar, para simplificar
-          try {
-            // Usar a função do serviço alunos.service.js
-            const ultimoTreino = await alunosService.getUltimaAulaRealizada(
-              aluno.id
+          // AJUSTADO: Verificar se aluno e aluno.id são válidos E NÃO NULOS/UNDEFINED
+          if (aluno && aluno.id !== null && aluno.id !== undefined) {
+            try {
+              // Usar a função do serviço alunos.service.js
+              const ultimoTreino = await alunosService.getUltimaAulaRealizada(
+                aluno.id // Agora sabemos que aluno.id é um UUID válido
+              );
+              newUltimosTreinosMap[aluno.id] = ultimoTreino || "nenhum"; // Armazena o treino ou 'nenhum'
+              updated = true;
+            } catch (error) {
+              console.error(
+                `Erro ao buscar último treino para ${
+                  aluno.nome || "ID desconhecido"
+                }:`, // Usar nome ou fallback
+                error
+              );
+              // Verificar se aluno.id existe antes de usar como chave
+              if (aluno.id) {
+                newUltimosTreinosMap[aluno.id] = "erro"; // Indica um erro na busca
+                updated = true;
+              }
+            }
+          } else {
+            // Log opcional para identificar alunos inválidos na lista
+            console.warn(
+              "Encontrado aluno inválido ou com ID nulo/undefined em alunosNaAula:",
+              aluno
             );
-            newUltimosTreinosMap[aluno.id] = ultimoTreino || "nenhum"; // Armazena o treino ou 'nenhum'
-            updated = true;
-          } catch (error) {
-            console.error(
-              `Erro ao buscar último treino para ${aluno.nome}:`,
-              error
-            );
-            newUltimosTreinosMap[aluno.id] = "erro"; // Indica um erro na busca
-            updated = true;
+            // ADICIONADO: Marcar como erro se o ID for inválido para evitar 'Carregando...'
+            // Não adicionaremos ao map neste caso para evitar chaves inválidas.
           }
         }
         // Atualiza o estado apenas se houve alguma mudança
         if (updated) {
           setUltimosTreinosMap(newUltimosTreinosMap);
         }
+      } else {
+        // ADICIONADO: Limpar o mapa se não houver alunos na aula
+        if (Object.keys(ultimosTreinosMap).length > 0) {
+          setUltimosTreinosMap({});
+        }
       }
     };
 
     fetchUltimosTreinos();
     // Dependência: Executa sempre que a lista de alunos na aula mudar
-  }, [alunosNaAula]);
+  }, [alunosNaAula]); // Removido ultimosTreinosMap da dependência para evitar loop
 
   // Renderizar o painel de informações do último treino e do aluno atual
   const renderizarUltimoTreino = (aluno) => {

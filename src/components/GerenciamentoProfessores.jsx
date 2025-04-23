@@ -132,7 +132,6 @@ const GerenciamentoProfessores = (props) => {
         especialidade: novoProfessor.especialidade,
         experiencia: novoProfessor.experiencia,
         formacao: novoProfessor.formacao,
-        historicoAulas: [],
       };
 
       try {
@@ -161,17 +160,20 @@ const GerenciamentoProfessores = (props) => {
   };
 
   const handleDelete = async (id) => {
-    try {
-      // CORREÇÃO: Usar o nome correto da função do serviço (delete)
-      await professoresService.delete(id);
-      const professoresAtualizados = professores.filter((p) => p.id !== id);
-      setProfessores(professoresAtualizados);
-    } catch (err) {
-      setError("Erro ao excluir professor: " + err.message);
-      console.error("Erro ao excluir professor:", err);
+    // ADICIONADO: Confirmação antes de excluir
+    if (window.confirm("Tem certeza que deseja excluir este professor?")) {
+      try {
+        // CORREÇÃO: Usar o nome correto da função do serviço (delete)
+        await professoresService.delete(id);
+        const professoresAtualizados = professores.filter((p) => p.id !== id);
+        setProfessores(professoresAtualizados);
+      } catch (err) {
+        setError("Erro ao excluir professor: " + err.message);
+        console.error("Erro ao excluir professor:", err);
+      }
     }
 
-    setActiveDropdown(null); // Fecha o dropdown após excluir
+    setActiveDropdown(null); // Fecha o dropdown após excluir ou cancelar
   };
 
   const handleVerHistorico = (professor) => {
@@ -329,7 +331,8 @@ const GerenciamentoProfessores = (props) => {
           {filteredItems.slice(0, itemsPerPage).map((item) => (
             <tr key={item.id}>
               <td>{item.nome}</td>
-              <td>{item.idade}</td>
+              {/* ADICIONADO: Verificação para idade nula */}
+              <td>{item.idade !== null && item.idade !== undefined ? item.idade : "N/A"}</td>
               <td>{item.especialidade}</td>
               <td>{item.experiencia}</td>
               <td className="actions">
