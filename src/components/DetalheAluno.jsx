@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from 'react-router-dom'; // Importar useNavigate
 import AlunosService from "../services/AlunosService";
-import { voltarPagina, formatarData } from "../lib/utils";
+// Remover importação de voltarPagina se não for mais usada em outro lugar
+import { formatarData } from "../lib/utils";
 import "../styles/DetalheAluno.css";
 
 const DetalheAluno = ({ alunoId }) => {
+  const navigate = useNavigate(); // Obter a função navigate
   const [aluno, setAluno] = useState(null);
   const [historicoAulas, setHistoricoAulas] = useState([]);
   const [tabAtiva, setTabAtiva] = useState("detalhes");
@@ -56,12 +59,18 @@ const DetalheAluno = ({ alunoId }) => {
     return "";
   };
 
+  // Nova função para navegar para /alunos
+  const handleVoltarParaAlunos = () => {
+    navigate('/alunos');
+  };
+
   if (loading) {
     return (
       <div className="detalhe-aluno-container">
         <div className="detalhe-header">
           <h2>Detalhes do Aluno</h2>
-          <button className="btn-voltar" onClick={voltarPagina}>
+          {/* Usar a nova função */}
+          <button className="btn-voltar" onClick={handleVoltarParaAlunos}>
             Voltar
           </button>
         </div>
@@ -78,13 +87,15 @@ const DetalheAluno = ({ alunoId }) => {
       <div className="detalhe-aluno-container">
         <div className="detalhe-header">
           <h2>Detalhes do Aluno</h2>
-          <button className="btn-voltar" onClick={voltarPagina}>
+           {/* Usar a nova função */}
+          <button className="btn-voltar" onClick={handleVoltarParaAlunos}>
             Voltar
           </button>
         </div>
         <div className="detalhe-error">
           <p>{error || "Aluno não encontrado"}</p>
-          <button className="btn-voltar" onClick={voltarPagina}>
+           {/* Usar a nova função */}
+          <button className="btn-voltar" onClick={handleVoltarParaAlunos}>
             Voltar para a lista
           </button>
         </div>
@@ -100,7 +111,8 @@ const DetalheAluno = ({ alunoId }) => {
     >
       <div className="detalhe-header">
         <h2>Detalhes do Aluno</h2>
-        <button className="btn-voltar" onClick={voltarPagina}>
+         {/* Usar a nova função */}
+        <button className="btn-voltar" onClick={handleVoltarParaAlunos}>
           Voltar
         </button>
       </div>

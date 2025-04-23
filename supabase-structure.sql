@@ -50,6 +50,7 @@ CREATE TABLE public.exercicios (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   nome TEXT NOT NULL UNIQUE,
   musculatura TEXT,
+  aparelho TEXT, -- Coluna adicionada
   created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
 );
