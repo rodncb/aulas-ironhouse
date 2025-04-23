@@ -59,7 +59,8 @@ const GerenciamentoProfessores = (props) => {
   // Função para carregar o histórico de aulas
   const carregarHistoricoAulas = async () => {
     try {
-      const aulas = await aulasService.getAllAulas();
+      // CORRIGIDO: Renomear a chamada da função para getAll
+      const aulas = await aulasService.getAll();
       setHistoricoAulas(aulas);
     } catch (err) {
       console.error("Erro ao carregar histórico de aulas:", err);
