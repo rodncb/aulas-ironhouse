@@ -141,12 +141,27 @@ export async function reloadSupabaseSchemaCache() {
       // Continuar com métodos alternativos
     }
 
-    // Segunda tentativa: fazer uma consulta simples em cada tabela principal
-    // para forçar a atualização do cache de schema
+    // Segunda tentativa: fazer uma consulta específica na tabela 'alunos' incluindo 'tipoLesao'
+    try {
+      console.log(
+        "Tentando recarregar cache com consulta específica em 'alunos' incluindo 'tipoLesao'..."
+      );
+      await supabase.from("alunos").select("id, tipoLesao").limit(1);
+      console.log(
+        "Consulta específica em 'alunos' concluída para recarregar cache."
+      );
+      return true;
+    } catch (queryError) {
+      console.warn(
+        "Falha ao recarregar cache via consulta específica em 'alunos':",
+        queryError
+      );
+    }
+
+    // Terceira tentativa (fallback original): fazer uma consulta simples em cada tabela principal
     try {
       console.log("Tentando recarregar cache com consultas simples...");
 
-      // Lista das tabelas principais da aplicação
       const tabelas = [
         "alunos",
         "professores",
@@ -155,7 +170,6 @@ export async function reloadSupabaseSchemaCache() {
         "aula_alunos",
       ];
 
-      // Executar consultas simples
       const promises = tabelas.map((tabela) =>
         supabase.from(tabela).select("id").limit(1)
       );
@@ -167,8 +181,11 @@ export async function reloadSupabaseSchemaCache() {
       await supabase.from("aulas").select("id, exercicios").limit(1);
 
       return true;
-    } catch (queryError) {
-      console.warn("Falha ao recarregar cache via consultas:", queryError);
+    } catch (fallbackQueryError) {
+      console.warn(
+        "Falha ao recarregar cache via consultas de fallback:",
+        fallbackQueryError
+      );
     }
 
     console.error(
