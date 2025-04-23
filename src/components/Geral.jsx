@@ -52,6 +52,8 @@ const Geral = ({ alunosEmAula, atualizarAlunosEmAula }) => {
   const [error, setError] = useState(null); // Estado para erros gerais
   // Estado para controlar alertas
   const [alertas, setAlertas] = useState([]);
+  // Novo estado para armazenar os últimos treinos dos alunos em aula
+  const [ultimosTreinosMap, setUltimosTreinosMap] = useState({});
 
   // Refs para controle de atualizações cíclicas
   const sincronizacaoRef = useRef(false);
@@ -853,7 +855,7 @@ const Geral = ({ alunosEmAula, atualizarAlunosEmAula }) => {
 
       const aulaResponse = await aulasService.create(novaAulaVazia);
 
-      // Definir como aula atual
+      // Definir como aula atual - IMPORTANTE: Atualizar o estado para refletir a nova aula
       setAulaAtual({
         ...aulaResponse,
         alunos: [], // Garantir que não há alunos nesta nova aula
@@ -874,6 +876,9 @@ const Geral = ({ alunosEmAula, atualizarAlunosEmAula }) => {
       // Resetar paginação
       setPaginaAtual(1);
       setSavingData(false);
+
+      // Resetar a flag novaAulaRef APÓS as atualizações de estado relacionadas à nova aula
+      novaAulaRef.current = false;
 
       // Scroll suave até o formulário de nova aula
       setTimeout(() => {
@@ -897,6 +902,8 @@ const Geral = ({ alunosEmAula, atualizarAlunosEmAula }) => {
       setShowErroModal(true);
       setErroMsg("Erro ao iniciar nova aula no Supabase: " + error.message);
       setSavingData(false);
+      // Resetar a flag em caso de erro também
+      novaAulaRef.current = false;
     }
   };
 
@@ -1349,28 +1356,71 @@ const Geral = ({ alunosEmAula, atualizarAlunosEmAula }) => {
     );
   };
 
+  // Efeito para buscar o último treino dos alunos que estão em aula
+  useEffect(() => {
+    const fetchUltimosTreinos = async () => {
+      if (alunosNaAula.length > 0) {
+        const newUltimosTreinosMap = { ...ultimosTreinosMap }; // Copia o estado atual
+        let updated = false;
+        for (const aluno of alunosNaAula) {
+          // Busca apenas se ainda não tiver a informação ou se precisar atualizar
+          // Neste caso, vamos buscar sempre que alunosNaAula mudar, para simplificar
+          try {
+            // Usar a função do serviço alunos.service.js
+            const ultimoTreino = await alunosService.getUltimaAulaRealizada(
+              aluno.id
+            );
+            newUltimosTreinosMap[aluno.id] = ultimoTreino || "nenhum"; // Armazena o treino ou 'nenhum'
+            updated = true;
+          } catch (error) {
+            console.error(
+              `Erro ao buscar último treino para ${aluno.nome}:`,
+              error
+            );
+            newUltimosTreinosMap[aluno.id] = "erro"; // Indica um erro na busca
+            updated = true;
+          }
+        }
+        // Atualiza o estado apenas se houve alguma mudança
+        if (updated) {
+          setUltimosTreinosMap(newUltimosTreinosMap);
+        }
+      }
+    };
+
+    fetchUltimosTreinos();
+    // Dependência: Executa sempre que a lista de alunos na aula mudar
+  }, [alunosNaAula]);
+
   // Renderizar o painel de informações do último treino e do aluno atual
   const renderizarUltimoTreino = (aluno) => {
-    // Buscar informações adicionais do aluno no estado atual
-    const alunoCompleto = todosAlunos.find((a) => a.id === aluno.id) || aluno;
+    const ultimoTreinoInfo = ultimosTreinosMap[aluno.id];
 
-    const ultimoTreino =
-      alunoCompleto.historicoAulas && alunoCompleto.historicoAulas.length > 0
-        ? alunoCompleto.historicoAulas[alunoCompleto.historicoAulas.length - 1]
-        : null;
+    // Se ainda não buscou ou está buscando
+    if (ultimoTreinoInfo === undefined) {
+      return <p>Carregando último treino...</p>;
+    }
 
-    if (!ultimoTreino) {
+    // Se não encontrou treino realizado
+    if (ultimoTreinoInfo === "nenhum") {
       return <p>Nenhum treino registrado.</p>;
     }
 
+    // Se ocorreu erro na busca
+    if (ultimoTreinoInfo === "erro") {
+      return <p>Erro ao buscar treino.</p>;
+    }
+
+    // Se encontrou o treino (objeto com data e status)
     return (
       <div className="ultimo-treino-container">
         <p>
-          <strong>Data:</strong> {formatarData(ultimoTreino.data)}
+          <strong>Último Treino:</strong> {formatarData(ultimoTreinoInfo.data)}
         </p>
+        {/* Opcional: Exibir status se necessário
         <p>
-          <strong>Status:</strong> {getStatusLabel(ultimoTreino.status)}
-        </p>
+          <strong>Status:</strong> {getStatusLabel(ultimoTreinoInfo.status)}
+        </p> */}
       </div>
     );
   };

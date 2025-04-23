@@ -148,8 +148,51 @@ async function deleteAluno(id) {
   }
 }
 
+// Nova função para buscar a última aula realizada por um aluno
+async function getUltimaAulaRealizada(alunoId) {
+  try {
+    // 1. Encontrar os IDs das aulas que o aluno participou
+    const { data: aulaAlunosData, error: aulaAlunosError } = await supabase
+      .from("aula_alunos")
+      .select("aula_id")
+      .eq("aluno_id", alunoId);
+
+    if (aulaAlunosError) throw aulaAlunosError;
+    if (!aulaAlunosData || aulaAlunosData.length === 0) {
+      return null; // Aluno não participou de nenhuma aula
+    }
+
+    const aulaIds = aulaAlunosData.map((item) => item.aula_id);
+
+    // 2. Buscar a aula mais recente com status 'realizada' entre essas aulas
+    const { data: ultimaAulaData, error: ultimaAulaError } = await supabase
+      .from("aulas")
+      .select("data, status")
+      .in("id", aulaIds)
+      .eq("status", "realizada")
+      .order("data", { ascending: false })
+      .limit(1)
+      .maybeSingle(); // Use maybeSingle para retornar null se não encontrar
+
+    if (ultimaAulaError) throw ultimaAulaError;
+
+    return ultimaAulaData; // Retorna a última aula realizada ou null
+  } catch (error) {
+    console.error("Erro ao buscar última aula realizada do aluno:", error);
+    // Não emitir erro de cache aqui, pois pode ser um erro esperado (ex: aluno novo)
+    // emitSchemaCacheError(error);
+    throw error; // Propagar o erro para ser tratado no componente
+  }
+}
+
 // Exportar funções individuais para compatibilidade com código existente
-export { getAll as getAlunos, createAluno, updateAluno, deleteAluno };
+export {
+  getAll as getAlunos,
+  createAluno,
+  updateAluno,
+  deleteAluno,
+  getUltimaAulaRealizada,
+}; // Adicionar nova função
 
 // Exportar o objeto de serviço como padrão
 const alunosService = {
@@ -157,6 +200,7 @@ const alunosService = {
   createAluno,
   updateAluno,
   deleteAluno,
+  getUltimaAulaRealizada, // Adicionar nova função
 };
 
 export default alunosService;

@@ -20,7 +20,7 @@ const EditarAluno = ({ alunoId, setActiveSection }) => {
     telefone: "",
     objetivo: "",
     lesao: "Não",
-    tipo_lesao: "",
+    tipoLesao: "", // Changed from tipo_lesao
     status: "ativo",
     plano: "",
     nivel: "",
@@ -69,7 +69,7 @@ const EditarAluno = ({ alunoId, setActiveSection }) => {
           telefone: infoAluno.telefone || "",
           objetivo: infoAluno.objetivo || "",
           lesao: infoAluno.lesao || "Não",
-          tipo_lesao: infoAluno.tipo_lesao || "",
+          tipoLesao: infoAluno.tipoLesao || "", // Changed from tipo_lesao
           status: infoAluno.status || "ativo",
           plano: infoAluno.plano || "",
           nivel: infoAluno.nivel || "",
@@ -151,8 +151,9 @@ const EditarAluno = ({ alunoId, setActiveSection }) => {
         dadosAtualizados.objetivo = formData.objetivo;
       }
 
-      if (formData.tipo_lesao && formData.lesao !== "Não") {
-        dadosAtualizados.tipo_lesao = formData.tipo_lesao;
+      // Use tipoLesao here
+      if (formData.tipoLesao && formData.lesao !== "Não") {
+        dadosAtualizados.tipoLesao = formData.tipoLesao; // Changed from tipo_lesao
       }
 
       console.log("Enviando dados para atualização:", dadosAtualizados);
@@ -395,11 +396,11 @@ const EditarAluno = ({ alunoId, setActiveSection }) => {
           {formData.lesao !== "Não" && (
             <div className="form-row">
               <div className="form-group full-width">
-                <label htmlFor="tipo_lesao">Descrição da Lesão</label>
+                <label htmlFor="tipoLesao">Descrição da Lesão</label> {/* Changed from tipo_lesao */}
                 <textarea
-                  id="tipo_lesao"
-                  name="tipo_lesao"
-                  value={formData.tipo_lesao}
+                  id="tipoLesao" // Changed from tipo_lesao
+                  name="tipoLesao" // Changed from tipo_lesao
+                  value={formData.tipoLesao} // Changed from tipo_lesao
                   onChange={handleChange}
                   placeholder="Descreva detalhes sobre a lesão"
                   rows={3}
