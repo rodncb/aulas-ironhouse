@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from 'react-router-dom'; // Importar useNavigate
+// REMOVIDO: import { useNavigate } from 'react-router-dom';
 import AlunosService from "../services/AlunosService";
-// Remover importação de voltarPagina se não for mais usada em outro lugar
 import { formatarData } from "../lib/utils";
 import "../styles/DetalheAluno.css";
 
-const DetalheAluno = ({ alunoId }) => {
-  const navigate = useNavigate(); // Obter a função navigate
+// Adicionar onNavigateBack às props
+const DetalheAluno = ({ alunoId, onNavigateBack }) => {
+  // REMOVIDO: const navigate = useNavigate();
   const [aluno, setAluno] = useState(null);
   const [historicoAulas, setHistoricoAulas] = useState([]);
   const [tabAtiva, setTabAtiva] = useState("detalhes");
@@ -59,9 +59,11 @@ const DetalheAluno = ({ alunoId }) => {
     return "";
   };
 
-  // Nova função para navegar para /alunos
+  // Função para chamar onNavigateBack com a seção 'alunos'
   const handleVoltarParaAlunos = () => {
-    navigate('/alunos');
+    if (onNavigateBack) {
+      onNavigateBack('alunos');
+    }
   };
 
   if (loading) {

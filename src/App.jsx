@@ -276,7 +276,8 @@ const App = () => {
     // Verificar se a seção ativa começa com "detalhe-aluno/" ou "editar-aluno/"
     if (activeSection.startsWith("detalhe-aluno/")) {
       const alunoId = activeSection.split("/")[1];
-      return <DetalheAluno alunoId={alunoId} />;
+      // Passar a função handleSectionChange como prop
+      return <DetalheAluno alunoId={alunoId} onNavigateBack={handleSectionChange} />;
     }
 
     if (activeSection.startsWith("editar-aluno/")) {
