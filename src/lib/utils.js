@@ -3,7 +3,7 @@
  */
 
 /**
- * Função para voltar à página anterior ou navegar para o dashboard
+ * Função para voltar para a tela Geral (Dashboard)
  * @param {Event} e - Evento (opcional)
  */
 export const voltarPagina = (e) => {
@@ -12,14 +12,8 @@ export const voltarPagina = (e) => {
     e.preventDefault();
     e.stopPropagation();
   }
-
-  // Tentar voltar na história do navegador
-  if (window.history.length > 1) {
-    window.history.back();
-  } else {
-    // Se não houver histórico, navegar para o dashboard
-    navegarPara("geral");
-  }
+  // Sempre navegar para a seção 'geral'
+  navegarPara("geral");
 };
 
 /**

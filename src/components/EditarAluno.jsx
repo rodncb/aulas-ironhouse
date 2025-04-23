@@ -389,7 +389,9 @@ const EditarAluno = ({ alunoId, setActiveSection }) => {
                 {/* Corrigido: value="Nao" (sem acento) */}
                 <option value="Nao">Não</option>
                 {/* Corrigido: value="Sim - Lesao Moderada" */}
-                <option value="Sim - Lesao Moderada">Sim - Lesão Moderada</option>
+                <option value="Sim - Lesao Moderada">
+                  Sim - Lesão Moderada
+                </option>
                 {/* Corrigido: value="Sim - Lesao Grave" */}
                 <option value="Sim - Lesao Grave">Sim - Lesão Grave</option>
               </select>

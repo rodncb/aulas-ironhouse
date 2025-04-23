@@ -471,8 +471,11 @@ const GerenciamentoProfessores = (props) => {
             <div className="modal-body">
               {/* Filter aulas for the specific professor */}
               {(() => {
+                // CORREÇÃO: Filtrar usando aula.professor.id
                 const aulasDoProfessor = historicoAulas.filter(
-                  (aula) => aula.professor_id === professorHistorico.id
+                  (aula) =>
+                    aula.professor &&
+                    aula.professor.id === professorHistorico.id
                 );
                 const totalAulasProfessor = aulasDoProfessor.length;
 

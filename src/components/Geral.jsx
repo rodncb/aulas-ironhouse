@@ -469,7 +469,6 @@ const Geral = ({ alunosEmAula, atualizarAlunosEmAula }) => {
     try {
       setLoading(true);
 
-      // Encontrar o aluno completo
       const alunoCompleto = todosAlunos.find(
         (a) => String(a.id) === String(alunoSelecionado)
       );
@@ -481,41 +480,76 @@ const Geral = ({ alunosEmAula, atualizarAlunosEmAula }) => {
         return;
       }
 
-      // Verificar se o aluno já está na aula
-      if (alunosNaAula.some((a) => String(a.id) === String(alunoCompleto.id))) {
-        setErroMsg("Este aluno já está na aula!");
+      // --- NOVA VERIFICAÇÃO ---
+      // Verificar se o aluno já está em ALGUMA aula ativa ou atual
+      const aulasAtivasGeral = historicoAulas.filter(
+        (aula) => aula.status === "atual" || aula.status === "ativa"
+      );
+      const alunoJaEmAulaAtiva = aulasAtivasGeral.some(
+        (aula) =>
+          aula.alunos &&
+          aula.alunos.some((a) => String(a.id) === String(alunoCompleto.id))
+      );
+
+      if (alunoJaEmAulaAtiva) {
+        setErroMsg(
+          `O aluno ${alunoCompleto.nome} já está em uma aula ativa. Finalize ou cancele a aula anterior antes de adicioná-lo a uma nova.`
+        );
         setShowErroModal(true);
         setLoading(false);
         return;
       }
+      // --- FIM DA NOVA VERIFICAÇÃO ---
 
-      // Obter todas as aulas com status "atual"
-      const aulasAtivas = historicoAulas.filter(
-        (aula) => aula.status === "atual"
-      );
+      // Determinar a aula alvo para adicionar o aluno
+      let aulaAlvo = null;
+      if (modoEdicao && aulaEditando) {
+        aulaAlvo = aulaEditando;
+      } else if (aulaAtual) {
+        // Se já existe uma aula atual (e não estamos editando outra), usar essa
+        aulaAlvo = aulaAtual;
+      } else {
+        // Se não há aula atual nem edição, procurar a primeira ativa (cenário de fallback)
+        // CORREÇÃO: Buscar a aula criada mais recentemente com status 'atual'
+        const aulasAtuaisRecentes = historicoAulas
+          .filter((aula) => aula.status === "atual")
+          .sort((a, b) => new Date(b.created_at) - new Date(a.created_at)); // Ordena pela data de criação
 
-      // Se não houver aulas ativas, mostrar erro
-      if (aulasAtivas.length === 0) {
+        if (aulasAtuaisRecentes.length > 0) {
+          aulaAlvo = aulasAtuaisRecentes[0]; // Usa a mais recente
+        }
+      }
+
+      if (!aulaAlvo) {
         setErroMsg(
-          "Não há aula ativa disponível. Crie uma nova aula primeiro."
+          "Não há aula ativa ou em edição para adicionar o aluno. Crie ou edite uma aula primeiro."
         );
         setShowErroModal(true);
         setLoading(false);
         return;
       }
 
-      // Verificar se a primeira aula ativa já possui 4 alunos
-      const primeiraAulaAtiva = aulasAtivas[0];
-      const alunosAtuais = primeiraAulaAtiva.alunos || [];
-
-      if (alunosAtuais.length >= 4) {
+      // Verificar limite de alunos na aula alvo
+      const alunosAtuaisNaAulaAlvo = aulaAlvo.alunos || [];
+      if (alunosAtuaisNaAulaAlvo.length >= 4) {
         setErroMsg("Esta aula já atingiu o limite máximo de 4 alunos.");
         setShowErroModal(true);
         setLoading(false);
         return;
       }
 
-      // Preparar o aluno para adicionar
+      // Verificar se o aluno já está especificamente nesta aula alvo (redundante com a verificação geral, mas seguro)
+      if (
+        alunosAtuaisNaAulaAlvo.some(
+          (a) => String(a.id) === String(alunoCompleto.id)
+        )
+      ) {
+        setErroMsg("Este aluno já está nesta aula!");
+        setShowErroModal(true);
+        setLoading(false);
+        return;
+      }
+
       const alunoParaAdicionar = {
         id: alunoCompleto.id,
         nome: alunoCompleto.nome,
@@ -527,42 +561,53 @@ const Geral = ({ alunosEmAula, atualizarAlunosEmAula }) => {
       };
 
       try {
-        // Adicionar o novo aluno
-        const aulaAtualizada = await aulasService.update(primeiraAulaAtiva.id, {
-          ...primeiraAulaAtiva,
-          alunos: [...alunosAtuais, alunoParaAdicionar],
-          total_alunos: (alunosAtuais.length || 0) + 1,
-        });
-
-        // Atualizar o estado local
-        const historicoAtualizado = historicoAulas.map((aula) =>
-          aula.id === primeiraAulaAtiva.id ? aulaAtualizada : aula
+        // Adicionar o aluno à aula alvo usando o service dedicado
+        const aulaAtualizadaBackend = await aulasService.adicionarAluno(
+          aulaAlvo.id,
+          alunoCompleto.id
         );
 
+        // Atualizar o estado local APÓS sucesso no backend
+        const historicoAtualizado = historicoAulas.map((aula) =>
+          aula.id === aulaAlvo.id ? aulaAtualizadaBackend : aula
+        );
         setHistoricoAulas(historicoAtualizado);
 
-        // Atualizar a aula atual se estivermos modificando a aula atual
-        if (aulaAtual && aulaAtual.id === primeiraAulaAtiva.id) {
-          setAulaAtual(aulaAtualizada);
+        // Atualizar a aula atual ou editando, se for o caso
+        if (aulaAtual && aulaAtual.id === aulaAlvo.id) {
+          setAulaAtual(aulaAtualizadaBackend);
+        }
+        if (aulaEditando && aulaEditando.id === aulaAlvo.id) {
+          setAulaEditando(aulaAtualizadaBackend);
         }
 
-        // Atualizar a lista de alunos na aula
-        const novosAlunosNaAula = [...alunosNaAula, alunoParaAdicionar];
-        setAlunosNaAula(novosAlunosNaAula);
+        // Atualizar a lista de alunos na aula (usando dados do backend)
+        // Garantir que alunosNaAula reflita a aula que está sendo mostrada/editada
+        setAlunosNaAula(aulaAtualizadaBackend.alunos || []);
 
         // Atualizar no App.js
         if (typeof atualizarAlunosEmAula === "function") {
-          atualizarAlunosEmAula(novosAlunosNaAula);
+          atualizarAlunosEmAula(aulaAtualizadaBackend.alunos || []);
         }
       } catch (error) {
-        setErroMsg(`Erro ao atualizar aula: ${error.message}`);
+        // Se o erro for de aluno duplicado (tratado no service), mostrar mensagem específica
+        if (
+          error.message.includes("Aluno já existe na aula") ||
+          (error.details &&
+            error.details.includes(
+              'duplicate key value violates unique constraint "aula_alunos_pkey"'
+            ))
+        ) {
+          setErroMsg("Este aluno já está nesta aula!");
+        } else {
+          setErroMsg(`Erro ao adicionar aluno à aula: ${error.message}`);
+        }
         setShowErroModal(true);
       }
 
-      // Resetar seleção
       setAlunoSelecionado("");
     } catch (error) {
-      setErroMsg(`Erro ao adicionar aluno: ${error.message}`);
+      setErroMsg(`Erro ao processar adição de aluno: ${error.message}`);
       setShowErroModal(true);
     } finally {
       setLoading(false);
@@ -594,25 +639,21 @@ const Geral = ({ alunosEmAula, atualizarAlunosEmAula }) => {
     }
 
     try {
-      // Buscar o objeto completo do professor selecionado
+      setSavingData(true); // Adicionado para indicar salvamento
       const professor = professorSelecionado
         ? todosProfessores.find(
             (p) => p.id.toString() === professorSelecionado.toString()
           )
         : null;
-
-      // Garantir que o professor seja um objeto completo com id e nome
       const professorFormatado = professor
-        ? {
-            id: professor.id,
-            nome: professor.nome,
-          }
+        ? { id: professor.id, nome: professor.nome }
         : null;
 
       let aulaData;
+      let foiCriado = false; // Flag para saber se criamos ou atualizamos
 
       if (modoEdicao && aulaEditando) {
-        // Atualizar aula existente
+        // Atualizar aula existente em modo de edição
         aulaData = {
           ...aulaEditando,
           alunos: alunosNaAula,
@@ -622,10 +663,9 @@ const Geral = ({ alunosEmAula, atualizarAlunosEmAula }) => {
           status: "atual",
           updated_at: new Date().toISOString(),
         };
-
         aulaData = await aulasService.update(aulaData.id, aulaData);
       } else if (aulaAtual) {
-        // Atualizar aula atual
+        // Atualizar aula atual (que pode ter sido criada em iniciarNovaAula ou carregada)
         aulaData = {
           ...aulaAtual,
           alunos: alunosNaAula,
@@ -635,50 +675,53 @@ const Geral = ({ alunosEmAula, atualizarAlunosEmAula }) => {
           status: "atual",
           updated_at: new Date().toISOString(),
         };
-
         aulaData = await aulasService.update(aulaData.id, aulaData);
       } else {
-        // Criar uma nova aula
+        // Criar uma nova aula (caso iniciarNovaAula não tenha criado ou aulaAtual seja null)
+        foiCriado = true;
         const hoje = new Date();
         const dataFormatada = hoje.toISOString().split("T")[0];
         aulaData = {
           data: dataFormatada,
           alunos: alunosNaAula,
-          professor: professorFormatado,
+          professor: professorFormatado, // Usa o professor selecionado no form
           exercicios: exerciciosSelecionados,
           anotacoes: anotacoes || "",
-          status: "atual",
+          status: "atual", // Nova aula sempre começa como 'atual'
           created_at: new Date().toISOString(),
+          total_alunos: alunosNaAula.length, // Adicionado para consistência
         };
-
         aulaData = await aulasService.create(aulaData);
       }
 
       // Atualizar o estado local
-      setAulaAtual(aulaData);
+      setAulaAtual(aulaData); // Define a aula salva (criada ou atualizada) como a atual
 
-      // Atualizar o histórico de aulas no estado local
-      const historicoAtualizado = historicoAulas.filter(
-        (aula) => aula.id !== aulaData.id
-      );
-      const novoHistorico = [...historicoAtualizado, aulaData];
-      setHistoricoAulas(novoHistorico);
+      // Atualizar o histórico de aulas
+      setHistoricoAulas((prevHistorico) => {
+        const historicoFiltrado = prevHistorico.filter(
+          (a) => a.id !== aulaData.id
+        );
+        return [aulaData, ...historicoFiltrado]; // Adiciona ou atualiza no início
+      });
 
-      // Resetar formulário
+      // Resetar formulário e modo
       setShowSelecao(false);
       setModoEdicao(false);
       setAulaEditando(null);
       setAlunoSelecionado("");
-      setProfessorSelecionado("");
+      // Não resetar professorSelecionado aqui, pode ser útil manter
       setExerciciosSelecionados([]);
       setAnotacoes("");
 
-      // Manter os alunos na aula para continuar trabalhando
-      if (atualizarAlunosEmAula) atualizarAlunosEmAula(aulaData.alunos);
+      // Atualizar alunos em aula globalmente
+      if (atualizarAlunosEmAula) atualizarAlunosEmAula(aulaData.alunos || []);
 
       alert("Aula salva com sucesso!");
     } catch (error) {
       alert("Erro ao salvar aula: " + error.message);
+    } finally {
+      setSavingData(false); // Finaliza o indicador de salvamento
     }
   };
 
@@ -796,88 +839,51 @@ const Geral = ({ alunosEmAula, atualizarAlunosEmAula }) => {
 
       // Mostrar o painel de seleção logo no início, para garantir uma resposta visual imediata
       setShowSelecao(true);
-      setSavingData(true);
+      // REMOVIDO: setSavingData(true); // Não estamos salvando ainda
 
-      // Reset completo dos estados
-      setAulaAtual(null);
+      // Reset completo dos estados para uma NOVA aula
+      setAulaAtual(null); // Garante que não estamos editando uma aula existente
       setAlunoSelecionado("");
-      setProfessorSelecionado("");
+      setProfessorSelecionado(""); // Será definido abaixo com o padrão
       setExerciciosSelecionados([]);
-
-      // IMPORTANTE: Limpar a lista de alunos local para não trazer alunos de outras aulas
-      // Quando iniciamos uma nova aula, não devemos ter nenhum aluno selecionado
-      setAlunosNaAula([]);
+      setAlunosNaAula([]); // Nova aula começa sem alunos
+      setModoEdicao(false); // Garante que não está em modo de edição
+      setAulaEditando(null);
+      setActiveDropdown(null);
+      setAnotacoes("");
 
       // Garantir que o estado global também seja limpo
       if (typeof atualizarAlunosEmAula === "function") {
         atualizarAlunosEmAula([]);
       }
 
-      setModoEdicao(false);
-      setAulaEditando(null);
-      setActiveDropdown(null);
-      setAnotacoes("");
-
-      // Selecionar o primeiro professor disponível (para garantir que sempre tenha um professor)
+      // Selecionar o primeiro professor disponível como PADRÃO para a UI
       const primeiroProfessor =
         todosProfessores.length > 0
-          ? {
-              id: todosProfessores[0].id,
-              nome: todosProfessores[0].nome,
-            }
+          ? todosProfessores[0] // Pega o objeto completo
           : null;
 
-      // Se temos um professor, vamos definir o professorSelecionado
+      // Se temos um professor, vamos definir o professorSelecionado no ESTADO da UI
       if (primeiroProfessor) {
         setProfessorSelecionado(primeiroProfessor.id.toString());
       }
 
-      // Criar nova aula com o professor incluído
-      const hoje = new Date();
-      // Formatando a data no formato ISO 8601 (YYYY-MM-DD) para o Supabase
-      const dataFormatada = hoje.toISOString().split("T")[0];
+      // --- REMOVIDO: Criação imediata da aula no backend ---
+      // const hoje = new Date();
+      // const dataFormatada = hoje.toISOString().split("T")[0];
+      // const novaAulaVazia = { ... };
+      // const aulaResponse = await aulasService.create(novaAulaVazia);
+      // setAulaAtual({ ...aulaResponse, alunos: [] });
+      // setHistoricoAulas((prev) => [...]);
+      // --- FIM DA REMOÇÃO ---
 
-      const novaAulaVazia = {
-        data: dataFormatada,
-        alunos: [], // Garantir que a nova aula começa sem alunos
-        total_alunos: 0,
-        exercicios: [],
-        status: "atual",
-        professor: primeiroProfessor,
-      };
+      // Resetar paginação (se aplicável)
+      // setPaginaAtual(1);
 
-      // Buscar aulas atuais apenas para fins de logging
-      const todasAulas = await aulasService.getAll();
-
-      const aulasAtuais = todasAulas.filter((aula) => aula.status === "atual");
-
-      // Criar a nova aula no backend
-
-      const aulaResponse = await aulasService.create(novaAulaVazia);
-
-      // Definir como aula atual - IMPORTANTE: Atualizar o estado para refletir a nova aula
-      setAulaAtual({
-        ...aulaResponse,
-        alunos: [], // Garantir que não há alunos nesta nova aula
-      });
-
-      // IMPORTANTE: NÃO atualizar o estado global de alunosEmAula aqui com alunos de outras aulas
-      if (typeof atualizarAlunosEmAula === "function") {
-        // Passar array vazio para a nova aula
-        atualizarAlunosEmAula([]);
-      }
-
-      // Atualizar o histórico de aulas para incluir a nova aula
-      setHistoricoAulas((prev) => [
-        { ...aulaResponse, alunos: [] }, // Garantir que não há alunos ao adicionar no histórico
-        ...prev.filter((a) => a.id !== aulaResponse.id),
-      ]);
-
-      // Resetar paginação
-      setPaginaAtual(1);
-      setSavingData(false);
+      // REMOVIDO: setSavingData(false);
 
       // Resetar a flag novaAulaRef APÓS as atualizações de estado relacionadas à nova aula
+      // Isso pode ser feito aqui ou no final, mas importante não estar true durante a sincronização inicial
       novaAulaRef.current = false;
 
       // Scroll suave até o formulário de nova aula
@@ -886,10 +892,7 @@ const Geral = ({ alunosEmAula, atualizarAlunosEmAula }) => {
           ".selecao-aluno-panel-embedded"
         );
         if (selecaoElement) {
-          // Rolar até o formulário de nova aula
           selecaoElement.scrollIntoView({ behavior: "smooth", block: "start" });
-
-          // Focar no primeiro campo do formulário (select do professor) para melhor experiência
           const selectProfessor =
             selecaoElement.querySelector(".select-professor");
           if (selectProfessor) {
@@ -898,12 +901,11 @@ const Geral = ({ alunosEmAula, atualizarAlunosEmAula }) => {
         }
       }, 100);
     } catch (error) {
-      // Manter o formulário aberto mesmo se houver erro
+      // Manter o formulário aberto mesmo se houver erro na preparação
       setShowErroModal(true);
-      setErroMsg("Erro ao iniciar nova aula no Supabase: " + error.message);
-      setSavingData(false);
-      // Resetar a flag em caso de erro também
-      novaAulaRef.current = false;
+      setErroMsg("Erro ao preparar nova aula: " + error.message);
+      // REMOVIDO: setSavingData(false);
+      novaAulaRef.current = false; // Resetar a flag em caso de erro também
     }
   };
 
@@ -1232,48 +1234,86 @@ const Geral = ({ alunosEmAula, atualizarAlunosEmAula }) => {
     try {
       setSavingData(true);
 
-      // Remover aluno do estado local primeiro para feedback imediato
-      const alunosAtualizados = alunosNaAula.filter((a) => a.id !== alunoId);
-      setAlunosNaAula(alunosAtualizados);
+      // Determinar a aula alvo da qual remover o aluno
+      let aulaAlvo = null;
+      if (modoEdicao && aulaEditando) {
+        aulaAlvo = aulaEditando;
+      } else if (aulaAtual) {
+        // Se estamos visualizando a aula atual, remover dela
+        aulaAlvo = aulaAtual;
+      } else {
+        // Fallback: Se não estamos editando nem visualizando uma aula específica,
+        // encontrar a aula 'atual' ou 'ativa' que contém o aluno.
+        // Priorizar a aula 'atual' mais recente que contém o aluno.
+        const aulasComAluno = historicoAulas
+          .filter(
+            (aula) =>
+              (aula.status === "atual" || aula.status === "ativa") &&
+              aula.alunos &&
+              aula.alunos.some((a) => a.id === alunoId)
+          )
+          .sort((a, b) => {
+            // Prioriza 'atual' e depois a mais recente
+            if (a.status === "atual" && b.status !== "atual") return -1;
+            if (a.status !== "atual" && b.status === "atual") return 1;
+            return new Date(b.created_at) - new Date(a.created_at);
+          });
 
-      // Atualizar App.js para sincronização imediata
-      if (typeof atualizarAlunosEmAula === "function") {
-        atualizarAlunosEmAula(alunosAtualizados);
+        if (aulasComAluno.length > 0) {
+          aulaAlvo = aulasComAluno[0]; // Remover da aula prioritária encontrada
+        }
       }
 
-      // Obter todas as aulas ativas
-      const aulasAtivas = historicoAulas.filter(
-        (aula) => aula.status === "atual"
+      if (!aulaAlvo) {
+        // Se mesmo assim não encontrar, pode ser um aluno órfão ou erro de estado
+        setErroMsg(
+          "Não foi possível determinar a aula para remover o aluno. Verifique se o aluno realmente está em uma aula ativa."
+        );
+        setShowErroModal(true);
+        setSavingData(false);
+        return;
+      }
+
+      // Remover aluno da aula alvo no backend usando o service dedicado
+      const aulaAtualizadaBackend = await aulasService.removerAluno(
+        aulaAlvo.id,
+        alunoId
       );
 
-      // Para cada aula ativa
-      for (const aula of aulasAtivas) {
-        // Verificar se o aluno está nesta aula
-        if (aula.alunos && aula.alunos.some((a) => a.id === alunoId)) {
-          try {
-            // Remover o aluno da aula
-            const novosAlunosAula = aula.alunos.filter((a) => a.id !== alunoId);
+      // Atualizar estado local APÓS sucesso no backend
+      const historicoAtualizado = historicoAulas.map((a) =>
+        a.id === aulaAlvo.id ? aulaAtualizadaBackend : a
+      );
+      setHistoricoAulas(historicoAtualizado);
 
-            // Atualizar a aula no servidor
-            const aulaAtualizada = await aulasService.update(aula.id, {
-              ...aula,
-              alunos: novosAlunosAula,
-              total_alunos: novosAlunosAula.length,
-            });
+      // Atualizar aulaAtual ou aulaEditando se a aula modificada for uma delas
+      if (aulaAtual && aulaAtual.id === aulaAlvo.id) {
+        setAulaAtual(aulaAtualizadaBackend);
+      }
+      if (aulaEditando && aulaEditando.id === aulaAlvo.id) {
+        setAulaEditando(aulaAtualizadaBackend);
+      }
 
-            // Atualizar o histórico local
-            setHistoricoAulas((prev) =>
-              prev.map((a) => (a.id === aula.id ? aulaAtualizada : a))
-            );
+      // Atualizar alunosNaAula para refletir a aula mostrada/editada
+      // Se a aula modificada é a que está sendo exibida/editada, atualiza a lista
+      if (
+        (aulaAtual && aulaAtual.id === aulaAlvo.id) ||
+        (aulaEditando && aulaEditando.id === aulaAlvo.id)
+      ) {
+        setAlunosNaAula(aulaAtualizadaBackend.alunos || []);
+      } else {
+        // Se a aula modificada não é a que está ativa na UI,
+        // talvez seja melhor buscar os alunos da aula ativa novamente
+        // ou simplesmente não atualizar alunosNaAula aqui, deixando o useEffect de sincronização cuidar disso.
+        // Por segurança, vamos atualizar com base na aula modificada,
+        // mas isso pode causar um "flash" se o usuário estiver vendo outra aula.
+        // Uma abordagem mais segura seria verificar se aulaAlvo.id corresponde à aula visível.
+        setAlunosNaAula(aulaAtualizadaBackend.alunos || []); // Atualiza mesmo assim, pode precisar de ajuste fino
+      }
 
-            // Se esta for a aula atual, atualizar também
-            if (aulaAtual && aulaAtual.id === aula.id) {
-              setAulaAtual(aulaAtualizada);
-            }
-          } catch (error) {
-            // Continuar tentando remover das outras aulas
-          }
-        }
+      // Atualizar App.js (passando os alunos da aula modificada)
+      if (typeof atualizarAlunosEmAula === "function") {
+        atualizarAlunosEmAula(aulaAtualizadaBackend.alunos || []);
       }
 
       setSavingData(false);
