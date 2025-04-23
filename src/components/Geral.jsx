@@ -506,23 +506,63 @@ const Geral = ({ alunosEmAula, atualizarAlunosEmAula }) => {
       if (modoEdicao && aulaEditando) {
         aulaAlvo = aulaEditando;
       } else if (aulaAtual) {
-        // Se já existe uma aula atual (e não estamos editando outra), usar essa
         aulaAlvo = aulaAtual;
-      } else {
-        // Se não há aula atual nem edição, procurar a primeira ativa (cenário de fallback)
-        // CORREÇÃO: Buscar a aula criada mais recentemente com status 'atual'
-        const aulasAtuaisRecentes = historicoAulas
-          .filter((aula) => aula.status === "atual")
-          .sort((a, b) => new Date(b.created_at) - new Date(a.created_at)); // Ordena pela data de criação
-
-        if (aulasAtuaisRecentes.length > 0) {
-          aulaAlvo = aulasAtuaisRecentes[0]; // Usa a mais recente
-        }
       }
 
+      // --- CORREÇÃO: Criar aula se não houver uma ativa/editando ---
+      if (!aulaAlvo) {
+        // Verificar se um professor foi selecionado (necessário para criar a aula)
+        if (!professorSelecionado) {
+          setErroMsg(
+            "Selecione um professor antes de adicionar o primeiro aluno a uma nova aula."
+          );
+          setShowErroModal(true);
+          setLoading(false);
+          return;
+        }
+
+        try {
+          // Criar uma nova aula básica no backend
+          const hoje = new Date();
+          const dataFormatada = hoje.toISOString().split("T")[0]; // Formato YYYY-MM-DD
+          const professor = todosProfessores.find(
+            (p) => p.id.toString() === professorSelecionado.toString()
+          );
+
+          const novaAulaData = {
+            data: dataFormatada,
+            status: "atual",
+            professor_id: professor ? professor.id : null,
+            alunos: [], // Começa vazia
+            exercicios: [],
+            anotacoes: "",
+            total_alunos: 0,
+          };
+
+          // Chamar o serviço para criar a aula
+          const aulaCriada = await aulasService.create(novaAulaData);
+
+          // Definir a aula recém-criada como a aula alvo e a aula atual
+          aulaAlvo = aulaCriada;
+          setAulaAtual(aulaCriada); // Define como aula atual para futuras adições
+
+          // Adicionar a nova aula ao histórico local
+          setHistoricoAulas((prevHistorico) => [aulaCriada, ...prevHistorico]);
+        } catch (creationError) {
+          setErroMsg(
+            `Erro ao criar a nova aula automaticamente: ${creationError.message}`
+          );
+          setShowErroModal(true);
+          setLoading(false);
+          return; // Interrompe se a criação falhar
+        }
+      }
+      // --- FIM DA CORREÇÃO ---
+
+      // Se mesmo após a tentativa de criação, não temos aulaAlvo, algo deu errado
       if (!aulaAlvo) {
         setErroMsg(
-          "Não há aula ativa ou em edição para adicionar o aluno. Crie ou edite uma aula primeiro."
+          "Não foi possível determinar ou criar uma aula ativa. Tente novamente."
         );
         setShowErroModal(true);
         setLoading(false);

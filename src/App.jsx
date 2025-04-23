@@ -277,7 +277,9 @@ const App = () => {
     if (activeSection.startsWith("detalhe-aluno/")) {
       const alunoId = activeSection.split("/")[1];
       // Passar a função handleSectionChange como prop
-      return <DetalheAluno alunoId={alunoId} onNavigateBack={handleSectionChange} />;
+      return (
+        <DetalheAluno alunoId={alunoId} onNavigateBack={handleSectionChange} />
+      );
     }
 
     if (activeSection.startsWith("editar-aluno/")) {

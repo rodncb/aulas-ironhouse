@@ -233,13 +233,22 @@ BEGIN
 END;
 $$;
 
--- Políticas para a tabela 'professores' (Apenas Admins podem gerenciar)
-CREATE POLICY "Permitir leitura de professores para admins" ON public.professores
-  FOR SELECT USING (check_user_role(ARRAY['admin']));
+-- Políticas para a tabela 'professores' (Admins e Professores podem ler, Admins gerenciam)
+-- CORREÇÃO: Alterar nome da política e permitir leitura para 'professor'
+DROP POLICY IF EXISTS "Permitir leitura de professores para admins" ON public.professores;
+CREATE POLICY "Permitir leitura de professores para admins/professores" ON public.professores
+  FOR SELECT USING (check_user_role(ARRAY['admin', 'professor']));
+
+-- Manter as outras políticas apenas para admin
+DROP POLICY IF EXISTS "Permitir criação de professores para admins" ON public.professores;
 CREATE POLICY "Permitir criação de professores para admins" ON public.professores
   FOR INSERT WITH CHECK (check_user_role(ARRAY['admin']));
+
+DROP POLICY IF EXISTS "Permitir atualização de professores para admins" ON public.professores;
 CREATE POLICY "Permitir atualização de professores para admins" ON public.professores
   FOR UPDATE USING (check_user_role(ARRAY['admin']));
+
+DROP POLICY IF EXISTS "Permitir exclusão de professores para admins" ON public.professores;
 CREATE POLICY "Permitir exclusão de professores para admins" ON public.professores
   FOR DELETE USING (check_user_role(ARRAY['admin']));
 

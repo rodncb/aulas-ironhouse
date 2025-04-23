@@ -62,7 +62,7 @@ const DetalheAluno = ({ alunoId, onNavigateBack }) => {
   // Função para chamar onNavigateBack com a seção 'alunos'
   const handleVoltarParaAlunos = () => {
     if (onNavigateBack) {
-      onNavigateBack('alunos');
+      onNavigateBack("alunos");
     }
   };
 
@@ -89,14 +89,14 @@ const DetalheAluno = ({ alunoId, onNavigateBack }) => {
       <div className="detalhe-aluno-container">
         <div className="detalhe-header">
           <h2>Detalhes do Aluno</h2>
-           {/* Usar a nova função */}
+          {/* Usar a nova função */}
           <button className="btn-voltar" onClick={handleVoltarParaAlunos}>
             Voltar
           </button>
         </div>
         <div className="detalhe-error">
           <p>{error || "Aluno não encontrado"}</p>
-           {/* Usar a nova função */}
+          {/* Usar a nova função */}
           <button className="btn-voltar" onClick={handleVoltarParaAlunos}>
             Voltar para a lista
           </button>
@@ -113,7 +113,7 @@ const DetalheAluno = ({ alunoId, onNavigateBack }) => {
     >
       <div className="detalhe-header">
         <h2>Detalhes do Aluno</h2>
-         {/* Usar a nova função */}
+        {/* Usar a nova função */}
         <button className="btn-voltar" onClick={handleVoltarParaAlunos}>
           Voltar
         </button>
