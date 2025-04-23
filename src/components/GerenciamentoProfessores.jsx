@@ -259,11 +259,16 @@ const GerenciamentoProfessores = (props) => {
     setActiveDropdown(null);
   };
 
-  // Função para voltar para a página geral
+  // Função para voltar para a página geral (Dashboard)
   const voltarParaGeral = () => {
-    if (window.history.length > 1) {
-      window.history.back();
+    // Usa setActiveSection para voltar ao dashboard (Geral)
+    if (props.setActiveSection) {
+      props.setActiveSection("geral");
     } else {
+      // Fallback (menos ideal, mas mantém alguma navegação)
+      console.warn(
+        "setActiveSection não foi passada como prop para GerenciamentoProfessores"
+      );
       const event = new CustomEvent("navegarPara", {
         detail: { secao: "geral" },
       });
@@ -464,65 +469,80 @@ const GerenciamentoProfessores = (props) => {
               </button>
             </div>
             <div className="modal-body">
-              <div className="professor-info-resumo">
-                <p>
-                  <strong>Idade:</strong> {professorHistorico.idade} anos
-                </p>
-                <p>
-                  <strong>Especialidade:</strong>{" "}
-                  {professorHistorico.especialidade}
-                </p>
-                <p>
-                  <strong>Experiência:</strong> {professorHistorico.experiencia}
-                </p>
-                <p>
-                  <strong>Total de aulas:</strong>{" "}
-                  {professorHistorico.historicoAulas?.length || 0}
-                </p>
-              </div>
+              {/* Filter aulas for the specific professor */}
+              {(() => {
+                const aulasDoProfessor = historicoAulas.filter(
+                  (aula) => aula.professor_id === professorHistorico.id
+                );
+                const totalAulasProfessor = aulasDoProfessor.length;
 
-              {professorHistorico.historicoAulas?.length > 0 ? (
-                <table className="tabela-historico">
-                  <thead>
-                    <tr>
-                      <th>Data</th>
-                      <th>Status</th>
-                      <th>Ações</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {[...professorHistorico.historicoAulas]
-                      .sort((a, b) => {
-                        // Ordenar por data (mais recente primeiro)
-                        const dataA = new Date(
-                          a.data.split("/").reverse().join("-")
-                        );
-                        const dataB = new Date(
-                          b.data.split("/").reverse().join("-")
-                        );
-                        return dataB - dataA;
-                      })
-                      .map((aula) => (
-                        <tr key={aula.id}>
-                          <td>{aula.data}</td>
-                          <td>{getStatusLabel(aula.status)}</td>
-                          <td>
-                            <button
-                              className="btn-detalhes"
-                              onClick={() => verDetalhesAula(aula.id)}
-                            >
-                              Ver
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                  </tbody>
-                </table>
-              ) : (
-                <p className="sem-aulas">
-                  Este professor ainda não ministrou nenhuma aula.
-                </p>
-              )}
+                return (
+                  <>
+                    <div className="professor-info-resumo">
+                      <p>
+                        <strong>Idade:</strong> {professorHistorico.idade} anos
+                      </p>
+                      <p>
+                        <strong>Especialidade:</strong>{" "}
+                        {professorHistorico.especialidade}
+                      </p>
+                      <p>
+                        <strong>Experiência:</strong>{" "}
+                        {professorHistorico.experiencia}
+                      </p>
+                      <p>
+                        <strong>Total de aulas:</strong> {totalAulasProfessor}
+                      </p>
+                    </div>
+
+                    {totalAulasProfessor > 0 ? (
+                      <table className="tabela-historico">
+                        <thead>
+                          <tr>
+                            <th>Data</th>
+                            <th>Status</th>
+                            <th>Ações</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {[...aulasDoProfessor] // Use the filtered list
+                            .sort((a, b) => {
+                              // Ordenar por data (mais recente primeiro)
+                              // Assuming data is in DD/MM/YYYY format
+                              const dataA = new Date(
+                                a.data.split("/").reverse().join("-")
+                              );
+                              const dataB = new Date(
+                                b.data.split("/").reverse().join("-")
+                              );
+                              // Handle invalid dates if necessary
+                              if (isNaN(dataA) || isNaN(dataB)) return 0;
+                              return dataB - dataA;
+                            })
+                            .map((aula) => (
+                              <tr key={aula.id}>
+                                <td>{aula.data}</td>
+                                <td>{getStatusLabel(aula.status)}</td>
+                                <td>
+                                  <button
+                                    className="btn-detalhes"
+                                    onClick={() => verDetalhesAula(aula.id)}
+                                  >
+                                    Ver
+                                  </button>
+                                </td>
+                              </tr>
+                            ))}
+                        </tbody>
+                      </table>
+                    ) : (
+                      <p className="sem-aulas">
+                        Este professor ainda não ministrou nenhuma aula.
+                      </p>
+                    )}
+                  </>
+                );
+              })()}
             </div>
           </div>
         </div>
