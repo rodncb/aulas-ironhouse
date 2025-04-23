@@ -333,7 +333,11 @@ const GerenciamentoProfessores = (props) => {
             <tr key={item.id}>
               <td>{item.nome}</td>
               {/* ADICIONADO: Verificação para idade nula */}
-              <td>{item.idade !== null && item.idade !== undefined ? item.idade : "N/A"}</td>
+              <td>
+                {item.idade !== null && item.idade !== undefined
+                  ? item.idade
+                  : "N/A"}
+              </td>
               <td>{item.especialidade}</td>
               <td>{item.experiencia}</td>
               <td className="actions">
