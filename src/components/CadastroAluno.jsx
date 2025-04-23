@@ -16,6 +16,8 @@ const CadastroAluno = () => {
   const [novoAluno, setNovoAluno] = useState({
     nome: "",
     idade: "",
+    telefone: "", // ADICIONADO: Telefone
+    status: "Ativo", // ADICIONADO: Status (padrão Ativo)
     lesao: "Não",
     tipoLesao: "",
     objetivo: "",
@@ -77,6 +79,7 @@ const CadastroAluno = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    // AJUSTADO: Adicionar validação para telefone se necessário (opcional)
     if (novoAluno.nome.trim() === "" || !novoAluno.idade) return;
 
     try {
@@ -86,6 +89,8 @@ const CadastroAluno = () => {
       const novoAlunoData = {
         nome: novoAluno.nome,
         idade: parseInt(novoAluno.idade),
+        telefone: novoAluno.telefone, // ADICIONADO: Telefone
+        status: novoAluno.status, // ADICIONADO: Status
         lesao: novoAluno.lesao,
         tipoLesao: novoAluno.tipoLesao,
         objetivo: novoAluno.objetivo,
@@ -128,6 +133,8 @@ const CadastroAluno = () => {
       setNovoAluno({
         nome: "",
         idade: "",
+        telefone: "", // ADICIONADO: Reset Telefone
+        status: "Ativo", // ADICIONADO: Reset Status
         lesao: "Não",
         tipoLesao: "",
         objetivo: "",
@@ -302,8 +309,9 @@ const CadastroAluno = () => {
               </button>
             </div>
             <form onSubmit={handleSubmit} className="aluno-form">
+              {/* RENOMEADO: Label para Nome Completo */}
               <div className="form-group">
-                <label htmlFor="nome">Nome</label>
+                <label htmlFor="nome">Nome Completo</label>
                 <input
                   type="text"
                   id="nome"
@@ -326,6 +334,33 @@ const CadastroAluno = () => {
                 />
               </div>
 
+              {/* ADICIONADO: Campo Telefone / WhatsApp */}
+              <div className="form-group">
+                <label htmlFor="telefone">Telefone / WhatsApp</label>
+                <input
+                  type="text" // Pode ser 'tel' para melhor semântica e teclado móvel
+                  id="telefone"
+                  name="telefone"
+                  value={novoAluno.telefone}
+                  onChange={handleChange}
+                  placeholder="(XX) XXXXX-XXXX"
+                />
+              </div>
+
+              {/* ADICIONADO: Campo Status */}
+              <div className="form-group">
+                <label htmlFor="status">Status</label>
+                <select
+                  id="status"
+                  name="status"
+                  value={novoAluno.status}
+                  onChange={handleChange}
+                >
+                  <option value="Ativo">Ativo</option>
+                  <option value="Inativo">Inativo</option>
+                </select>
+              </div>
+
               <div className="form-group">
                 <label htmlFor="lesao">Tem alguma lesão?</label>
                 <select
@@ -342,8 +377,9 @@ const CadastroAluno = () => {
                 </select>
               </div>
 
+              {/* RENOMEADO: Label para Descrição da Lesão */}
               <div className="form-group">
-                <label htmlFor="tipoLesao">Tipo de Lesão</label>
+                <label htmlFor="tipoLesao">Descrição da Lesão</label>
                 <input
                   type="text"
                   id="tipoLesao"
