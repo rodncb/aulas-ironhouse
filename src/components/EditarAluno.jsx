@@ -386,9 +386,12 @@ const EditarAluno = ({ alunoId, setActiveSection }) => {
                 value={formData.lesao}
                 onChange={handleChange}
               >
-                <option value="Não">Não</option>
-                <option value="Sim - Moderada">Sim - Lesão Moderada</option>
-                <option value="Sim - Grave">Sim - Lesão Grave</option>
+                {/* Corrigido: value="Nao" (sem acento) */}
+                <option value="Nao">Não</option>
+                {/* Corrigido: value="Sim - Lesao Moderada" */}
+                <option value="Sim - Lesao Moderada">Sim - Lesão Moderada</option>
+                {/* Corrigido: value="Sim - Lesao Grave" */}
+                <option value="Sim - Lesao Grave">Sim - Lesão Grave</option>
               </select>
             </div>
           </div>
