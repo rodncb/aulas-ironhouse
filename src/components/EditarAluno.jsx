@@ -396,7 +396,8 @@ const EditarAluno = ({ alunoId, setActiveSection }) => {
           {formData.lesao !== "Não" && (
             <div className="form-row">
               <div className="form-group full-width">
-                <label htmlFor="tipoLesao">Descrição da Lesão</label> {/* Changed from tipo_lesao */}
+                <label htmlFor="tipoLesao">Descrição da Lesão</label>{" "}
+                {/* Changed from tipo_lesao */}
                 <textarea
                   id="tipoLesao" // Changed from tipo_lesao
                   name="tipoLesao" // Changed from tipo_lesao

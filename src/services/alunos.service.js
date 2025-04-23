@@ -39,7 +39,8 @@ async function createAluno(alunoData) {
         {
           ...alunoData,
           // Garantir que os campos opcionais sejam nulos se vazios
-          tipo_lesao: alunoData.tipoLesao || null,
+          // Corrigido para usar tipoLesao consistentemente
+          tipoLesao: alunoData.tipoLesao || null,
           objetivo: alunoData.objetivo || null,
         },
       ])
