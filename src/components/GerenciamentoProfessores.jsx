@@ -162,7 +162,8 @@ const GerenciamentoProfessores = (props) => {
 
   const handleDelete = async (id) => {
     try {
-      await professoresService.remove(id);
+      // CORREÇÃO: Usar o nome correto da função do serviço (delete)
+      await professoresService.delete(id);
       const professoresAtualizados = professores.filter((p) => p.id !== id);
       setProfessores(professoresAtualizados);
     } catch (err) {
