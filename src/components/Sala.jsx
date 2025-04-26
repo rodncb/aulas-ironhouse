@@ -154,13 +154,36 @@ function Sala() {
           throw aulasBasicasError;
         }
 
-        // Se não encontrou aulas
+        // Se não encontrou aulas, criar uma automaticamente
         if (!aulasBasicas || aulasBasicas.length === 0) {
-          console.log("Nenhuma aula em andamento encontrada para o professor");
-          setAulaAtual(null);
-          setAulaAtiva(false);
+          console.log(
+            "Nenhuma aula em andamento encontrada. Criando uma nova aula automaticamente."
+          );
+
+          // Criar objeto de aula para salvar no banco de dados
+          const novaAula = {
+            professor_id: professorAtual.id,
+            status: "em_andamento",
+            data: new Date().toISOString().split("T")[0],
+            observacoes: "",
+            alunos: [],
+          };
+
+          // Salvar a aula no banco de dados imediatamente
+          const aulaSalva = await aulasService.create(novaAula);
+
+          // Atualizar os estados com a aula criada
+          setAulaAtual(aulaSalva);
+          setAulaAtiva(true);
           setAlunosEmAula([]);
           setModoSelecaoAluno(true);
+          setAlunosDropdownAberto(false); // Manter dropdown fechado inicialmente
+          
+          console.log(
+            "Aula iniciada automaticamente e salva no banco de dados:",
+            aulaSalva
+          );
+          setSalaLoading(false);
           return;
         }
 
@@ -217,6 +240,9 @@ function Sala() {
           setAulaAtiva(true);
           setAlunosEmAula(alunosDaAula);
           setModoSelecaoAluno(alunosDaAula.length === 0);
+          
+          // Manter dropdown fechado inicialmente em todos os casos
+          setAlunosDropdownAberto(false);
         } catch (alunosError) {
           console.error("Erro ao buscar alunos da aula:", alunosError);
           // Mesmo com erro nos alunos, ainda carregamos a aula básica
@@ -224,6 +250,7 @@ function Sala() {
           setAulaAtiva(true);
           setAlunosEmAula([]);
           setModoSelecaoAluno(true);
+          setAlunosDropdownAberto(false); // Manter dropdown fechado inicialmente
         }
       } catch (err) {
         console.error("Erro ao verificar aula em andamento:", err);
@@ -947,12 +974,14 @@ function Sala() {
           console.log(
             `Aluno ${alunoParaFinalizar.nome} relacionado com sucesso à aula finalizada`
           );
-          
+
           // 3. Salvar os exercícios selecionados para este aluno
           const exerciciosDoAluno = exerciciosPorAluno[alunoId] || [];
           if (exerciciosDoAluno.length > 0) {
-            console.log(`Salvando ${exerciciosDoAluno.length} exercícios para o aluno ${alunoId} na aula ${aulaFinalizada.id}`);
-            
+            console.log(
+              `Salvando ${exerciciosDoAluno.length} exercícios para o aluno ${alunoId} na aula ${aulaFinalizada.id}`
+            );
+
             // Criar registros na tabela aula_exercicios para cada exercício
             for (const exercicio of exerciciosDoAluno) {
               if (exercicio.exercicio_id) {
@@ -962,13 +991,18 @@ function Sala() {
                     .insert({
                       aula_id: aulaFinalizada.id,
                       exercicio_id: exercicio.exercicio_id,
-                      aluno_id: alunoId
+                      aluno_id: alunoId,
                     });
-                    
+
                   if (exError) {
-                    console.error(`Erro ao salvar exercício ${exercicio.exercicio_id}:`, exError);
+                    console.error(
+                      `Erro ao salvar exercício ${exercicio.exercicio_id}:`,
+                      exError
+                    );
                   } else {
-                    console.log(`Exercício ${exercicio.exercicio_id} salvo com sucesso para aula ${aulaFinalizada.id}`);
+                    console.log(
+                      `Exercício ${exercicio.exercicio_id} salvo com sucesso para aula ${aulaFinalizada.id}`
+                    );
                   }
                 } catch (exErr) {
                   console.error("Erro ao inserir exercício:", exErr);
@@ -1095,39 +1129,8 @@ function Sala() {
       {/* Mostrar a interface principal apenas depois de carregar */}
       {!salaLoading && !authLoading && professorAtual && (
         <div className="sala-container">
-          {/* Botão para adicionar aluno no topo */}
+          {/* Sempre mostrar o dropdown de seleção de alunos, independente de haver alunos em aula ou não */}
           {aulaAtiva && (
-            <div className="adicionar-aluno-button">
-              <button
-                className="btn-adicionar-aluno"
-                onClick={() => {
-                  setAlunoSelecionado(null);
-                  setModoSelecaoAluno(true);
-                  setAlunosDropdownAberto(true);
-                }}
-              >
-                + Adicionar Aluno
-              </button>
-            </div>
-          )}
-
-          {/* Seção de controle da aula (botões iniciar/finalizar) */}
-          <div className="controles-aula">
-            {!aulaAtiva && (
-              <div className="sem-aula">
-                <button
-                  className="btn-iniciar-aula"
-                  onClick={handleIniciarNovaAula}
-                  disabled={salaLoading}
-                >
-                  Iniciar Nova Aula
-                </button>
-              </div>
-            )}
-          </div>
-
-          {/* Modo de seleção de aluno */}
-          {aulaAtiva && modoSelecaoAluno ? (
             <div className="selecao-aluno">
               <div className="selecionar-aluno-container">
                 <h3>Selecionar Aluno</h3>
@@ -1188,7 +1191,7 @@ function Sala() {
                 </div>
               </div>
             </div>
-          ) : null}
+          )}
 
           {/* Lista de todos os alunos em aula com seus detalhes sempre visíveis */}
           {aulaAtiva && alunosEmAula.length > 0 && (
