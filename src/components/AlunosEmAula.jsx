@@ -4,39 +4,30 @@ import alunosService from "../services/alunos.service";
 import aulasService from "../services/aulas.service";
 
 // Componente que exibe e gerencia alunos em aula
-const AlunosEmAula = ({ alunosNaAula = [], onAlunosChange }) => {
+const AlunosEmAula = ({ alunosNaAula = [], aulaId, onAlunoSelect }) => {
   const [alunoSelecionado, setAlunoSelecionado] = useState("");
   const [todosAlunos, setTodosAlunos] = useState([]);
-  const [aulasAtivas, setAulasAtivas] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  // Carregar os dados iniciais
+  // Carregar todos os alunos disponíveis
   useEffect(() => {
     const carregarDados = async () => {
       try {
         setLoading(true);
-        console.log("[AlunosEmAula.jsx] Carregando dados...");
+        setError(null);
 
-        // Carregar todos os alunos e aulas
-        const [alunos, aulas] = await Promise.all([
-          alunosService.getAll(),
-          aulasService.getAll(),
-        ]);
-
+        // Carregar todos os alunos
+        const alunos = await alunosService.getAll();
         setTodosAlunos(alunos);
 
-        // Filtrar apenas aulas ativas
-        const aulasAtivasList = aulas.filter(
-          (aula) => aula.status === "atual" || aula.status === "ativa"
-        );
-        setAulasAtivas(aulasAtivasList);
-
         console.log(
-          `[AlunosEmAula.jsx] Dados carregados: ${alunos.length} alunos, ${aulasAtivasList.length} aulas ativas`
+          `[AlunosEmAula.jsx] Dados carregados: ${alunos.length} alunos`
         );
         setLoading(false);
       } catch (error) {
         console.error("[AlunosEmAula.jsx] Erro ao carregar dados:", error);
+        setError("Erro ao carregar alunos. Tente novamente.");
         setLoading(false);
       }
     };
@@ -46,10 +37,11 @@ const AlunosEmAula = ({ alunosNaAula = [], onAlunosChange }) => {
 
   // Adicionar um aluno à aula
   const handleAdicionarAluno = async () => {
-    if (!alunoSelecionado) return;
+    if (!alunoSelecionado || !aulaId) return;
 
     try {
       setLoading(true);
+      setError(null);
 
       // Encontrar o aluno selecionado
       const alunoParaAdicionar = todosAlunos.find(
@@ -58,116 +50,97 @@ const AlunosEmAula = ({ alunosNaAula = [], onAlunosChange }) => {
 
       if (!alunoParaAdicionar) {
         console.error("[AlunosEmAula.jsx] Aluno não encontrado");
+        setError("Aluno não encontrado no sistema.");
         setLoading(false);
         return;
       }
 
-      // Verificar se o aluno já está em alguma aula ativa
+      // Verificar se o aluno já está nesta aula
       if (alunosNaAula.some((a) => a.id === alunoParaAdicionar.id)) {
-        alert("Este aluno já está na aula!");
+        setError("Este aluno já está na aula!");
         setLoading(false);
         return;
       }
 
-      console.log(
-        `[AlunosEmAula.jsx] Adicionando aluno: ${alunoParaAdicionar.nome}`
-      );
+      // Buscar a aula atual com seus alunos
+      const aulaAtual = await aulasService.getById(aulaId);
 
-      // Adicionar o aluno à lista local e notificar o componente pai
-      const novosAlunos = [...alunosNaAula, alunoParaAdicionar];
-      onAlunosChange(novosAlunos);
-
-      // Se temos aulas ativas, adicionar o aluno à primeira aula ativa disponível
-      if (aulasAtivas.length > 0) {
-        try {
-          const primeiraAulaAtiva = aulasAtivas[0];
-
-          // Verificar se a aula já tem uma lista de alunos
-          const alunosAtuais = primeiraAulaAtiva.alunos || [];
-
-          // Adicionar o novo aluno à aula
-          const aulaAtualizada = await aulasService.update(
-            primeiraAulaAtiva.id,
-            {
-              ...primeiraAulaAtiva,
-              alunos: [...alunosAtuais, alunoParaAdicionar],
-            }
-          );
-
-          // Atualizar a lista de aulas ativas com a aula atualizada
-          const aulasAtualizadas = aulasAtivas.map((aula) =>
-            aula.id === primeiraAulaAtiva.id ? aulaAtualizada : aula
-          );
-          setAulasAtivas(aulasAtualizadas);
-
-          console.log(
-            `[AlunosEmAula.jsx] Aluno adicionado à aula ID ${primeiraAulaAtiva.id}`
-          );
-        } catch (error) {
-          console.error("[AlunosEmAula.jsx] Erro ao atualizar aula:", error);
-        }
-      } else {
-        console.log(
-          "[AlunosEmAula.jsx] Nenhuma aula ativa disponível para adicionar o aluno"
-        );
+      if (!aulaAtual) {
+        setError("Aula não encontrada. Recarregue a página.");
+        setLoading(false);
+        return;
       }
+
+      // Preparar a lista de alunos atualizada para a aula
+      const alunosAtuais = aulaAtual.alunos || [];
+      const novosAlunos = [...alunosAtuais, alunoParaAdicionar];
+
+      // Atualizar a aula com o novo aluno
+      await aulasService.update(aulaId, {
+        ...aulaAtual,
+        alunos: novosAlunos,
+      });
+
+      // Notificar o componente pai sobre a atualização
+      // Em vez de tentar atualizar alunosNaAula localmente, isso deve ser gerenciado pelo componente pai
+      window.location.reload(); // Recarregar a página para refletir as alterações
 
       setAlunoSelecionado("");
       setLoading(false);
     } catch (error) {
       console.error("[AlunosEmAula.jsx] Erro ao adicionar aluno:", error);
+      setError("Erro ao adicionar aluno à aula. Tente novamente.");
       setLoading(false);
     }
   };
 
   // Remover um aluno da aula
   const handleRemoverAluno = async (alunoId) => {
+    if (!aulaId) return;
+
     try {
       setLoading(true);
-      console.log(`[AlunosEmAula.jsx] Removendo aluno ID ${alunoId}`);
+      setError(null);
 
-      // Remover o aluno da lista local e notificar o componente pai
-      const novosAlunos = alunosNaAula.filter((a) => a.id !== alunoId);
-      onAlunosChange(novosAlunos);
+      // Buscar a aula atual
+      const aulaAtual = await aulasService.getById(aulaId);
 
-      // Remover o aluno de todas as aulas ativas
-      for (const aula of aulasAtivas) {
-        if (aula.alunos && aula.alunos.some((a) => a.id === alunoId)) {
-          try {
-            // Filtrar o aluno da lista de alunos da aula
-            const novosAlunosAula = aula.alunos.filter((a) => a.id !== alunoId);
-
-            // Atualizar a aula sem o aluno
-            const aulaAtualizada = await aulasService.update(aula.id, {
-              ...aula,
-              alunos: novosAlunosAula,
-            });
-
-            console.log(
-              `[AlunosEmAula.jsx] Aluno removido da aula ID ${aula.id}`
-            );
-
-            // Atualizar a lista de aulas ativas
-            setAulasAtivas((prev) =>
-              prev.map((a) => (a.id === aula.id ? aulaAtualizada : a))
-            );
-          } catch (error) {
-            console.error(
-              `[AlunosEmAula.jsx] Erro ao remover aluno da aula ${aula.id}:`,
-              error
-            );
-          }
-        }
+      if (!aulaAtual) {
+        setError("Aula não encontrada. Recarregue a página.");
+        setLoading(false);
+        return;
       }
+
+      // Filtrar o aluno da lista de alunos da aula
+      const alunosAtualizados = (aulaAtual.alunos || []).filter(
+        (aluno) => aluno.id !== alunoId
+      );
+
+      // Atualizar a aula sem o aluno
+      await aulasService.update(aulaId, {
+        ...aulaAtual,
+        alunos: alunosAtualizados,
+      });
+
+      // Recarregar a página para refletir as alterações
+      window.location.reload();
 
       setLoading(false);
     } catch (error) {
       console.error("[AlunosEmAula.jsx] Erro ao remover aluno:", error);
+      setError("Erro ao remover aluno da aula. Tente novamente.");
       setLoading(false);
     }
   };
 
-  // Filtrar alunos disponíveis (que não estão em nenhuma aula ativa)
+  // Selecionar um aluno para ver detalhes
+  const handleSelecionarAluno = (aluno) => {
+    if (onAlunoSelect) {
+      onAlunoSelect(aluno);
+    }
+  };
+
+  // Filtrar alunos disponíveis (que não estão na aula atual)
   const alunosDisponiveis = todosAlunos.filter(
     (aluno) => !alunosNaAula.some((a) => a.id === aluno.id)
   );
@@ -175,6 +148,7 @@ const AlunosEmAula = ({ alunosNaAula = [], onAlunosChange }) => {
   return (
     <div className="alunos-em-aula">
       {loading && <div className="loading-indicator">Processando...</div>}
+      {error && <div className="error-message">{error}</div>}
 
       <div className="adicionar-aluno">
         <select
@@ -192,6 +166,7 @@ const AlunosEmAula = ({ alunosNaAula = [], onAlunosChange }) => {
         <button
           onClick={handleAdicionarAluno}
           disabled={!alunoSelecionado || loading}
+          className="btn-adicionar"
         >
           Adicionar
         </button>
@@ -200,14 +175,33 @@ const AlunosEmAula = ({ alunosNaAula = [], onAlunosChange }) => {
       <div className="lista-alunos">
         {alunosNaAula && alunosNaAula.length > 0 ? (
           alunosNaAula.map((aluno) => (
-            <div key={aluno.id} className="aluno-item">
-              <span>{aluno.nome}</span>
-              <button
-                onClick={() => handleRemoverAluno(aluno.id)}
-                disabled={loading}
-              >
-                Remover
-              </button>
+            <div
+              key={aluno.id}
+              className="aluno-item"
+              onClick={() => handleSelecionarAluno(aluno)}
+            >
+              <span className="nome-aluno">{aluno.nome}</span>
+              <div className="acoes-aluno">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation(); // Evita acionar o onClick do div pai
+                    handleSelecionarAluno(aluno);
+                  }}
+                  className="btn-detalhes"
+                >
+                  Detalhes
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation(); // Evita acionar o onClick do div pai
+                    handleRemoverAluno(aluno.id);
+                  }}
+                  disabled={loading}
+                  className="btn-remover"
+                >
+                  Remover
+                </button>
+              </div>
             </div>
           ))
         ) : (

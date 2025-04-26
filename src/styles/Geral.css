@@ -1998,15 +1998,17 @@
 }
 
 .lista-alunos-presentes {
-  list-style-type: none;
+  list-style: none;
   padding: 0;
-  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
 }
 
 .aluno-item {
-  background-color: #f8f9fa;
+  background-color: #f7f9fc;
   border-radius: 8px;
-  padding: 12px 15px;
+  padding: 12px;
   margin-bottom: 10px;
   border-left: 4px solid #42b983;
 }
@@ -2129,19 +2131,19 @@
 .aluno-item {
   background-color: #f9f9f9;
   border-radius: 8px;
-  padding: 15px;
+  padding: 12px 15px;
   margin-bottom: 10px;
   border-left: 4px solid #ff8800;
 }
 
 .aluno-nome-idade {
-  font-size: 1.1em;
-  margin-bottom: 10px;
+  font-size: 16px;
+  margin-bottom: 5px;
 }
 
 .aluno-objetivo,
 .aluno-lesao {
-  font-size: 0.95em;
+  font-size: 14px;
   margin-top: 5px;
   padding: 5px 10px;
   background-color: white;
@@ -2230,6 +2232,7 @@
   background-color: #f7f9fc;
   border-radius: 8px;
   padding: 12px;
+  margin-bottom: 10px;
   border-left: 4px solid #27ae60;
 }
 
@@ -2252,4 +2255,207 @@
 
 .visualizacao-exercicios {
   margin-top: 20px;
+}
+
+/* Estilos para o popup de sucesso */
+.success-popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.success-popup {
+  background-color: white;
+  padding: 30px 50px;
+  border-radius: 10px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 80%;
+  animation: slideInUp 0.4s ease-out;
+}
+
+.success-icon {
+  background-color: #4caf50;
+  color: white;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  margin-bottom: 20px;
+}
+
+.success-message {
+  font-size: 20px;
+  color: #333;
+  font-weight: bold;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideInUp {
+  from {
+    transform: translateY(50px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Melhorias para experiência mobile - Abril 2025 */
+@media (max-width: 768px) {
+  /* Aumentar gap entre o header e os componentes */
+  .geral-container {
+    padding-top: 30px !important;
+  }
+
+  .geral-header {
+    margin-bottom: 30px !important;
+  }
+
+  /* Melhorar a visualização de popups no histórico */
+  .modal-backdrop,
+  .modal-detalhes-overlay {
+    align-items: flex-start !important;
+    padding-top: 10vh !important; /* Ajusta a posição vertical do modal */
+  }
+
+  .detalhes-modal,
+  .modal-detalhes-content {
+    max-height: 80vh !important;
+    width: 98% !important;
+    padding: 15px !important;
+  }
+
+  /* Melhorando layout dos botões de ação para mobile */
+  .acoes-aula {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 4px !important;
+    width: 100% !important;
+  }
+
+  .acoes-aula button {
+    width: 100% !important;
+    min-height: 44px !important; /* Área de toque adequada */
+    padding: 8px 4px !important;
+    font-size: 12px !important;
+    margin: 0 !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+  }
+
+  /* Melhorar visualização do botão de fechar nos modais */
+  .btn-fechar {
+    width: 44px !important;
+    height: 44px !important;
+    font-size: 28px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background-color: rgba(0, 0, 0, 0.05) !important;
+    border-radius: 50% !important;
+    top: 5px !important;
+    right: 5px !important;
+  }
+}
+
+/* Ajustes específicos para dispositivos muito pequenos */
+@media (max-width: 480px) {
+  /* Aumentar ainda mais o gap no mobile pequeno */
+  .geral-container {
+    padding-top: 35px !important;
+  }
+
+  /* Ajustar espaçamento entre cards */
+  .dashboard-cards {
+    gap: 20px !important;
+    margin-bottom: 35px !important;
+  }
+
+  /* Melhorar layout dos botões no histórico */
+  .acoes-aula button {
+    font-size: 11px !important;
+    font-weight: bold !important;
+    padding: 4px !important;
+    border-radius: 6px !important;
+  }
+
+  /* Facilitar clique nos botões de ação */
+  .btn-detalhes,
+  .btn-editar,
+  .btn-realizar,
+  .btn-cancelar {
+    min-height: 46px !important;
+  }
+
+  /* Melhorar visualização do histórico de professores */
+  .tabela-historico td {
+    padding: 12px 5px !important;
+  }
+
+  .tabela-historico th {
+    padding: 12px 5px !important;
+  }
+
+  /* Melhoria específica para histórico de professores no mobile */
+  .historico-aulas h2 {
+    font-size: 18px !important;
+    margin-bottom: 20px !important;
+  }
+}
+
+/* Melhorias nos estados de hover para botões no mobile */
+@media (hover: none) {
+  .btn-detalhes:active,
+  .btn-editar:active,
+  .btn-realizar:active,
+  .btn-cancelar:active {
+    opacity: 0.7;
+    transform: scale(0.98);
+  }
+
+  .acoes-aula button:active {
+    opacity: 0.7;
+    transform: scale(0.98);
+  }
+}
+
+/* Lista de exercícios em modo compacto */
+.lista-exercicios.compacta {
+  max-height: 200px; /* Reduzindo a altura máxima */
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+}
+
+.lista-exercicios.compacta .exercicio-item {
+  padding: 8px; /* Reduzindo o padding */
+  margin-bottom: 4px; /* Reduzindo a margem entre itens */
+  display: flex;
+  flex-direction: column; /* Empilhando nome e musculatura para economizar espaço horizontal */
+  gap: 4px;
 }

@@ -1,514 +1,647 @@
-import {
-  supabase,
-  reloadSupabaseSchemaCache,
-  testConnection,
-} from "./supabase";
-import { aulaAlunosService } from "./AulaAlunosService";
+import { supabase } from "./supabase";
 
-/**
- * Função utilitária para tentar uma operação e recarregar o cache do esquema se necessário
- * @param {Function} operation - Função que realiza a operação no Supabase
- * @returns {Promise<any>} - Resultado da operação
- */
-async function tryOperationWithCacheReload(operation) {
-  try {
-    return await operation();
-  } catch (error) {
-    // Verifica se o erro está relacionado ao cache do esquema
-    if (error.message.includes("schema cache")) {
-      // Tenta recarregar o cache do esquema
-      const reloaded = await reloadSupabaseSchemaCache();
-
-      if (reloaded) {
-        try {
-          // Tenta a operação novamente após recarregar o cache
-          return await operation();
-        } catch (retryError) {
-          throw retryError;
-        }
-      } else {
-        throw error;
-      }
-    } else {
-      // Se não for um erro relacionado ao cache, apenas propaga o erro
-      throw error;
-    }
-  }
-}
-
-export const aulasService = {
-  async getAll() {
-    return tryOperationWithCacheReload(async () => {
-      try {
-        await testConnection(1);
-      } catch (err) {
-        // Ignora erro
-      }
-
-      // Antes da chamada principal, verificar se há tabelas existentes
-      try {
-        await supabase.rpc("get_tables_info");
-      } catch (err) {
-        // Ignora erro
-      }
-
-      const { data: aulasData, error: aulasError } = await supabase
+const aulasService = {
+  /**
+   * Obtém todas as aulas
+   */
+  getAll: async () => {
+    try {
+      const { data, error } = await supabase
         .from("aulas")
         .select(
           `
           *,
-          professor:professores (id, nome),
-          aula_alunos (
-            aluno:alunos (*)
-          )
+          professor:professor_id(*),
+          alunos(*)
         `
         )
         .order("created_at", { ascending: false });
 
-      if (aulasError) {
-        throw aulasError;
-      }
-
-      // Se não houver dados, tentar uma consulta mais simples para diagnóstico
-      if (!aulasData || aulasData.length === 0) {
-        try {
-          await supabase.from("aulas").select("*");
-        } catch (err) {
-          // Ignora erro
-        }
-      }
-
-      // Processar os dados para formatar a estrutura desejada
-      const aulasComAlunos =
-        aulasData?.map((aula) => {
-          // Extrair os dados do professor corretamente
-          const professorData = aula.professor || null;
-
-          // Mapear os dados dos alunos da tabela de junção
-          const alunos =
-            aula.aula_alunos?.map((rel) => rel.aluno).filter(Boolean) || []; // Filtrar nulos caso haja inconsistência
-
-          return {
-            ...aula,
-            professor: professorData, // Manter a estrutura aninhada do professor
-            alunos: alunos, // Substituir aula_alunos pelo array de alunos
-            aula_alunos: undefined, // Remover a estrutura intermediária
-          };
-        }) || [];
-
-      return aulasComAlunos;
-    });
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error("Erro ao buscar todas as aulas:", error);
+      throw error;
+    }
   },
 
-  async getAulaAtual() {
-    return tryOperationWithCacheReload(async () => {
-      // Primeiro vamos verificar se existe alguma aula com status "atual"
-      const { data: aulasAtuais, error: erroAtuais } = await supabase
+  /**
+   * Obtém aulas por ID do professor
+   * @param {number} professorId - ID do professor
+   * @param {string} status - Status da aula (opcional)
+   */
+  getAulasByProfessorId: async (professorId, status = null) => {
+    try {
+      let query = supabase
         .from("aulas")
-        .select("*")
-        .eq("status", "atual");
+        .select(
+          `
+          *,
+          professor:professor_id(*),
+          alunos(*)
+        `
+        )
+        .eq("professor_id", professorId)
+        .order("created_at", { ascending: false });
 
-      if (erroAtuais) {
-        // Ignora erro
+      if (status) {
+        query = query.eq("status", status);
       }
 
-      // Agora vamos verificar aulas com status "ativa"
-      const { data: aulasAtivas, error: erroAtivas } = await supabase
-        .from("aulas")
-        .select("*")
-        .eq("status", "ativa");
+      const { data, error } = await query;
 
-      if (erroAtivas) {
-        // Ignora erro
-      }
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error(`Erro ao buscar aulas do professor ${professorId}:`, error);
+      throw error;
+    }
+  },
 
-      // Agora sim fazemos a consulta com OR
+  /**
+   * Obtém aulas de um professor por status específico
+   * @param {string} professorId - ID do professor
+   * @param {string} status - Status da aula (em_andamento, finalizada, cancelada, etc)
+   */
+  getAulasByProfessorAndStatus: async (professorId, status) => {
+    try {
+      // Buscar as aulas do professor com o status especificado
       const { data, error } = await supabase
         .from("aulas")
-        .select("*")
-        .or(`status.eq.atual,status.eq.ativa`)
-        .maybeSingle();
+        .select(
+          `
+          *,
+          professor:professor_id(*),
+          alunos(*)
+        `
+        )
+        .eq("professor_id", professorId)
+        .eq("status", status)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+
+      // Se não encontrou aulas ou ocorreu um erro
+      if (!data || data.length === 0) {
+        return [];
+      }
+
+      return data;
+    } catch (error) {
+      console.error(
+        `Erro ao buscar aulas do professor ${professorId} com status ${status}:`,
+        error
+      );
+      throw error;
+    }
+  },
+
+  /**
+   * Obtém aulas por ID do aluno
+   * @param {number} alunoId - ID do aluno
+   */
+  getAulasByAlunoId: async (alunoId) => {
+    try {
+      console.log(`[INFO] Buscando aulas para o aluno com ID: ${alunoId}`);
+
+      // Abordagem mais direta usando join na consulta
+      const { data, error } = await supabase
+        .from("aula_alunos")
+        .select(
+          `
+          aluno_id,
+          observacoes,
+          aula:aulas (
+            id, 
+            data,
+            status,
+            observacoes,
+            created_at,
+            professor:professores (id, nome, email)
+          )
+        `
+        )
+        .eq("aluno_id", alunoId)
+        .order("created_at", { ascending: false });
 
       if (error) {
+        console.error(
+          `[ERROR] Erro ao buscar aulas do aluno ${alunoId}:`,
+          error
+        );
         throw error;
       }
 
-      // Se encontrou uma aula atual, buscar os alunos associados
-      if (data) {
-        try {
-          // Utilizar o serviço dedicado para buscar alunos, que já faz o join correto
-          const alunos = await aulaAlunosService.getAlunosDaAula(data.id);
-          return { ...data, alunos: alunos };
-        } catch (err) {
-          return { ...data, alunos: [] }; // Retorna array vazio em caso de erro
-        }
+      if (!data || data.length === 0) {
+        console.log(`[INFO] Nenhuma aula encontrada para o aluno ${alunoId}`);
+        return [];
       }
 
-      return data; // Retorna null se não houver aula atual
-    });
-  },
-
-  async create(aula) {
-    return tryOperationWithCacheReload(async () => {
-      // Separar os alunos e professor do objeto de aula antes de inserir
-      const { alunos, professor, ...aulaData } = aula;
-
-      // Garantir que o campo total_alunos seja inicializado corretamente
-      aulaData.total_alunos = alunos?.length || 0;
-
-      // SOLUÇÃO: Salvar corretamente a relação com o professor
-      if (professor) {
-        aulaData.professor_id = professor.id;
-      }
-
-      const { data, error } = await supabase
-        .from("aulas")
-        .insert([aulaData])
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      // Se tiver alunos, adicionar à tabela de junção
-      if (alunos && alunos.length > 0) {
-        try {
-          await aulaAlunosService.atualizarAlunosDaAula(
-            data.id,
-            alunos.map((a) => (typeof a === "object" ? a.id : a))
-          );
-        } catch (err) {
-          // Não falharemos a criação da aula se a adição de alunos falhar
-        }
-      }
-
-      // Buscar dados atualizados incluindo alunos
-      const dadosAtualizados = { ...data };
-      try {
-        dadosAtualizados.alunos = await aulaAlunosService.getAlunosDaAula(
-          data.id
-        );
-
-        // SOLUÇÃO: Buscar dados do professor para incluir na resposta
-        if (data.professor_id) {
-          const { data: professorData, error: professorError } = await supabase
-            .from("professores")
-            .select("id, nome")
-            .eq("id", data.professor_id)
-            .single();
-
-          if (!professorError && professorData) {
-            dadosAtualizados.professor = professorData;
+      // Transformar o resultado em um formato mais adequado para o componente
+      const aulas = data
+        .filter((item) => item.aula !== null) // Filtrar registros com aula nula
+        .map((item) => {
+          // Para cada registro, extraímos a aula e adicionamos as observações específicas do aluno
+          const aula = item.aula;
+          if (aula) {
+            // Adicionar as observações do relacionamento aula_alunos ao objeto aula
+            aula.observacoes_aluno = item.observacoes || "";
           }
-        }
-      } catch (err) {
-        dadosAtualizados.alunos = [];
-      }
+          return aula;
+        });
 
-      return dadosAtualizados;
-    });
+      console.log(
+        `[SUCCESS] Encontradas ${aulas.length} aulas para o aluno ${alunoId}`
+      );
+      return aulas;
+    } catch (error) {
+      console.error(`[ERROR] Erro ao buscar aulas do aluno ${alunoId}:`, error);
+      throw error;
+    }
   },
 
-  async update(id, aula) {
-    return tryOperationWithCacheReload(async () => {
-      // Separar os alunos e professor do objeto de aula antes de atualizar
-      const { alunos, professor, ...aulaData } = aula;
+  /**
+   * Obtém uma aula por ID
+   * @param {number} id - ID da aula
+   */
+  getById: async (id) => {
+    try {
+      console.log(`Buscando aula com ID ${id}`);
 
-      // Atualizar total_alunos se a lista de alunos for fornecida
-      if (alunos) {
-        aulaData.total_alunos = alunos.length;
-      }
-
-      // SOLUÇÃO: Salvar a relação com o professor corretamente
-      // Se tiver um professor, garantir que o ID do professor seja armazenado no campo correto
-      if (professor) {
-        aulaData.professor_id = professor.id;
-      } else {
-        aulaData.professor_id = null;
-      }
-
-      const { data, error } = await supabase
+      // 1. Buscar dados básicos da aula primeiro
+      const { data: aulaBasica, error: aulaError } = await supabase
         .from("aulas")
-        .update(aulaData)
+        .select("*")
         .eq("id", id)
-        .select()
         .single();
+
+      if (aulaError) {
+        console.error(`Erro ao buscar dados básicos da aula ${id}:`, aulaError);
+        throw aulaError;
+      }
+
+      if (!aulaBasica) {
+        throw new Error(`Aula com ID ${id} não encontrada`);
+      }
+
+      console.log(
+        `Aula básica encontrada: ${aulaBasica.id}, status: ${aulaBasica.status}`
+      );
+
+      // 2. Buscar o professor separadamente
+      let professor = null;
+      try {
+        const { data: profData, error: profError } = await supabase
+          .from("professores")
+          .select("*")
+          .eq("id", aulaBasica.professor_id)
+          .single();
+
+        if (!profError && profData) {
+          professor = profData;
+        } else {
+          console.log(`Aviso: Professor não encontrado para aula ${id}`);
+        }
+      } catch (profErr) {
+        console.warn(`Erro ao buscar professor da aula ${id}:`, profErr);
+      }
+
+      // 3. Usar a própria coluna JSONB 'alunos' para evitar joins complexos
+      const alunos = aulaBasica.alunos || [];
+
+      // 4. Montar o objeto aula completo
+      const aulaCompleta = {
+        ...aulaBasica,
+        professor: professor || { id: aulaBasica.professor_id },
+      };
+
+      console.log(
+        `Aula ${id} montada com sucesso. Tem ${alunos.length} aluno(s).`
+      );
+
+      return aulaCompleta;
+    } catch (error) {
+      console.error(`Erro ao buscar aula ${id}:`, error);
+      throw error;
+    }
+  },
+
+  /**
+   * Cria uma nova aula
+   * @param {Object} aulaData - Dados da aula
+   */
+  create: async (aulaData) => {
+    try {
+      // Extrair os alunos para inserir na tabela de relacionamentos depois
+      const alunos = aulaData.alunos || [];
+
+      // Preparar os dados da aula sem usar o espalhamento
+      const aulaBasica = {
+        professor_id: aulaData.professor_id,
+        data: aulaData.data,
+        status: aulaData.status || "em_andamento",
+        observacoes: aulaData.observacoes || "",
+      };
+
+      // Incluir outros campos se existirem
+      if (aulaData.titulo) aulaBasica.titulo = aulaData.titulo;
+      if (aulaData.descricao) aulaBasica.descricao = aulaData.descricao;
+      if (aulaData.hora) aulaBasica.hora = aulaData.hora;
+      if (aulaData.exercicios) aulaBasica.exercicios = aulaData.exercicios;
+
+      console.log("Criando aula com dados:", aulaBasica);
+      console.log("Alunos a serem associados:", alunos);
+
+      // Inserir a aula básica
+      const { data, error } = await supabase
+        .from("aulas")
+        .insert([aulaBasica])
+        .select();
+
+      if (error) {
+        console.error("Erro ao inserir aula básica:", error);
+        throw error;
+      }
+
+      if (!data || data.length === 0) {
+        console.error("Nenhum dado retornado ao criar aula");
+        throw new Error("Falha ao criar aula: nenhum dado retornado");
+      }
+
+      const aulaId = data[0].id;
+      console.log(`Aula criada com ID: ${aulaId}`);
+
+      // Se temos alunos, adicioná-los à tabela de relacionamento
+      if (alunos.length > 0) {
+        try {
+          // Criar os registros para a tabela de relacionamento
+          const alunosRelacionamentos = alunos.map((aluno) => ({
+            aula_id: aulaId,
+            aluno_id: aluno.id,
+          }));
+
+          console.log(
+            "Inserindo relacionamentos de alunos:",
+            alunosRelacionamentos
+          );
+
+          // Inserir os relacionamentos
+          const { error: relError } = await supabase
+            .from("aula_alunos")
+            .insert(alunosRelacionamentos);
+
+          if (relError) {
+            console.error("Erro ao adicionar alunos à aula:", relError);
+            // Continuamos mesmo com erro na inserção dos alunos
+          }
+        } catch (relErr) {
+          console.error("Erro ao processar relacionamentos de alunos:", relErr);
+          // Continuamos mesmo com erro nos relacionamentos
+        }
+      }
+
+      // Atualizar a coluna "alunos" no formato JSONB diretamente
+      if (alunos.length > 0) {
+        try {
+          console.log("Atualizando campo JSONB de alunos");
+          const alunosJSON = alunos.map((aluno) => ({
+            id: aluno.id,
+            nome: aluno.nome,
+            idade: aluno.idade,
+            lesao: aluno.lesao,
+            observacoes: aluno.observacoes,
+          }));
+
+          const { error: updateError } = await supabase
+            .from("aulas")
+            .update({ alunos: alunosJSON })
+            .eq("id", aulaId);
+
+          if (updateError) {
+            console.error(
+              "Erro ao atualizar campo JSONB de alunos:",
+              updateError
+            );
+          }
+        } catch (jsonErr) {
+          console.error("Erro ao processar JSON de alunos:", jsonErr);
+        }
+      }
+
+      // Retornar dados básicos da aula em vez de buscar novamente
+      return {
+        id: aulaId,
+        ...aulaBasica,
+        alunos: alunos,
+      };
+    } catch (error) {
+      console.error("Erro ao criar aula:", error);
+      throw error;
+    }
+  },
+
+  /**
+   * Atualiza uma aula
+   * @param {number} id - ID da aula
+   * @param {Object} aulaData - Novos dados da aula
+   */
+  update: async (id, aulaData) => {
+    try {
+      // Extrair os alunos para atualizar relacionamentos
+      const alunos = aulaData.alunos || [];
+
+      // Remover alunos para atualizar apenas dados básicos da aula
+      // eslint-disable-next-line no-unused-vars
+      const { alunos: _, ...aulaBasica } = aulaData;
+
+      // Atualizar os dados básicos da aula
+      const { error } = await supabase
+        .from("aulas")
+        .update(aulaBasica)
+        .eq("id", id);
 
       if (error) throw error;
 
-      // Se tiver alunos, atualizar na tabela de junção
-      if (alunos) {
-        try {
-          await aulaAlunosService.atualizarAlunosDaAula(
-            id,
-            alunos.map((a) => (typeof a === "object" ? a.id : a))
-          );
-        } catch (err) {
-          // Não falharemos a atualização da aula se a atualização de alunos falhar
+      // Deletar relacionamentos anteriores
+      const { error: deleteError } = await supabase
+        .from("aula_alunos")
+        .delete()
+        .eq("aula_id", id);
+
+      if (deleteError) {
+        console.error(
+          "Erro ao remover alunos anteriores da aula:",
+          deleteError
+        );
+      }
+
+      // Se temos alunos, recriar os relacionamentos
+      // Aqui confiamos no trigger para atualizar o campo JSONB 'alunos'
+      if (alunos.length > 0) {
+        // Criar os registros para a tabela de relacionamento
+        const alunosRelacionamentos = alunos.map((aluno) => ({
+          aula_id: id,
+          aluno_id: aluno.id,
+        }));
+
+        // Inserir os novos relacionamentos
+        const { error: relError } = await supabase
+          .from("aula_alunos")
+          .insert(alunosRelacionamentos);
+
+        if (relError) {
+          console.error("Erro ao adicionar novos alunos à aula:", relError);
         }
       }
 
-      // Buscar dados atualizados incluindo alunos
-      const dadosAtualizados = { ...data };
-      try {
-        dadosAtualizados.alunos = await aulaAlunosService.getAlunosDaAula(id);
-
-        // SOLUÇÃO: Buscar dados do professor atualizados
-        if (data.professor_id) {
-          const { data: professorData, error: professorError } = await supabase
-            .from("professores")
-            .select("id, nome")
-            .eq("id", data.professor_id)
-            .single();
-
-          if (!professorError && professorData) {
-            dadosAtualizados.professor = professorData;
-          }
-        }
-      } catch (err) {
-        dadosAtualizados.alunos = [];
-      }
-
-      return dadosAtualizados;
-    });
+      // Retornar a aula com todos os dados atualizados
+      return await aulasService.getById(id);
+    } catch (error) {
+      console.error(`Erro ao atualizar aula ${id}:`, error);
+      throw error;
+    }
   },
 
-  async finalizarAulaAtual() {
-    return tryOperationWithCacheReload(async () => {
-      const aulaAtual = await this.getAulaAtual();
-      if (aulaAtual) {
-        const { error } = await supabase
-          .from("aulas")
-          .update({ status: "realizada" })
-          .eq("id", aulaAtual.id);
+  /**
+   * Exclui uma aula
+   * @param {number} id - ID da aula
+   */
+  delete: async (id) => {
+    try {
+      // Primeiro, deletar os relacionamentos com alunos
+      const { error: relError } = await supabase
+        .from("aula_alunos")
+        .delete()
+        .eq("aula_id", id);
 
-        if (error) {
-          throw error;
-        }
-      }
-    });
-  },
-
-  async delete(id) {
-    return tryOperationWithCacheReload(async () => {
-      // Primeiro remover todas as relações na tabela de junção
-      try {
-        await aulaAlunosService.atualizarAlunosDaAula(id, []);
-      } catch (err) {
-        // Não falharemos a exclusão da aula se a remoção de alunos falhar
+      if (relError) {
+        console.error("Erro ao remover relacionamentos dos alunos:", relError);
       }
 
-      // Agora excluir a aula
+      // Depois, deletar a aula
       const { error } = await supabase.from("aulas").delete().eq("id", id);
 
       if (error) throw error;
       return true;
-    });
+    } catch (error) {
+      console.error(`Erro ao excluir aula ${id}:`, error);
+      throw error;
+    }
+  },
+
+  /**
+   * Finaliza automaticamente todas as aulas em andamento
+   * @returns {Promise<{count: number, success: boolean}>} - Número de aulas finalizadas
+   */
+  finalizarAulasEmAndamento: async () => {
+    try {
+      console.log("Iniciando finalização automática de aulas em andamento...");
+
+      // 1. Buscar todas as aulas com status "em_andamento"
+      const { data: aulasEmAndamento, error: fetchError } = await supabase
+        .from("aulas")
+        .select("*")
+        .eq("status", "em_andamento");
+
+      if (fetchError) {
+        console.error("Erro ao buscar aulas em andamento:", fetchError);
+        throw fetchError;
+      }
+
+      if (!aulasEmAndamento || aulasEmAndamento.length === 0) {
+        console.log("Nenhuma aula em andamento encontrada para finalizar");
+        return { count: 0, success: true };
+      }
+
+      console.log(
+        `Encontradas ${aulasEmAndamento.length} aulas em andamento para finalizar`
+      );
+
+      // 2. Atualizar todas para status "finalizada"
+      const { error: updateError } = await supabase
+        .from("aulas")
+        .update({
+          status: "finalizada",
+          observacoes: (aula) =>
+            `${
+              aula.observacoes || ""
+            }\n[SISTEMA] Aula finalizada automaticamente às 23:59h.`,
+        })
+        .eq("status", "em_andamento");
+
+      if (updateError) {
+        console.error("Erro ao finalizar aulas em andamento:", updateError);
+        throw updateError;
+      }
+
+      console.log(
+        `${aulasEmAndamento.length} aulas finalizadas automaticamente`
+      );
+      return {
+        count: aulasEmAndamento.length,
+        success: true,
+      };
+    } catch (error) {
+      console.error("Erro ao finalizar aulas em andamento:", error);
+      return {
+        error: error.message,
+        success: false,
+      };
+    }
   },
 
   /**
    * Adiciona um aluno a uma aula existente
-   * @param {string} aulaId - ID da aula
-   * @param {string} alunoId - ID do aluno
-   * @returns {Promise<Object>} - Dados atualizados da aula
+   * @param {number} aulaId - ID da aula
+   * @param {number} alunoId - ID do aluno
    */
-  async adicionarAluno(aulaId, alunoId) {
-    return tryOperationWithCacheReload(async () => {
-      const resultado = await aulaAlunosService.adicionarAluno(aulaId, alunoId);
+  adicionarAluno: async (aulaId, alunoId) => {
+    try {
+      console.log(`Adicionando aluno ${alunoId} à aula ${aulaId}`);
 
-      // Se encontrou um erro de duplicação, apenas retorna o erro
-      if (resultado.error && resultado.isDuplicate) {
-        return resultado;
-      }
-
-      // Atualizar o contador de alunos na aula
-      try {
-        await aulaAlunosService.atualizarTotalAlunos(aulaId);
-      } catch (err) {
-        // Não falhar toda a operação devido a um erro ao atualizar o contador
-      }
-
-      // Obter a aula atualizada com todos os alunos
-      const { data, error } = await supabase
-        .from("aulas")
-        .select("*")
-        .eq("id", aulaId)
-        .single();
-
-      if (error) throw error;
-
-      const dadosAtualizados = { ...data };
-      try {
-        dadosAtualizados.alunos = await aulaAlunosService.getAlunosDaAula(
-          aulaId
-        );
-
-        // Garantir que o contador seja coerente com o número real de alunos
-        if (dadosAtualizados.alunos) {
-          const contagem = dadosAtualizados.alunos.length;
-
-          // Se o contador não corresponder ao número real de alunos, atualizar
-          if (data.total_alunos !== contagem || data.totalAlunos !== contagem) {
-            await supabase
-              .from("aulas")
-              .update({
-                total_alunos: contagem,
-                totalAlunos: contagem,
-              })
-              .eq("id", aulaId);
-
-            dadosAtualizados.total_alunos = contagem;
-            dadosAtualizados.totalAlunos = contagem;
-          }
+      // Usar a função RPC para adicionar o aluno
+      const { data: result, error: rpcError } = await supabase.rpc(
+        "add_aluno_to_aula",
+        {
+          p_aula_id: aulaId,
+          p_aluno_id: alunoId,
         }
-      } catch (err) {
-        dadosAtualizados.alunos = [];
+      );
+
+      if (rpcError) {
+        console.error("Erro ao adicionar aluno via RPC:", rpcError);
+        throw rpcError;
       }
 
-      return dadosAtualizados;
-    });
+      console.log("Resultado da adição de aluno via RPC:", result);
+
+      // Buscar a aula atualizada
+      return await aulasService.getById(aulaId);
+    } catch (error) {
+      console.error(
+        `Erro ao adicionar aluno ${alunoId} à aula ${aulaId}:`,
+        error
+      );
+      throw error;
+    }
   },
 
   /**
-   * Remove um aluno de uma aula existente
-   * @param {string} aulaId - ID da aula
-   * @param {string} alunoId - ID do aluno
-   * @returns {Promise<Object>} - Dados atualizados da aula
+   * Remove um aluno de uma aula existente (versão mais robusta)
+   * @param {number} aulaId - ID da aula
+   * @param {number} alunoId - ID do aluno
    */
-  async removerAluno(aulaId, alunoId) {
-    return tryOperationWithCacheReload(async () => {
-      await aulaAlunosService.removerAluno(aulaId, alunoId);
+  removerAlunoCompleto: async (aulaId, alunoId) => {
+    try {
+      console.log(`[ROBUSTO] Removendo aluno ${alunoId} da aula ${aulaId}`);
 
-      // Atualizar o contador de alunos na aula
-      try {
-        await aulaAlunosService.atualizarTotalAlunos(aulaId);
-      } catch (err) {
-        // Não falhar toda a operação devido a um erro ao atualizar o contador
+      // 1. Remover da tabela de relacionamento
+      const { error: relacaoError } = await supabase
+        .from("aula_alunos")
+        .delete()
+        .eq("aula_id", aulaId)
+        .eq("aluno_id", alunoId);
+
+      if (relacaoError) {
+        console.error("Erro ao remover da tabela aula_alunos:", relacaoError);
+      } else {
+        console.log("Relação removida com sucesso da tabela aula_alunos");
       }
 
-      // Obter a aula atualizada com todos os alunos
-      const { data, error } = await supabase
+      // 2. Obter a aula atual para atualizar o campo JSON de alunos
+      const { data: aulaAtual, error: aulaError } = await supabase
         .from("aulas")
-        .select("*")
+        .select("alunos")
         .eq("id", aulaId)
         .single();
 
-      if (error) throw error;
-
-      const dadosAtualizados = { ...data };
-      try {
-        dadosAtualizados.alunos = await aulaAlunosService.getAlunosDaAula(
-          aulaId
+      if (aulaError) {
+        console.error("Erro ao buscar dados da aula:", aulaError);
+      } else if (aulaAtual && aulaAtual.alunos) {
+        // Filtrar o aluno do array JSON
+        const alunosAtualizados = aulaAtual.alunos.filter(
+          (a) => a.id !== alunoId
         );
 
-        // Garantir que o contador seja coerente com o número real de alunos
-        if (dadosAtualizados.alunos) {
-          const contagem = dadosAtualizados.alunos.length;
+        // Atualizar o campo JSON diretamente
+        const { error: updateError } = await supabase
+          .from("aulas")
+          .update({ alunos: alunosAtualizados })
+          .eq("id", aulaId);
 
-          // Se o contador não corresponder ao número real de alunos, atualizar
-          if (data.total_alunos !== contagem || data.totalAlunos !== contagem) {
-            await supabase
-              .from("aulas")
-              .update({
-                total_alunos: contagem,
-                totalAlunos: contagem,
-              })
-              .eq("id", aulaId);
-
-            dadosAtualizados.total_alunos = contagem;
-            dadosAtualizados.totalAlunos = contagem;
-          }
+        if (updateError) {
+          console.error("Erro ao atualizar campo JSON de alunos:", updateError);
+        } else {
+          console.log("Campo JSON de alunos atualizado com sucesso");
         }
-      } catch (err) {
-        dadosAtualizados.alunos = [];
       }
 
-      return dadosAtualizados;
-    });
+      // 3. Tentar usar a função RPC como backup
+      try {
+        const { error: rpcError } = await supabase.rpc(
+          "remove_aluno_from_aula",
+          {
+            p_aula_id: aulaId,
+            p_aluno_id: alunoId,
+          }
+        );
+
+        if (rpcError) {
+          console.warn(
+            "Aviso: RPC não conseguiu remover o aluno (isso pode ser normal se já foi removido):",
+            rpcError
+          );
+        }
+      } catch (rpcErr) {
+        console.warn("Erro ao chamar RPC (ignorado):", rpcErr);
+      }
+
+      // 4. Forçar refresh do cache do schema
+      try {
+        await supabase.rpc("reload_schema_cache");
+      } catch (cacheErr) {
+        console.warn(
+          "Erro ao recarregar cache do schema (ignorado):",
+          cacheErr
+        );
+      }
+
+      // Buscar a aula atualizada para confirmar
+      return await aulasService.getById(aulaId);
+    } catch (error) {
+      console.error(
+        `Erro ao remover aluno ${alunoId} da aula ${aulaId} (versão robusta):`,
+        error
+      );
+      throw error;
+    }
   },
 
   /**
-   * Obtém os detalhes completos de uma aula, incluindo alunos
-   * @param {string} aulaId - ID da aula
-   * @returns {Promise<Object>} - Dados da aula com alunos
+   * Obtém aulas por status
+   * @param {string} status - Status da aula (atual, ativa, finalizada, cancelada)
    */
-  async getById(aulaId) {
-    return tryOperationWithCacheReload(async () => {
+  getAulasByStatus: async (status) => {
+    try {
       const { data, error } = await supabase
         .from("aulas")
-        .select("*")
-        .eq("id", aulaId)
-        .single();
+        .select(
+          `
+          *,
+          professor:professor_id(*),
+          alunos(*)
+        `
+        )
+        .eq("status", status)
+        .order("created_at", { ascending: false });
 
       if (error) throw error;
-
-      const dadosAula = { ...data };
-      try {
-        dadosAula.alunos = await aulaAlunosService.getAlunosDaAula(aulaId);
-      } catch (err) {
-        dadosAula.alunos = [];
-      }
-
-      return dadosAula;
-    });
-  },
-
-  /**
-   * Atualiza o status de uma aula
-   * @param {string} aulaId - ID da aula
-   * @param {string} status - Novo status (atual, ativa, realizada, cancelada)
-   * @returns {Promise<Object>} - Dados atualizados da aula
-   */
-  async updateStatus(aulaId, status) {
-    return tryOperationWithCacheReload(async () => {
-      // Verificar se o ID e status são válidos
-      if (!aulaId) {
-        throw new Error("ID de aula inválido");
-      }
-
-      if (!status) {
-        throw new Error("Status de aula inválido");
-      }
-
-      // Verificar se a aula existe
-      const { data: aulaExistente, error: erroVerificacao } = await supabase
-        .from("aulas")
-        .select("id, status")
-        .eq("id", aulaId)
-        .single();
-
-      if (erroVerificacao) {
-        throw erroVerificacao;
-      }
-
-      if (!aulaExistente) {
-        throw new Error(`Aula com ID ${aulaId} não encontrada`);
-      }
-
-      const { data, error } = await supabase
-        .from("aulas")
-        .update({ status })
-        .eq("id", aulaId)
-        .select()
-        .single();
-
-      if (error) {
-        throw error;
-      }
-
-      // Incluir os alunos da aula na resposta
-      const dadosAtualizados = { ...data };
-      try {
-        dadosAtualizados.alunos = await aulaAlunosService.getAlunosDaAula(
-          aulaId
-        );
-      } catch (err) {
-        dadosAtualizados.alunos = [];
-      }
-
-      return dadosAtualizados;
-    });
+      return data || [];
+    } catch (error) {
+      console.error(`Erro ao buscar aulas com status ${status}:`, error);
+      throw error;
+    }
   },
 };
 
-// Adicionando export default para compatibilidade
 export default aulasService;

@@ -2,30 +2,33 @@ import React, { useState, useEffect } from "react";
 import "../styles/Cadastro.css";
 import "../styles/CadastroAluno.css";
 import "../styles/Modal.css";
-import { voltarPagina, getStatusLabel } from "../lib/utils"; // Importar funções utilitárias
-import alunosService from "../services/alunos.service"; // Importar serviço de alunos
+import "../styles/EditarAluno.css"; // Importando os estilos do EditarAluno também
+import alunosService from "../services/alunos.service";
 
 const CadastroAluno = () => {
   const [showModal, setShowModal] = useState(false);
   const [alunos, setAlunos] = useState([]);
-  const [loading, setLoading] = useState(true); // Estado para controlar carregamento
-  const [error, setError] = useState(null); // Estado para controlar erros
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [searchTerm, setSearchTerm] = useState("");
-  const [novoAluno, setNovoAluno] = useState({
-    nome: "",
-    idade: "",
-    telefone: "", // ADICIONADO: Telefone
-    status: "Ativo", // ADICIONADO: Status (padrão Ativo)
-    lesao: "Não",
-    tipoLesao: "",
-    objetivo: "",
-    plano: "8 Check-in", // Valor padrão para o novo campo de plano
-    nivel: "Iniciante", // Valor padrão para o novo campo de nível
-    observacoes: "", // Campo adicionado para observações
-  });
   const [alunoHistorico, setAlunoHistorico] = useState(null);
+
+  // Estado para o formulário de cadastro, no mesmo formato do EditarAluno
+  const [formData, setFormData] = useState({
+    nome: "",
+    dataNascimento: "", // Data de nascimento ao invés de idade
+    objetivo: "",
+    lesao: "Nao", // Note: Sem acento, como no EditarAluno
+    tipoLesao: "",
+    status: "ativo",
+    plano: "8 Check-in",
+    nivel: "Iniciante",
+    observacoes: "",
+  });
 
   // Carregar alunos do Supabase ao montar o componente
   useEffect(() => {
@@ -44,12 +47,6 @@ const CadastroAluno = () => {
     };
 
     fetchAlunos();
-
-    // Código antigo usando localStorage
-    // const alunosSalvos = localStorage.getItem("todosAlunos");
-    // if (alunosSalvos) {
-    //   setAlunos(JSON.parse(alunosSalvos));
-    // }
   }, []);
 
   // Escutar por atualizações do histórico de aulas
@@ -71,85 +68,155 @@ const CadastroAluno = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setNovoAluno({
-      ...novoAluno,
+    setFormData((prev) => ({
+      ...prev,
       [name]: value,
-    });
+    }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    // AJUSTADO: Adicionar validação para telefone se necessário (opcional)
-    if (novoAluno.nome.trim() === "" || !novoAluno.idade) return;
+    setSaving(true);
+    setError(null);
+    setSuccess(false);
 
     try {
-      setLoading(true);
+      if (formData.nome.trim() === "") {
+        throw new Error("Nome do aluno é obrigatório");
+      }
+
+      // Garantir a conversão de "Não" para "Nao"
+      let lesaoValor = formData.lesao === "Não" ? "Nao" : formData.lesao;
+
+      // Verificar se o valor é um dos permitidos
+      if (
+        lesaoValor !== "Nao" &&
+        lesaoValor !== "Sim - Lesao Grave" &&
+        lesaoValor !== "Sim - Lesao Moderada"
+      ) {
+        console.warn(
+          `Valor de lesão inválido detectado: ${lesaoValor}. Definindo como 'Nao'.`
+        );
+        lesaoValor = "Nao";
+      }
+
+      // Calcular a idade a partir da data de nascimento
+      let idade = null;
+      if (formData.dataNascimento) {
+        const hoje = new Date();
+        const dataNasc = new Date(formData.dataNascimento);
+        idade = hoje.getFullYear() - dataNasc.getFullYear();
+        const mesAtual = hoje.getMonth();
+        const mesNasc = dataNasc.getMonth();
+
+        // Ajuste da idade se ainda não fez aniversário este ano
+        if (
+          mesNasc > mesAtual ||
+          (mesNasc === mesAtual && dataNasc.getDate() > hoje.getDate())
+        ) {
+          idade--;
+        }
+      }
 
       // Criar novo aluno no Supabase
       const novoAlunoData = {
-        nome: novoAluno.nome,
-        idade: parseInt(novoAluno.idade),
-        telefone: novoAluno.telefone, // ADICIONADO: Telefone
-        status: novoAluno.status, // ADICIONADO: Status
-        lesao: novoAluno.lesao,
-        tipoLesao: novoAluno.tipoLesao,
-        objetivo: novoAluno.objetivo,
-        plano: novoAluno.plano,
-        nivel: novoAluno.nivel,
-        observacoes: novoAluno.observacoes, // Incluir observações
+        nome: formData.nome,
+        data_nascimento: formData.dataNascimento || null,
+        idade: idade, // Idade calculada
+        status: formData.status || "ativo",
+        lesao: lesaoValor,
+        tipo_lesao: lesaoValor !== "Nao" ? formData.tipoLesao : null,
+        objetivo: formData.objetivo || null,
+        plano: formData.plano || "8 Check-in",
+        nivel: formData.nivel || "Iniciante",
+        observacoes: formData.observacoes || null, // Garantir que observações sejam salvas
       };
 
+      // Remover a chave tipoLesao se existir, pois já mapeamos para tipo_lesao
+      delete novoAlunoData.tipoLesao;
+
+      console.log("Dados FINAIS sendo enviados para o service:", novoAlunoData);
+
+      // Usar a função createAluno do service
       const alunoSalvo = await alunosService.createAluno(novoAlunoData);
 
-      // Atualizar o estado local com o novo aluno retornado pelo Supabase
-      const alunosAtualizados = [...alunos, alunoSalvo];
-      setAlunos(alunosAtualizados);
-
-      // Código antigo usando localStorage
-      // const newId = Math.max(...alunos.map((a) => a.id), 0) + 1;
-      // const alunosAtualizados = [
-      //   ...alunos,
-      //   {
-      //     id: newId,
-      //     nome: novoAluno.nome,
-      //     idade: parseInt(novoAluno.idade),
-      //     lesao: novoAluno.lesao,
-      //     tipoLesao: novoAluno.tipoLesao,
-      //     objetivo: novoAluno.objetivo,
-      //     plano: novoAluno.plano,
-      //     nivel: novoAluno.nivel,
-      //     historicoAulas: [],
-      //   },
-      // ];
-      // setAlunos(alunosAtualizados);
-      // localStorage.setItem("todosAlunos", JSON.stringify(alunosAtualizados));
+      // Atualizar o estado local com o novo aluno
+      setAlunos((prev) => [...prev, alunoSalvo]);
 
       // Disparar evento para atualizar outros componentes
       const event = new CustomEvent("atualizarHistoricoAlunos", {
-        detail: { alunos: alunosAtualizados },
+        detail: { alunos: [...alunos, alunoSalvo] },
       });
       window.dispatchEvent(event);
 
-      setNovoAluno({
+      // Resetar o formulário - garantir que todos os campos são resetados
+      setFormData({
         nome: "",
-        idade: "",
-        telefone: "", // ADICIONADO: Reset Telefone
-        status: "Ativo", // ADICIONADO: Reset Status
-        lesao: "Não",
-        tipoLesao: "",
+        dataNascimento: "",
         objetivo: "",
+        lesao: "Nao",
+        tipoLesao: "",
+        status: "ativo",
         plano: "8 Check-in",
         nivel: "Iniciante",
-        observacoes: "", // Resetar observações
+        observacoes: "", // Resetar também as observações
       });
 
-      setShowModal(false);
-      setError(null);
+      setSuccess(true);
+
+      // Armazenar o ID do aluno para poder verificá-lo
+      const alunoSalvoId = alunoSalvo.id;
+
+      // Fechar o modal após um breve delay
+      setTimeout(() => {
+        // Verificar se ainda existe um aluno com esse ID
+        if (alunos.some((a) => a.id === alunoSalvoId)) {
+          setShowModal(false);
+          setSuccess(false); // Limpa o sucesso ao fechar
+        }
+      }, 3000);
     } catch (err) {
-      console.error("Erro ao adicionar aluno:", err);
-      setError("Não foi possível adicionar o aluno. Tente novamente.");
+      console.error("Erro detalhado ao adicionar aluno:", err); // Log do erro completo
+
+      // Salvar o formulário no localStorage para recuperação em caso de erro
+      try {
+        localStorage.setItem("formDataBackup", JSON.stringify(formData));
+      } catch (storageError) {
+        console.warn(
+          "Não foi possível salvar o backup do formulário:",
+          storageError
+        );
+      }
+
+      // Identificar tipos de erro específicos
+      let userFriendlyError;
+
+      if (
+        err.message &&
+        (err.message.toLowerCase().includes("network") ||
+          err.message.toLowerCase().includes("failed to fetch") ||
+          err.message.toLowerCase().includes("internet") ||
+          err.message.toLowerCase().includes("connection"))
+      ) {
+        // Erro de conexão - muito comum em dispositivos móveis
+        userFriendlyError =
+          "Problema de conexão com a internet detectado. Verifique sua conexão Wi-Fi ou dados móveis e tente novamente. NÃO FECHE ESTA JANELA nem atualize a página, seus dados estão salvos.";
+      } else if (err.code === "23505") {
+        // Erro de violação de chave única
+        userFriendlyError =
+          "Já existe um aluno com estas informações no sistema.";
+      } else {
+        // Erro genérico
+        const errorMsgDetail =
+          err.details || err.message || "Erro desconhecido";
+        userFriendlyError = `Falha ao adicionar aluno: ${errorMsgDetail}. Verifique sua conexão e tente novamente. NÃO ATUALIZE a página.`;
+      }
+
+      // Mensagem de erro mais informativa e persistente
+      setError(userFriendlyError);
+      // Não limpar o erro automaticamente
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
   };
 
@@ -163,11 +230,6 @@ const CadastroAluno = () => {
       // Atualizar estado local
       const alunosAtualizados = alunos.filter((a) => a.id !== id);
       setAlunos(alunosAtualizados);
-
-      // Código antigo usando localStorage
-      // const alunosAtualizados = alunos.filter((a) => a.id !== id);
-      // setAlunos(alunosAtualizados);
-      // localStorage.setItem("todosAlunos", JSON.stringify(alunosAtualizados));
 
       // Disparar evento para atualizar outros componentes
       const event = new CustomEvent("atualizarHistoricoAlunos", {
@@ -193,6 +255,19 @@ const CadastroAluno = () => {
   );
 
   const openModal = () => {
+    setFormData({
+      nome: "",
+      dataNascimento: "",
+      objetivo: "",
+      lesao: "Nao",
+      tipoLesao: "",
+      status: "ativo",
+      plano: "8 Check-in",
+      nivel: "Iniciante",
+      observacoes: "",
+    });
+    setError(null);
+    setSuccess(false);
     setShowModal(true);
   };
 
@@ -201,7 +276,7 @@ const CadastroAluno = () => {
   };
 
   // Função para voltar à página anterior ou para o dashboard
-  const voltarPagina = () => {
+  const voltarParaGeral = () => {
     if (window.history.length > 1) {
       window.history.back();
     } else {
@@ -222,12 +297,12 @@ const CadastroAluno = () => {
       {loading && <div className="loading-indicator">Carregando...</div>}
 
       <div className="voltar-container">
-        <button className="btn-voltar" onClick={voltarPagina}>
+        <button className="btn-voltar" onClick={voltarParaGeral}>
           Voltar
         </button>
       </div>
 
-      <h1>Aluno</h1>
+      <h1>Alunos</h1>
 
       <div className="actions-container">
         <button
@@ -299,6 +374,7 @@ const CadastroAluno = () => {
         </tbody>
       </table>
 
+      {/* Modal de cadastro com design baseado no EditarAluno.jsx */}
       {showModal && (
         <div className="modal-overlay">
           <div className="modal-aluno">
@@ -308,152 +384,225 @@ const CadastroAluno = () => {
                 ×
               </button>
             </div>
-            <form onSubmit={handleSubmit} className="aluno-form">
-              {/* RENOMEADO: Label para Nome Completo */}
-              <div className="form-group">
-                <label htmlFor="nome">Nome Completo</label>
-                <input
-                  type="text"
-                  id="nome"
-                  name="nome"
-                  value={novoAluno.nome}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
 
-              <div className="form-group">
-                <label htmlFor="idade">Idade</label>
-                <input
-                  type="number"
-                  id="idade"
-                  name="idade"
-                  value={novoAluno.idade}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
+            <div className="editar-aluno-form-container">
+              {/* Mensagem de sucesso persistente até fechar o modal */}
+              {success && (
+                <div className="mensagem-sucesso">
+                  <div className="sucesso-icon">✓</div>
+                  Aluno cadastrado com sucesso!
+                  <p className="sucesso-info">
+                    Esta janela fechará automaticamente em 3 segundos...
+                  </p>
+                </div>
+              )}
 
-              {/* ADICIONADO: Campo Telefone / WhatsApp */}
-              <div className="form-group">
-                <label htmlFor="telefone">Telefone / WhatsApp</label>
-                <input
-                  type="text" // Pode ser 'tel' para melhor semântica e teclado móvel
-                  id="telefone"
-                  name="telefone"
-                  value={novoAluno.telefone}
-                  onChange={handleChange}
-                  placeholder="(XX) XXXXX-XXXX"
-                />
-              </div>
+              {/* Mensagem de erro persistente e mais destacada */}
+              {error && <div className="mensagem-erro">{error}</div>}
 
-              {/* ADICIONADO: Campo Status */}
-              <div className="form-group">
-                <label htmlFor="status">Status</label>
-                <select
-                  id="status"
-                  name="status"
-                  value={novoAluno.status}
-                  onChange={handleChange}
-                >
-                  <option value="Ativo">Ativo</option>
-                  <option value="Inativo">Inativo</option>
-                </select>
-              </div>
+              {/* Overlay de carregamento durante o salvamento */}
+              {saving && (
+                <div className="salvando-overlay">
+                  <div className="salvando-spinner"></div>
+                  <p>Salvando dados do aluno...</p>
+                  <p className="salvando-info">
+                    Por favor, aguarde. Não feche esta janela.
+                  </p>
+                </div>
+              )}
 
-              <div className="form-group">
-                <label htmlFor="lesao">Tem alguma lesão?</label>
-                <select
-                  id="lesao"
-                  name="lesao"
-                  value={novoAluno.lesao}
-                  onChange={handleChange}
-                >
-                  <option value="Não">Não</option>
-                  <option value="Sim - Lesao Moderada">
-                    Sim - Lesão Moderada
-                  </option>
-                  <option value="Sim - Lesao Grave">Sim - Lesão Grave</option>
-                </select>
-              </div>
+              <form onSubmit={handleSubmit} className="editar-aluno-form">
+                <div className="form-row">
+                  <div className="form-group">
+                    <label htmlFor="nome">Nome Completo*</label>
+                    <input
+                      type="text"
+                      id="nome"
+                      name="nome"
+                      value={formData.nome}
+                      onChange={handleChange}
+                      required
+                      placeholder="Nome do aluno"
+                    />
+                  </div>
 
-              {/* RENOMEADO: Label para Descrição da Lesão */}
-              <div className="form-group">
-                <label htmlFor="tipoLesao">Descrição da Lesão</label>
-                <input
-                  type="text"
-                  id="tipoLesao"
-                  name="tipoLesao"
-                  value={novoAluno.tipoLesao}
-                  onChange={handleChange}
-                />
-              </div>
+                  <div className="form-group">
+                    <label htmlFor="dataNascimento">Data de Nascimento</label>
+                    <input
+                      type="date"
+                      id="dataNascimento"
+                      name="dataNascimento"
+                      value={formData.dataNascimento}
+                      onChange={handleChange}
+                    />
+                  </div>
+                </div>
 
-              <div className="form-group">
-                <label htmlFor="objetivo">Objetivo</label>
-                <textarea
-                  id="objetivo"
-                  name="objetivo"
-                  value={novoAluno.objetivo}
-                  onChange={handleChange}
-                  rows="5"
-                />
-              </div>
+                <div className="form-row">
+                  <div className="form-group">
+                    <label htmlFor="status">Status</label>
+                    <select
+                      id="status"
+                      name="status"
+                      value={formData.status}
+                      onChange={handleChange}
+                    >
+                      <option value="ativo">Ativo</option>
+                      <option value="inativo">Inativo</option>
+                    </select>
+                  </div>
+                </div>
 
-              <div className="form-group">
-                <label htmlFor="plano">Plano</label>
-                <select
-                  id="plano"
-                  name="plano"
-                  value={novoAluno.plano}
-                  onChange={handleChange}
-                >
-                  <option value="8 Check-in">8 Check-in</option>
-                  <option value="12 Check-in">12 Check-in</option>
-                  <option value="16 Check-in">16 Check-in</option>
-                  <option value="Premium">Premium</option>
-                </select>
-              </div>
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>Plano</label>
+                    <div className="checkbox-group">
+                      <label className="checkbox-label">
+                        <input
+                          type="checkbox"
+                          name="plano"
+                          checked={formData.plano === "8 Check-in"}
+                          onChange={() =>
+                            setFormData({ ...formData, plano: "8 Check-in" })
+                          }
+                        />
+                        8 Check-in
+                      </label>
+                      <label className="checkbox-label">
+                        <input
+                          type="checkbox"
+                          name="plano"
+                          checked={formData.plano === "12 Check-in"}
+                          onChange={() =>
+                            setFormData({ ...formData, plano: "12 Check-in" })
+                          }
+                        />
+                        12 Check-in
+                      </label>
+                      <label className="checkbox-label">
+                        <input
+                          type="checkbox"
+                          name="plano"
+                          checked={formData.plano === "16 Check-in"}
+                          onChange={() =>
+                            setFormData({ ...formData, plano: "16 Check-in" })
+                          }
+                        />
+                        16 Check-in
+                      </label>
+                      <label className="checkbox-label">
+                        <input
+                          type="checkbox"
+                          name="plano"
+                          checked={formData.plano === "Premium"}
+                          onChange={() =>
+                            setFormData({ ...formData, plano: "Premium" })
+                          }
+                        />
+                        Premium
+                      </label>
+                    </div>
+                  </div>
 
-              <div className="form-group">
-                <label htmlFor="nivel">Nível</label>
-                <select
-                  id="nivel"
-                  name="nivel"
-                  value={novoAluno.nivel}
-                  onChange={handleChange}
-                >
-                  <option value="Iniciante">Iniciante</option>
-                  <option value="Intermediário">Intermediário</option>
-                  <option value="Avançado">Avançado</option>
-                </select>
-              </div>
+                  <div className="form-group">
+                    <label htmlFor="nivel">Nível de experiência</label>
+                    <select
+                      id="nivel"
+                      name="nivel"
+                      value={formData.nivel}
+                      onChange={handleChange}
+                    >
+                      <option value="">Selecione um nível</option>
+                      <option value="Iniciante">Iniciante</option>
+                      <option value="Intermediário">Intermediário</option>
+                      <option value="Avançado">Avançado</option>
+                    </select>
+                  </div>
+                </div>
 
-              <div className="form-group">
-                <label htmlFor="observacoes">Observações</label>
-                <textarea
-                  id="observacoes"
-                  name="observacoes"
-                  value={novoAluno.observacoes}
-                  onChange={handleChange}
-                  rows="3"
-                  placeholder="Observações adicionais sobre o aluno..."
-                />
-              </div>
+                <div className="form-row">
+                  <div className="form-group">
+                    <label htmlFor="lesao">Tem alguma lesão?</label>
+                    <select
+                      id="lesao"
+                      name="lesao"
+                      value={formData.lesao} // O valor aqui ainda pode ser "Não" com acento
+                      onChange={handleChange}
+                    >
+                      {/* O valor da option "Não" deve ser "Nao" sem acento */}
+                      <option value="Nao">Não</option>
+                      <option value="Sim - Lesao Moderada">
+                        Sim - Lesão Moderada
+                      </option>
+                      <option value="Sim - Lesao Grave">
+                        Sim - Lesão Grave
+                      </option>
+                    </select>
+                  </div>
+                </div>
 
-              <div className="form-actions">
-                <button
-                  type="button"
-                  className="btn-cancelar"
-                  onClick={closeModal}
-                >
-                  Cancelar
-                </button>
-                <button type="submit" className="btn-salvar">
-                  Salvar
-                </button>
-              </div>
-            </form>
+                {formData.lesao !== "Nao" && (
+                  <div className="form-row">
+                    <div className="form-group full-width">
+                      <label htmlFor="tipoLesao">Descrição da Lesão</label>
+                      <textarea
+                        id="tipoLesao"
+                        name="tipoLesao"
+                        value={formData.tipoLesao}
+                        onChange={handleChange}
+                        placeholder="Descreva detalhes sobre a lesão"
+                        rows={3}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                <div className="form-row">
+                  <div className="form-group full-width">
+                    <label htmlFor="objetivo">Objetivo de Treino</label>
+                    <textarea
+                      id="objetivo"
+                      name="objetivo"
+                      value={formData.objetivo}
+                      onChange={handleChange}
+                      placeholder="Qual o objetivo do aluno com o treino?"
+                      rows={3}
+                    />
+                  </div>
+                </div>
+
+                <div className="form-row">
+                  <div className="form-group full-width">
+                    <label htmlFor="observacoes">Observações</label>
+                    <textarea
+                      id="observacoes"
+                      name="observacoes"
+                      value={formData.observacoes}
+                      onChange={handleChange}
+                      placeholder="Observações adicionais sobre o aluno..."
+                      rows={3}
+                    />
+                  </div>
+                </div>
+
+                <div className="form-actions">
+                  <button
+                    type="button"
+                    className="btn-cancelar"
+                    onClick={closeModal}
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    className="btn-salvar"
+                    disabled={saving}
+                  >
+                    {saving ? "Salvando..." : "Cadastrar Aluno"}
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         </div>
       )}
@@ -505,7 +654,15 @@ const CadastroAluno = () => {
                       .map((aula) => (
                         <tr key={aula.id}>
                           <td>{aula.data}</td>
-                          <td>{getStatusLabel(aula.status)}</td>
+                          <td>
+                            {aula.status === "realizada"
+                              ? "Realizada"
+                              : aula.status === "atual"
+                              ? "Atual"
+                              : aula.status === "cancelada"
+                              ? "Cancelada"
+                              : aula.status}
+                          </td>
                         </tr>
                       ))}
                   </tbody>

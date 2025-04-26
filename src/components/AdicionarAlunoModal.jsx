@@ -4,9 +4,11 @@ import "../styles/AdicionarAlunoModal.css";
 const AdicionarAlunoModal = ({ onClose, onAdicionar }) => {
   const [formData, setFormData] = useState({
     nome: "",
+    dataNascimento: "", // Substituindo idade por data de nascimento
     tipo: "iniciante", // iniciante, moderado, avançado
     nivel: 1, // 1 a 10
     lesao: "verde", // verde, amarelo, vermelho
+    observacoes: "", // Adicionando campo de observações
   });
 
   const handleChange = (e) => {
@@ -19,14 +21,37 @@ const AdicionarAlunoModal = ({ onClose, onAdicionar }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onAdicionar(formData);
+
+    // Calcular idade baseado na data de nascimento
+    let idade = null;
+    if (formData.dataNascimento) {
+      const hoje = new Date();
+      const dataNasc = new Date(formData.dataNascimento);
+      idade = hoje.getFullYear() - dataNasc.getFullYear();
+      const mesAtual = hoje.getMonth();
+      const mesNasc = dataNasc.getMonth();
+
+      // Ajuste da idade se ainda não fez aniversário este ano
+      if (
+        mesNasc > mesAtual ||
+        (mesNasc === mesAtual && dataNasc.getDate() > hoje.getDate())
+      ) {
+        idade--;
+      }
+    }
+
+    // Enviar dados com a idade calculada automaticamente
+    onAdicionar({
+      ...formData,
+      idade: idade,
+    });
   };
 
   return (
     <div className="modal-overlay">
       <div className="modal-container">
         <div className="modal-header">
-          <h3>Adicionar Aluno</h3>
+          <h3>Cadastrar Aluno</h3>
           <button className="btn-fechar" onClick={onClose}>
             ×
           </button>
@@ -42,6 +67,17 @@ const AdicionarAlunoModal = ({ onClose, onAdicionar }) => {
               value={formData.nome}
               onChange={handleChange}
               required
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="dataNascimento">Data de Nascimento</label>
+            <input
+              type="date"
+              id="dataNascimento"
+              name="dataNascimento"
+              value={formData.dataNascimento}
+              onChange={handleChange}
             />
           </div>
 
@@ -113,6 +149,18 @@ const AdicionarAlunoModal = ({ onClose, onAdicionar }) => {
                 Lesionado
               </label>
             </div>
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="observacoes">Observações</label>
+            <textarea
+              id="observacoes"
+              name="observacoes"
+              value={formData.observacoes}
+              onChange={handleChange}
+              placeholder="Observações adicionais sobre o aluno..."
+              rows={3}
+            />
           </div>
 
           <div className="form-actions">

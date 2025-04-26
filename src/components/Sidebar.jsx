@@ -13,7 +13,7 @@ import {
   faChartPie,
   faSignOutAlt,
   faHistory,
-  faCog,
+  faChalkboard, // Ícone para a Sala
 } from "@fortawesome/free-solid-svg-icons";
 
 function Sidebar({
@@ -112,14 +112,23 @@ function Sidebar({
         )}
 
         <div className="sidebar-menu">
-          {/* Menu comum para todos os usuários */}
+          {/* Sala como primeira opção no menu para todos os usuários */}
           <div
+            className={getClassName("sala")}
+            onClick={() => handleSectionChange("sala")}
+          >
+            <FontAwesomeIcon icon={faChalkboard} className="sidebar-icon" />
+            {!collapsed && <span>Sala</span>}
+          </div>
+
+          {/* Dashboard comentado - temporariamente removido */}
+          {/* <div
             className={getClassName("geral")}
             onClick={() => handleSectionChange("geral")}
           >
             <FontAwesomeIcon icon={faChartPie} className="sidebar-icon" />
             {!collapsed && <span>Dashboard</span>}
-          </div>
+          </div> */}
 
           {/* Acesso limitado para professores */}
           {userRole === "professor" && (
@@ -165,15 +174,6 @@ function Sidebar({
                 <FontAwesomeIcon icon={faUser} className="sidebar-icon" />
                 {!collapsed && <span>Professores</span>}
               </div>
-              {/* Remover ou comentar a seção de Configurações
-              <div
-                className={getClassName("configuracoes")}
-                onClick={() => handleSectionChange("configuracoes")}
-              >
-                <FontAwesomeIcon icon={faCog} className="sidebar-icon" />
-                {!collapsed && <span>Configurações</span>}
-              </div>
-              */}
             </>
           )}
         </div>

@@ -14,6 +14,7 @@ export async function criarProfessorCorreto() {
     const senha = "Professor@2025"; // Você deve alterar esta senha após o login
 
     // Criar usuário professor no Supabase
+    // eslint-disable-next-line no-unused-vars
     const { data, error } = await supabase.auth.signUp({
       email: email,
       password: senha,

@@ -12,12 +12,16 @@ function GerenciamentoAlunos({ setActiveSection }) {
   const [entriesPerPage, setEntriesPerPage] = useState(10);
   const [showModal, setShowModal] = useState(false);
   const [atualizandoAluno, setAtualizandoAluno] = useState(null);
+  const [activeTab, setActiveTab] = useState("ativos"); // Estado para controlar qual aba está ativa
   const [novoAluno, setNovoAluno] = useState({
     nome: "",
-    idade: "",
+    dataNascimento: "", // Novo campo no lugar de idade
     lesao: "Não",
     tipo_lesao: "",
     objetivo: "",
+    plano: "8 Check-in",
+    nivel: "Iniciante",
+    observacoes: "",
     status: "ativo",
   });
 
@@ -140,10 +144,13 @@ function GerenciamentoAlunos({ setActiveSection }) {
     setShowModal(true);
     setNovoAluno({
       nome: "",
-      idade: "",
+      dataNascimento: "", // Novo campo no lugar de idade
       lesao: "Não",
       tipo_lesao: "",
       objetivo: "",
+      plano: "8 Check-in",
+      nivel: "Iniciante",
+      observacoes: "",
       status: "ativo",
     });
   };
@@ -166,10 +173,43 @@ function GerenciamentoAlunos({ setActiveSection }) {
       // Forçar atualização do cache antes de cadastrar
       await reloadSupabaseSchemaCache();
 
+      // Corrigir o valor de "lesao" para garantir que não contenha acentuação
+      let lesaoCorrigida = novoAluno.lesao;
+      if (lesaoCorrigida === "Não") {
+        lesaoCorrigida = "Nao";
+        console.log("Corrigindo valor de lesão de 'Não' para 'Nao'");
+      }
+
+      // Calcular a idade a partir da data de nascimento
+      let idade = null;
+      if (novoAluno.dataNascimento) {
+        const hoje = new Date();
+        const dataNasc = new Date(novoAluno.dataNascimento);
+        idade = hoje.getFullYear() - dataNasc.getFullYear();
+        const mesAtual = hoje.getMonth();
+        const mesNasc = dataNasc.getMonth();
+
+        // Ajuste da idade se ainda não fez aniversário este ano
+        if (
+          mesNasc > mesAtual ||
+          (mesNasc === mesAtual && dataNasc.getDate() > hoje.getDate())
+        ) {
+          idade--;
+        }
+      }
+
+      // Preparar dados para enviar ao Supabase com mapeamento correto de campos
       const alunoParaSalvar = {
-        ...novoAluno,
-        idade: novoAluno.idade ? parseInt(novoAluno.idade) : null,
-        status: "ativo",
+        nome: novoAluno.nome,
+        data_nascimento: novoAluno.dataNascimento || null, // Salvar data de nascimento
+        idade: idade, // Idade calculada automaticamente
+        status: novoAluno.status || "ativo",
+        lesao: lesaoCorrigida, // Usar o valor corrigido
+        tipo_lesao: lesaoCorrigida !== "Nao" ? novoAluno.tipo_lesao : null,
+        objetivo: novoAluno.objetivo || null,
+        plano: novoAluno.plano || "8 Check-in",
+        nivel: novoAluno.nivel || "Iniciante",
+        observacoes: novoAluno.observacoes || null,
       };
 
       console.log("Dados para cadastro:", alunoParaSalvar);
@@ -202,10 +242,29 @@ function GerenciamentoAlunos({ setActiveSection }) {
     }
   };
 
-  const alunosFiltrados = alunos.filter(
-    (aluno) =>
-      aluno.nome?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      aluno.telefone?.toLowerCase().includes(searchTerm.toLowerCase())
+  // Filtrar alunos por status (ativo/inativo) com base na aba selecionada
+  const filtrarAlunosPorStatus = (alunos, status) => {
+    return alunos.filter((aluno) => aluno.status === status);
+  };
+
+  // Filtrar alunos por termo de busca
+  const filtrarAlunosPorBusca = (alunos, searchTerm) => {
+    if (!searchTerm) return alunos;
+
+    return alunos.filter(
+      (aluno) =>
+        aluno.nome?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        aluno.telefone?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  };
+
+  // Aplicar ambos os filtros sequencialmente
+  const alunosFiltrados = filtrarAlunosPorBusca(
+    filtrarAlunosPorStatus(
+      alunos,
+      activeTab === "ativos" ? "ativo" : "inativo"
+    ),
+    searchTerm
   );
 
   if (loading && !atualizandoAluno)
@@ -215,6 +274,26 @@ function GerenciamentoAlunos({ setActiveSection }) {
   return (
     <div className="alunos-principal-container">
       <h1>Gerenciamento de Alunos</h1>
+
+      {/* Sistema de abas para alternar entre alunos ativos e inativos */}
+      <div className="alunos-tabs">
+        <button
+          className={`tab-button ${activeTab === "ativos" ? "active" : ""}`}
+          onClick={() => setActiveTab("ativos")}
+          data-count={alunos.filter((aluno) => aluno.status === "ativo").length}
+        >
+          Alunos Ativos
+        </button>
+        <button
+          className={`tab-button ${activeTab === "inativos" ? "active" : ""}`}
+          onClick={() => setActiveTab("inativos")}
+          data-count={
+            alunos.filter((aluno) => aluno.status === "inativo").length
+          }
+        >
+          Alunos Inativos
+        </button>
+      </div>
 
       <div className="actions-container">
         <button className="btn-cadastrar" onClick={openModal}>
@@ -322,7 +401,11 @@ function GerenciamentoAlunos({ setActiveSection }) {
       </table>
 
       {alunosFiltrados.length === 0 && (
-        <p className="sem-registros">Nenhum aluno encontrado.</p>
+        <p className="sem-registros">
+          {activeTab === "ativos"
+            ? "Nenhum aluno ativo encontrado."
+            : "Nenhum aluno inativo encontrado."}
+        </p>
       )}
 
       {showModal && (
@@ -335,70 +418,176 @@ function GerenciamentoAlunos({ setActiveSection }) {
               </button>
             </div>
             <form onSubmit={handleSubmit} className="aluno-form">
-              <div className="form-group">
-                <label htmlFor="nome">Nome</label>
-                <input
-                  type="text"
-                  id="nome"
-                  name="nome"
-                  value={novoAluno.nome}
-                  onChange={handleChange}
-                  required
-                />
+              <div className="form-row">
+                <div className="form-group">
+                  <label htmlFor="nome">Nome Completo*</label>
+                  <input
+                    type="text"
+                    id="nome"
+                    name="nome"
+                    value={novoAluno.nome}
+                    onChange={handleChange}
+                    required
+                    placeholder="Nome do aluno"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="dataNascimento">Data de Nascimento</label>
+                  <input
+                    type="date"
+                    id="dataNascimento"
+                    name="dataNascimento"
+                    value={novoAluno.dataNascimento}
+                    onChange={handleChange}
+                    placeholder="Data de nascimento do aluno"
+                  />
+                </div>
               </div>
 
-              <div className="form-group">
-                <label htmlFor="idade">Idade</label>
-                <input
-                  type="number"
-                  id="idade"
-                  name="idade"
-                  value={novoAluno.idade}
-                  onChange={handleChange}
-                />
+              <div className="form-row">
+                <div className="form-group">
+                  <label htmlFor="status">Status</label>
+                  <select
+                    id="status"
+                    name="status"
+                    value={novoAluno.status}
+                    onChange={handleChange}
+                  >
+                    <option value="ativo">Ativo</option>
+                    <option value="inativo">Inativo</option>
+                  </select>
+                </div>
               </div>
 
-              <div className="form-group">
-                <label htmlFor="lesao">Tem alguma lesão?</label>
-                <select
-                  id="lesao"
-                  name="lesao"
-                  value={novoAluno.lesao}
-                  onChange={handleChange}
-                >
-                  <option value="Não">Não</option>
-                  <option value="Sim - Lesao Moderada">
-                    Sim - Lesão Moderada
-                  </option>
-                  <option value="Sim - Lesao Grave">Sim - Lesão Grave</option>
-                </select>
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Plano</label>
+                  <div className="checkbox-group">
+                    <label className="checkbox-label">
+                      <input
+                        type="checkbox"
+                        name="plano"
+                        checked={novoAluno.plano === "8 Check-in"}
+                        onChange={() =>
+                          setNovoAluno({ ...novoAluno, plano: "8 Check-in" })
+                        }
+                      />
+                      8 Check-in
+                    </label>
+                    <label className="checkbox-label">
+                      <input
+                        type="checkbox"
+                        name="plano"
+                        checked={novoAluno.plano === "12 Check-in"}
+                        onChange={() =>
+                          setNovoAluno({ ...novoAluno, plano: "12 Check-in" })
+                        }
+                      />
+                      12 Check-in
+                    </label>
+                    <label className="checkbox-label">
+                      <input
+                        type="checkbox"
+                        name="plano"
+                        checked={novoAluno.plano === "16 Check-in"}
+                        onChange={() =>
+                          setNovoAluno({ ...novoAluno, plano: "16 Check-in" })
+                        }
+                      />
+                      16 Check-in
+                    </label>
+                    <label className="checkbox-label">
+                      <input
+                        type="checkbox"
+                        name="plano"
+                        checked={novoAluno.plano === "Premium"}
+                        onChange={() =>
+                          setNovoAluno({ ...novoAluno, plano: "Premium" })
+                        }
+                      />
+                      Premium
+                    </label>
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="nivel">Nível de experiência</label>
+                  <select
+                    id="nivel"
+                    name="nivel"
+                    value={novoAluno.nivel}
+                    onChange={handleChange}
+                  >
+                    <option value="">Selecione um nível</option>
+                    <option value="Iniciante">Iniciante</option>
+                    <option value="Intermediário">Intermediário</option>
+                    <option value="Avançado">Avançado</option>
+                  </select>
+                </div>
               </div>
 
-              <div className="form-group">
-                <label htmlFor="tipo_lesao">Tipo de Lesão:</label>
-                <textarea
-                  id="tipo_lesao"
-                  name="tipo_lesao"
-                  value={novoAluno.tipo_lesao}
-                  onChange={handleChange}
-                  placeholder="Descreva o tipo de lesão"
-                  disabled={novoAluno.lesao === "Não"}
-                />
+              <div className="form-row">
+                <div className="form-group">
+                  <label htmlFor="lesao">Tem alguma lesão?</label>
+                  <select
+                    id="lesao"
+                    name="lesao"
+                    value={novoAluno.lesao}
+                    onChange={handleChange}
+                  >
+                    <option value="Não">Não</option>
+                    <option value="Sim - Lesao Moderada">
+                      Sim - Lesão Moderada
+                    </option>
+                    <option value="Sim - Lesao Grave">Sim - Lesão Grave</option>
+                  </select>
+                </div>
               </div>
 
-              <div className="form-group">
-                <label htmlFor="objetivo">Objetivo:</label>
-                <textarea
-                  id="objetivo"
-                  name="objetivo"
-                  value={novoAluno.objetivo}
-                  onChange={handleChange}
-                  placeholder="Descreva o objetivo do aluno"
-                />
+              {novoAluno.lesao !== "Não" && (
+                <div className="form-row">
+                  <div className="form-group full-width">
+                    <label htmlFor="tipo_lesao">Descrição da Lesão</label>
+                    <textarea
+                      id="tipo_lesao"
+                      name="tipo_lesao"
+                      value={novoAluno.tipo_lesao}
+                      onChange={handleChange}
+                      placeholder="Descreva detalhes sobre a lesão"
+                      rows={3}
+                    />
+                  </div>
+                </div>
+              )}
+
+              <div className="form-row">
+                <div className="form-group full-width">
+                  <label htmlFor="objetivo">Objetivo de Treino</label>
+                  <textarea
+                    id="objetivo"
+                    name="objetivo"
+                    value={novoAluno.objetivo}
+                    onChange={handleChange}
+                    placeholder="Qual o objetivo do aluno com o treino?"
+                    rows={3}
+                  />
+                </div>
               </div>
 
-              {/* Campo oculto para garantir que o status seja sempre 'ativo' */}
-              <input type="hidden" name="status" value="ativo" />
+              <div className="form-row">
+                <div className="form-group full-width">
+                  <label htmlFor="observacoes">Observações</label>
+                  <textarea
+                    id="observacoes"
+                    name="observacoes"
+                    value={novoAluno.observacoes}
+                    onChange={handleChange}
+                    placeholder="Observações adicionais sobre o aluno..."
+                    rows={3}
+                  />
+                </div>
+              </div>
 
               <div className="form-actions">
                 <button
@@ -409,7 +598,7 @@ function GerenciamentoAlunos({ setActiveSection }) {
                   Cancelar
                 </button>
                 <button type="submit" className="btn-salvar">
-                  Salvar
+                  Cadastrar
                 </button>
               </div>
             </form>

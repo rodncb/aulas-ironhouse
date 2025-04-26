@@ -78,7 +78,7 @@ const Cadastros = ({ userRole }) => {
           onClick={() => {
             window.dispatchEvent(
               new CustomEvent("navegarPara", {
-                detail: { secao: "geral" },
+                detail: { secao: "sala" },
               })
             );
           }}

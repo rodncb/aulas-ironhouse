@@ -850,3 +850,83 @@ body.dropdown-active::after {
 .data-table tbody tr.lesao-moderada:hover {
   background-color: #fef3cd; /* Amarelo um pouco mais escuro no hover */
 }
+
+/* Sistema de abas para alunos ativos/inativos */
+.alunos-tabs {
+  display: flex;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.tab-button {
+  padding: 12px 24px;
+  background: none;
+  border: none;
+  font-size: 16px;
+  font-weight: 500;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border-bottom: 3px solid transparent;
+  position: relative;
+}
+
+.tab-button:hover {
+  color: #2196f3;
+}
+
+.tab-button.active {
+  color: #2196f3;
+  border-bottom: 3px solid #2196f3;
+}
+
+/* Contador de alunos na aba */
+.tab-button::after {
+  content: attr(data-count);
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background-color: #e0e0e0;
+  color: #333;
+  font-size: 12px;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tab-button.active::after {
+  background-color: #2196f3;
+  color: white;
+}
+
+/* Responsividade para abas */
+@media (max-width: 768px) {
+  .alunos-tabs {
+    justify-content: center;
+  }
+
+  .tab-button {
+    flex: 1;
+    text-align: center;
+    padding: 10px 5px;
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .tab-button {
+    padding: 8px 5px;
+    font-size: 14px;
+  }
+
+  .tab-button::after {
+    font-size: 10px;
+    width: 18px;
+    height: 18px;
+    top: 5px;
+    right: 5px;
+  }
+}

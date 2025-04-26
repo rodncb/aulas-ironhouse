@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import "../styles/GerenciamentoProfessores.css";
 import { voltarPagina, getStatusLabel } from "../lib/utils"; // Importar funções utilitárias
 import professoresService from "../services/professores.service"; // Importação do serviço de professores
-import { aulasService } from "../services/aulas.service"; // Importação do serviço de aulas
+import aulasService from "../services/aulas.service"; // Importação do serviço de aulas como export padrão
 
 const GerenciamentoProfessores = (props) => {
   const [showModal, setShowModal] = useState(false);
@@ -263,18 +263,18 @@ const GerenciamentoProfessores = (props) => {
     setActiveDropdown(null);
   };
 
-  // Função para voltar para a página geral (Dashboard)
-  const voltarParaGeral = () => {
-    // Usa setActiveSection para voltar ao dashboard (Geral)
+  // Função para voltar para a página sala
+  const voltarParaSala = () => {
+    // Usa setActiveSection para voltar para Sala
     if (props.setActiveSection) {
-      props.setActiveSection("geral");
+      props.setActiveSection("sala");
     } else {
       // Fallback (menos ideal, mas mantém alguma navegação)
       console.warn(
         "setActiveSection não foi passada como prop para GerenciamentoProfessores"
       );
       const event = new CustomEvent("navegarPara", {
-        detail: { secao: "geral" },
+        detail: { secao: "sala" },
       });
       window.dispatchEvent(event);
     }
@@ -284,7 +284,7 @@ const GerenciamentoProfessores = (props) => {
     <div className="professores-principal-container">
       {/* Botão voltar estilo Apple */}
       <div className="apple-back-button-container">
-        <button className="apple-back-button" onClick={voltarParaGeral}>
+        <button className="apple-back-button" onClick={voltarParaSala}>
           <span className="apple-back-arrow">←</span> Voltar
         </button>
       </div>

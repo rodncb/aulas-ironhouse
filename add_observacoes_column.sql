@@ -1,0 +1,1 @@
+ALTER TABLE aulas ADD COLUMN IF NOT EXISTS observacoes TEXT;

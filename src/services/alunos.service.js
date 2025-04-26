@@ -33,14 +33,19 @@ async function getAll() {
 
 async function createAluno(alunoData) {
   try {
-    // Mapear tipoLesao (camelCase) para tipo_lesao (snake_case)
+    // Remover a lógica de normalização para 'lesao'
+    // Confiar que o frontend envia 'Nao', 'Sim - Lesao Grave' ou 'Sim - Lesao Moderada'
+
+    // Mapear tipoLesao (camelCase do frontend) para tipo_lesao (snake_case do banco)
     const dadosParaSupabase = {
-      ...alunoData,
-      tipo_lesao: alunoData.tipoLesao || null, // Mapeamento aqui
+      ...alunoData, // Usar os dados diretamente como vieram do frontend
+      tipo_lesao: alunoData.tipoLesao || null, // Mapeamento explícito
     };
 
-    // Remover a chave original tipoLesao do objeto principal
+    // Remover a chave original tipoLesao se existir para evitar conflito
     delete dadosParaSupabase.tipoLesao;
+
+    console.log("Dados finais sendo enviados para o banco:", dadosParaSupabase);
 
     const { data, error } = await supabase
       .from("alunos")
@@ -48,8 +53,7 @@ async function createAluno(alunoData) {
       .select();
 
     if (error) throw error;
-    // Retornar os dados como vieram do Supabase (provavelmente com tipo_lesao)
-    // Se precisar retornar tipoLesao para o frontend, mapear de volta aqui.
+    // Retornar os dados como vieram do Supabase
     return data[0];
   } catch (error) {
     console.error("Erro ao criar aluno:", error);

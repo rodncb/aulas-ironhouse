@@ -96,24 +96,84 @@
 @media (max-width: 768px) {
   .modal-aluno,
   .modal-content {
-    width: 90%;
+    width: 92%;
+    max-height: 85vh;
+  }
+
+  .modal-header {
+    padding: 15px;
+  }
+
+  .modal-header h2 {
+    font-size: 1.3rem;
+  }
+
+  .close-btn {
+    font-size: 2rem; /* Botão de fechar maior para facilitar o toque */
+    padding: 5px 10px;
+  }
+
+  .modal-body {
+    padding: 15px;
+    max-height: calc(85vh - 60px);
+    overflow-y: auto;
   }
 }
 
 @media (max-width: 480px) {
   .modal-aluno,
   .modal-content {
-    width: 95%;
+    width: 96%;
+    max-height: 90vh;
     margin: 10px;
+    border-radius: 10px; /* Bordas mais arredondadas para melhor aparência mobile */
+  }
+
+  .modal-header {
+    padding: 12px 15px;
+  }
+
+  .modal-header h2 {
+    font-size: 1.2rem;
+  }
+
+  .modal-body {
+    padding: 12px;
+    max-height: calc(90vh - 56px);
   }
 
   .modal-actions {
     flex-direction: column;
+    padding: 12px 15px;
   }
 
   .button-primary,
   .button-secondary {
     width: 100%;
     margin-bottom: 10px;
+    padding: 14px;
+    font-size: 16px;
+    border-radius: 6px;
+  }
+
+  .close-btn {
+    font-size: 2.2rem;
+    padding: 0 10px;
+  }
+}
+
+/* Estilos específicos para dispositivos móveis - experiência de toque */
+@media (max-width: 480px) {
+  /* Estilo tap highlight transparente para uma experiência mais nativa */
+  * {
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+  }
+
+  /* Tornar todos os elementos interativos maiores para facilitar o toque */
+  button,
+  select,
+  input[type="submit"],
+  input[type="button"] {
+    min-height: 44px; /* Recomendação de tamanho mínimo para alvos de toque */
   }
 }

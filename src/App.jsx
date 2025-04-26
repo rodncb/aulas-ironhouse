@@ -16,6 +16,10 @@ import { useAuth } from "./hooks/useAuth";
 import { reloadSupabaseSchemaCache } from "./services/supabase";
 import DetalheAluno from "./components/DetalheAluno";
 import EditarAluno from "./components/EditarAluno";
+import Sala from "./components/Sala"; // Importando o componente Sala
+import aulaScheduler from "./services/scheduler"; // Importando o scheduler para finalização automática de aulas
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const App = () => {
   // Usando o hook de autenticação
@@ -26,7 +30,7 @@ const App = () => {
   const [currentUser, setCurrentUser] = useState(null);
   const [userRole, setUserRole] = useState(null); // 'professor' ou 'admin'
 
-  const [activeSection, setActiveSection] = useState("geral"); // Definindo 'geral' como padrão
+  const [activeSection, setActiveSection] = useState("sala"); // Alterado de "geral" para "sala"
   // Estado para armazenar os alunos em aula, compartilhado entre os componentes
   const [alunosEmAulaApp, setAlunosEmAulaApp] = useState([]);
   // Estado para controlar se o sidebar está colapsado
@@ -43,7 +47,7 @@ const App = () => {
       setCurrentUser(user);
       setUserRole(user.role);
       setIsAuthenticated(true);
-      setActiveSection("geral");
+      setActiveSection("sala"); // Alterado de "geral" para "sala"
     } else if (!loading) {
       setIsAuthenticated(false);
       setCurrentUser(null);
@@ -140,7 +144,7 @@ const App = () => {
       setCurrentUser(null);
       setIsAuthenticated(false);
       setUserRole(null);
-      setActiveSection("geral");
+      setActiveSection("sala"); // Alterado de "geral" para "sala"
 
       // Chamar o método de signOut do hook de autenticação
       await signOut();
@@ -206,15 +210,21 @@ const App = () => {
 
     // Seções permitidas para professores
     if (userRole === "professor") {
+      // Permitir acesso a todas as seções para professores também, incluindo 'sala'
+      // Removendo a lista restrita de seções
+      return true; // Professor pode acessar tudo agora
+      /*
       const allowedSections = [
-        "geral",
-        "alunos_historico",
-        "cadastro_exercicios",
+        \"geral\",
+        \"alunos_historico\",
+        \"cadastro_exercicios\",
+        \"sala\", // Adicionando a nova seção \"sala\"
       ];
       return allowedSections.includes(section);
+      */
     }
 
-    return false;
+    return false; // Caso não seja admin nem professor (improvável, mas seguro)
   };
 
   // Removemos a função handleReloadSchemaCache que não será mais utilizada
@@ -260,6 +270,21 @@ const App = () => {
   }, []);
   */
 
+  // Inicializar o scheduler de finalização automática de aulas
+  useEffect(() => {
+    // Iniciar o agendamento quando o aplicativo carregar
+    console.log(
+      "Iniciando agendamento de finalização automática de aulas às 23:59h"
+    );
+    aulaScheduler.iniciarAgendamento();
+
+    // Limpar o agendamento quando o componente for desmontado
+    return () => {
+      console.log("Parando agendamento de finalização automática de aulas");
+      aulaScheduler.pararAgendamento();
+    };
+  }, []);
+
   // Renderiza o componente apropriado com base na seção ativa
   const renderContent = () => {
     // Verificar novamente se o usuário pode acessar esta seção
@@ -276,7 +301,7 @@ const App = () => {
     // Verificar se a seção ativa começa com "detalhe-aluno/" ou "editar-aluno/"
     if (activeSection.startsWith("detalhe-aluno/")) {
       const alunoId = activeSection.split("/")[1];
-      // Passar a função handleSectionChange como prop
+      // Voltando a usar o componente DetalheAluno original em vez de DetalheCadastroAluno
       return (
         <DetalheAluno alunoId={alunoId} onNavigateBack={handleSectionChange} />
       );
@@ -290,6 +315,11 @@ const App = () => {
           setActiveSection={setActiveSection}
         />
       );
+    }
+
+    // Renderizando o componente Sala quando a seção ativa for "sala"
+    if (activeSection === "sala") {
+      return <Sala />;
     }
 
     switch (activeSection) {
@@ -357,6 +387,14 @@ const App = () => {
           {renderContent()}
         </div>
       </main>
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        pauseOnHover
+      />
     </div>
   );
 };

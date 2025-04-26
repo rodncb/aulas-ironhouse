@@ -174,6 +174,50 @@ const exerciciosService = {
       throw error;
     }
   },
+
+  // Buscar exercícios associados a uma aula
+  async getExerciciosByAulaId(aulaId) {
+    try {
+      // Primeiro buscar os IDs de exercícios relacionados a esta aula
+      const { data: aulaExercicios, error: relError } = await supabase
+        .from("aula_exercicios")
+        .select("exercicio_id")
+        .eq("aula_id", aulaId);
+
+      if (relError) {
+        console.error(
+          `Erro ao buscar relação aula-exercícios: ${relError.message}`
+        );
+        return [];
+      }
+
+      // Se não encontrou relações, retornar array vazio
+      if (!aulaExercicios || aulaExercicios.length === 0) {
+        return [];
+      }
+
+      // Extrair os IDs dos exercícios
+      const exerciciosIds = aulaExercicios.map((item) => item.exercicio_id);
+
+      // Buscar os detalhes completos dos exercícios
+      const { data: exercicios, error: exerciciosError } = await supabase
+        .from("exercicios")
+        .select("*")
+        .in("id", exerciciosIds);
+
+      if (exerciciosError) {
+        console.error(
+          `Erro ao buscar detalhes dos exercícios: ${exerciciosError.message}`
+        );
+        return [];
+      }
+
+      return exercicios || [];
+    } catch (error) {
+      console.error(`Erro ao buscar exercícios da aula ${aulaId}:`, error);
+      return [];
+    }
+  },
 };
 
 export default exerciciosService;

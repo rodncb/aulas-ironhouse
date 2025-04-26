@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Verificar Perfis Ironhouse</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+        line-height: 1.6;
+      }
+      h1,
+      h2 {
+        color: #333;
+      }
+      button {
+        background-color: #4caf50;
+        border: none;
+        color: white;
+        padding: 10px 15px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 16px;
+        margin: 10px 0;
+        cursor: pointer;
+        border-radius: 4px;
+      }
+      button:hover {
+        background-color: #45a049;
+      }
+      .output {
+        background-color: #f8f8f8;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        padding: 15px;
+        margin-top: 20px;
+        max-height: 400px;
+        overflow: auto;
+        white-space: pre-wrap;
+      }
+      .loading {
+        margin: 10px 0;
+      }
+      .usuario-item {
+        margin-bottom: 5px;
+      }
+      .admin {
+        color: #e91e63;
+      }
+      .professor {
+        color: #2196f3;
+      }
+      .success {
+        color: #4caf50;
+        font-weight: bold;
+      }
+      .error {
+        color: #f44336;
+        font-weight: bold;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Verificação Automática de Perfis - Ironhouse</h1>
+    <p>
+      Esta ferramenta está verificando e corrigindo automaticamente os perfis de
+      usuários na tabela 'profiles'.
+    </p>
+
+    <h2>Usuários Configurados</h2>
+    <div id="usuario-list">
+      <!-- Lista de usuários será gerada aqui -->
+    </div>
+
+    <div class="loading" id="loading">
+      <p>
+        Processando... <span id="countProgress">0</span>/<span id="countTotal"
+          >0</span
+        >
+      </p>
+      <progress
+        id="progressBar"
+        value="0"
+        max="100"
+        style="width: 100%"
+      ></progress>
+    </div>
+
+    <div id="summary" style="margin: 20px 0; display: none">
+      <h2>Resumo da Operação</h2>
+      <p id="summaryText"></p>
+      <p>Tente fazer login novamente na aplicação após esta verificação.</p>
+      <button id="recheck" style="display: none">Verificar Novamente</button>
+    </div>
+
+    <h2>Log de Operações</h2>
+    <div class="output" id="output"></div>
+
+    <script type="module">
+      // Importar o módulo Supabase
+      import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+
+      // Configurar Supabase
+      const SUPABASE_URL = "https://lnuhiwvbjvwwxuauhvst.supabase.co";
+      const SUPABASE_KEY =
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxudWhpd3ZianZ3d3h1YXVodnN0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTU4Njk3MzEsImV4cCI6MjAzMTQ0NTczMX0.vJ7R_BCMaD473OkKX5f-0cSYi6hHgQ3D3Au6fVOl3j0";
+      const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+      // Lista de usuários para verificar
+      const usuarios = [
+        {
+          email: "marcovfernandes89@gmail.com",
+          role: "admin",
+          uid: "930b8d22-a623-48d1-a6bf-13cd8ca8e9d7",
+          nome: "Marco",
+        },
+        {
+          email: "fabioaugustogp@gmai.com",
+          role: "admin",
+          uid: "7318009d-8a2a-4ec8-a8fb-34d7bd74f6ba",
+          nome: "Fabio Augusto",
+        },
+        {
+          email: "fernandesrafa97@gmail.com",
+          role: "admin",
+          uid: "414cb5a8-1422-4bf8-bc5e-7b25f4228495",
+          nome: "Rafael Fernandes",
+        },
+        {
+          email: "alexmolina.11@hotmail.com",
+          role: "professor",
+          uid: "27a803e6-7ded-4a40-9829-9aadb3ee41ae",
+          nome: "Alex Molina",
+        },
+        {
+          email: "felipe2021eg@gmail.com",
+          role: "professor",
+          uid: "9c51be79-6418-40d5-91d0-18c49b8c9dce",
+          nome: "Felipe Barbosa",
+        },
+        {
+          email: "pedropsr@icloud.com",
+          role: "professor",
+          uid: "3211f123-8a12-4195-b6c7-53a4cb3d0aae",
+          nome: "Pedro Pacheco",
+        },
+        {
+          email: "alefmts22@gmail.com",
+          role: "professor",
+          uid: "cf060174-6f8f-49a6-acc4-fed7f28001af",
+          nome: "Alef Guimarães",
+        },
+        {
+          email: "gavriel.albu13@gmail.com",
+          role: "professor",
+          uid: "ada1bd83-c338-489e-923f-cc61a6d95cab",
+          nome: "Gabriel Medeiros",
+        },
+        {
+          email: "nal-dinho07@hotmail.com",
+          role: "professor",
+          uid: "3248a93e-7880-45dc-b5f5-c3f47a5ee3c6",
+          nome: "Reinaldo Oliveira",
+        },
+        {
+          email: "lipifp17@hotmail.com",
+          role: "professor",
+          uid: "d87b563c-7a05-4785-9687-727d3b57197d",
+          nome: "Filipe Florenzano",
+        },
+        {
+          email: "patrick.salgado1@gmail.com",
+          role: "professor",
+          uid: "39dd99bf-461a-48df-a2fc-51097b6190e8",
+          nome: "Patrick Salgado",
+        },
+        {
+          email: "hcmoura11@gmail.com",
+          role: "professor",
+          uid: "7625bd7f-bafb-49a5-aade-2749caf27b64",
+          nome: "Hellen Almeida",
+        },
+        {
+          email: "alexia2811@icloud.com",
+          role: "professor",
+          uid: "2ee23275-0625-48f4-b043-c7ba81f2ec85",
+          nome: "Alexia Carvalho",
+        },
+        {
+          email: "flavinha.fray1995@gmail.com",
+          role: "professor",
+          uid: "831cf87f-3ca4-4bd6-94e6-575c576ec728",
+          nome: "Flávia J",
+        },
+      ];
+
+      // Elementos DOM
+      const output = document.getElementById("output");
+      const loading = document.getElementById("loading");
+      const countProgress = document.getElementById("countProgress");
+      const countTotal = document.getElementById("countTotal");
+      const usuariosList = document.getElementById("usuario-list");
+      const progressBar = document.getElementById("progressBar");
+      const summary = document.getElementById("summary");
+      const summaryText = document.getElementById("summaryText");
+      const recheckButton = document.getElementById("recheck");
+
+      // Mostrar usuários na lista
+      function renderizarUsuarios() {
+        usuariosList.innerHTML = "";
+        usuarios.forEach((usuario) => {
+          const div = document.createElement("div");
+          div.className = `usuario-item ${usuario.role}`;
+          div.id = `user-${usuario.uid}`;
+          div.textContent = `${usuario.nome} (${usuario.email}) - ${usuario.role}`;
+          usuariosList.appendChild(div);
+        });
+      }
+
+      // Adicionar mensagem ao log
+      function log(mensagem, tipo = "info") {
+        const hora = new Date().toLocaleTimeString();
+        const linha = document.createElement("div");
+        linha.className = tipo;
+        linha.textContent = `[${hora}] ${mensagem}`;
+        output.appendChild(linha);
+        output.scrollTop = output.scrollHeight;
+      }
+
+      // Atualizar status visual de um usuário
+      function atualizarStatusUsuario(uid, status) {
+        const elemento = document.getElementById(`user-${uid}`);
+        if (elemento) {
+          if (status === "success") {
+            elemento.innerHTML += " ✅";
+          } else if (status === "error") {
+            elemento.innerHTML += " ❌";
+          } else if (status === "unchanged") {
+            elemento.innerHTML += " ℹ️";
+          }
+        }
+      }
+
+      // Verificar e atualizar o perfil de um usuário
+      async function verificarEAtualizarPerfil(usuario) {
+        log(`Verificando perfil para: ${usuario.email}`);
+
+        try {
+          // Verificar se o perfil existe
+          const { data: perfil, error: erroConsulta } = await supabase
+            .from("profiles")
+            .select("*")
+            .eq("id", usuario.uid)
+            .single();
+
+          if (erroConsulta && erroConsulta.code !== "PGRST116") {
+            log(
+              `Erro ao consultar perfil para ${usuario.email}: ${erroConsulta.message}`,
+              "error"
+            );
+            atualizarStatusUsuario(usuario.uid, "error");
+            return {
+              sucesso: false,
+              mensagem: `Erro ao consultar: ${erroConsulta.message}`,
+            };
+          }
+
+          // Se o perfil não existe, criar um novo
+          if (!perfil) {
+            log(`Perfil não encontrado para ${usuario.email}. Criando novo...`);
+
+            const { data: novoPerfil, error: erroCriacao } = await supabase
+              .from("profiles")
+              .insert([
+                {
+                  id: usuario.uid,
+                  email: usuario.email,
+                  role: usuario.role,
+                  nome: usuario.nome,
+                  username: usuario.email.split("@")[0],
+                  updated_at: new Date().toISOString(),
+                },
+              ])
+              .select()
+              .single();
+
+            if (erroCriacao) {
+              log(
+                `Erro ao criar perfil para ${usuario.email}: ${erroCriacao.message}`,
+                "error"
+              );
+              atualizarStatusUsuario(usuario.uid, "error");
+              return {
+                sucesso: false,
+                mensagem: `Erro ao criar: ${erroCriacao.message}`,
+              };
+            }
+
+            log(
+              `✅ Perfil criado com sucesso para ${usuario.email}`,
+              "success"
+            );
+            atualizarStatusUsuario(usuario.uid, "success");
+            return {
+              sucesso: true,
+              mensagem: "Perfil criado",
+              perfil: novoPerfil,
+            };
+          }
+
+          // Se existe, verificar se precisa atualizar
+          if (
+            perfil.role !== usuario.role ||
+            perfil.email !== usuario.email ||
+            perfil.nome !== usuario.nome
+          ) {
+            log(`Atualizando perfil para ${usuario.email}...`);
+
+            const { data: perfilAtualizado, error: erroAtualizacao } =
+              await supabase
+                .from("profiles")
+                .update({
+                  email: usuario.email,
+                  role: usuario.role,
+                  nome: usuario.nome,
+                  updated_at: new Date().toISOString(),
+                })
+                .eq("id", usuario.uid)
+                .select()
+                .single();
+
+            if (erroAtualizacao) {
+              log(
+                `Erro ao atualizar perfil para ${usuario.email}: ${erroAtualizacao.message}`,
+                "error"
+              );
+              atualizarStatusUsuario(usuario.uid, "error");
+              return {
+                sucesso: false,
+                mensagem: `Erro ao atualizar: ${erroAtualizacao.message}`,
+              };
+            }
+
+            log(
+              `✅ Perfil atualizado com sucesso para ${usuario.email}`,
+              "success"
+            );
+            atualizarStatusUsuario(usuario.uid, "success");
+            return {
+              sucesso: true,
+              mensagem: "Perfil atualizado",
+              perfil: perfilAtualizado,
+            };
+          }
+
+          log(`ℹ️ Perfil já está correto para ${usuario.email}`);
+          atualizarStatusUsuario(usuario.uid, "unchanged");
+          return { sucesso: true, mensagem: "Perfil já está correto", perfil };
+        } catch (erro) {
+          log(
+            `Erro inesperado para ${usuario.email}: ${erro.message}`,
+            "error"
+          );
+          atualizarStatusUsuario(usuario.uid, "error");
+          return {
+            sucesso: false,
+            mensagem: `Erro inesperado: ${erro.message}`,
+          };
+        }
+      }
+
+      // Verificar todos os usuários
+      async function verificarTodosUsuarios() {
+        // Reiniciar a interface
+        log(
+          `Iniciando verificação automática de ${usuarios.length} usuários...`
+        );
+
+        // Configurar contador
+        countTotal.textContent = usuarios.length;
+        countProgress.textContent = 0;
+        progressBar.max = usuarios.length;
+        progressBar.value = 0;
+
+        let contador = 0;
+        let sucessos = 0;
+        let falhas = 0;
+        let semAlteracao = 0;
+
+        // Percorrer todos os usuários
+        for (const usuario of usuarios) {
+          const resultado = await verificarEAtualizarPerfil(usuario);
+
+          contador++;
+          countProgress.textContent = contador;
+          progressBar.value = contador;
+
+          if (resultado.sucesso) {
+            if (resultado.mensagem === "Perfil já está correto") {
+              semAlteracao++;
+            } else {
+              sucessos++;
+            }
+          } else {
+            falhas++;
+          }
+        }
+
+        // Mostrar resumo
+        const total = sucessos + falhas + semAlteracao;
+        summaryText.innerHTML = `
+                <p><strong>Total de perfis verificados:</strong> ${total}</p>
+                <p><strong>Perfis criados/atualizados:</strong> <span class="success">${sucessos}</span></p>
+                <p><strong>Perfis sem alteração:</strong> ${semAlteracao}</p>
+                <p><strong>Perfis com erro:</strong> <span class="${
+                  falhas > 0 ? "error" : ""
+                }">${falhas}</span></p>
+            `;
+        summary.style.display = "block";
+        recheckButton.style.display = "block";
+
+        log("Verificação concluída!");
+      }
+
+      // Iniciar verificação automaticamente ao carregar a página
+      window.addEventListener("load", () => {
+        renderizarUsuarios();
+        log("Ferramenta carregada. Iniciando verificação automática...");
+        verificarTodosUsuarios();
+      });
+
+      // Botão para verificar novamente
+      recheckButton.addEventListener("click", () => {
+        output.innerHTML = "";
+        summary.style.display = "none";
+        verificarTodosUsuarios();
+      });
+    </script>
+  </body>
+</html>

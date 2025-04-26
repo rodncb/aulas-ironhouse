@@ -16,8 +16,7 @@ const EditarAluno = ({ alunoId, setActiveSection }) => {
   // Estados para cada campo do formulário
   const [formData, setFormData] = useState({
     nome: "",
-    idade: "",
-    telefone: "",
+    dataNascimento: "", // Novo: data de nascimento
     objetivo: "",
     lesao: "Não",
     tipoLesao: "", // Changed from tipo_lesao
@@ -65,14 +64,14 @@ const EditarAluno = ({ alunoId, setActiveSection }) => {
         // Preencher o formulário com todos os campos necessários
         setFormData({
           nome: infoAluno.nome || "",
-          idade: infoAluno.idade || "",
-          telefone: infoAluno.telefone || "",
+          dataNascimento: infoAluno.data_nascimento || "", // Usar o campo data_nascimento do backend
           objetivo: infoAluno.objetivo || "",
           lesao: infoAluno.lesao || "Não",
-          tipoLesao: infoAluno.tipoLesao || "", // Changed from tipo_lesao
+          tipoLesao: infoAluno.tipo_lesao || "", // Usando campo do backend
           status: infoAluno.status || "ativo",
           plano: infoAluno.plano || "",
           nivel: infoAluno.nivel || "",
+          observacoes: infoAluno.observacoes || "", // Garantir que observações sejam carregadas
         });
 
         // Atualizar a lista de colunas existentes
@@ -129,31 +128,53 @@ const EditarAluno = ({ alunoId, setActiveSection }) => {
       // Garantir que as colunas existem
       await AlunosService.garantirColunasExistem();
 
+      // Corrigir o valor de "lesao" para garantir que não contenha acentuação
+      let lesaoCorrigida = formData.lesao;
+      if (lesaoCorrigida === "Não") {
+        lesaoCorrigida = "Nao";
+        console.log("Corrigindo valor de lesão de 'Não' para 'Nao'");
+      }
+
+      // Calcular a idade a partir da data de nascimento
+      let idade = null;
+      if (formData.dataNascimento) {
+        const hoje = new Date();
+        const dataNasc = new Date(formData.dataNascimento);
+        idade = hoje.getFullYear() - dataNasc.getFullYear();
+        const mesAtual = hoje.getMonth();
+        const mesNasc = dataNasc.getMonth();
+
+        // Ajuste da idade se ainda não fez aniversário este ano
+        if (
+          mesNasc > mesAtual ||
+          (mesNasc === mesAtual && dataNasc.getDate() > hoje.getDate())
+        ) {
+          idade--;
+        }
+      }
+
       // Criar objeto com os dados a serem atualizados
       const dadosAtualizados = {
         nome: formData.nome,
         status: formData.status,
-        lesao: formData.lesao,
+        lesao: lesaoCorrigida, // Usar valor corrigido
         plano: formData.plano,
         nivel: formData.nivel,
+        data_nascimento: formData.dataNascimento || null, // Adicionar data de nascimento
+        idade: idade, // Idade calculada
+        observacoes: formData.observacoes || null, // Garantir que observações sejam persistidas
       };
 
       // Adicionar campos opcionais apenas se tiverem valor
-      if (formData.idade) {
-        dadosAtualizados.idade = parseInt(formData.idade) || null;
-      }
-
-      if (formData.telefone) {
-        dadosAtualizados.telefone = formData.telefone;
-      }
-
       if (formData.objetivo) {
         dadosAtualizados.objetivo = formData.objetivo;
       }
 
-      // Use tipoLesao here
-      if (formData.tipoLesao && formData.lesao !== "Não") {
-        dadosAtualizados.tipoLesao = formData.tipoLesao; // Changed from tipo_lesao
+      // Adicionar descrição da lesão se necessário
+      if (lesaoCorrigida !== "Nao" && formData.tipoLesao) {
+        dadosAtualizados.tipo_lesao = formData.tipoLesao; // Usar o snake_case para o campo do banco
+      } else if (lesaoCorrigida === "Nao") {
+        dadosAtualizados.tipo_lesao = null; // Limpar tipo de lesão se não tiver lesão
       }
 
       console.log("Enviando dados para atualização:", dadosAtualizados);
@@ -269,33 +290,18 @@ const EditarAluno = ({ alunoId, setActiveSection }) => {
             </div>
 
             <div className="form-group">
-              <label htmlFor="idade">Idade</label>
+              <label htmlFor="dataNascimento">Data de Nascimento</label>
               <input
-                type="number"
-                id="idade"
-                name="idade"
-                value={formData.idade}
+                type="date"
+                id="dataNascimento"
+                name="dataNascimento"
+                value={formData.dataNascimento}
                 onChange={handleChange}
-                placeholder="Idade do aluno"
-                min="0"
-                max="120"
               />
             </div>
           </div>
 
           <div className="form-row">
-            <div className="form-group">
-              <label htmlFor="telefone">Telefone / WhatsApp</label>
-              <input
-                type="tel"
-                id="telefone"
-                name="telefone"
-                value={formData.telefone}
-                onChange={handleChange}
-                placeholder="(00) 00000-0000"
-              />
-            </div>
-
             <div className="form-group">
               <label htmlFor="status">Status</label>
               <select
@@ -424,6 +430,20 @@ const EditarAluno = ({ alunoId, setActiveSection }) => {
                 value={formData.objetivo}
                 onChange={handleChange}
                 placeholder="Qual o objetivo do aluno com o treino?"
+                rows={3}
+              />
+            </div>
+          </div>
+
+          <div className="form-row">
+            <div className="form-group full-width">
+              <label htmlFor="observacoes">Observações</label>
+              <textarea
+                id="observacoes"
+                name="observacoes"
+                value={formData.observacoes || ""}
+                onChange={handleChange}
+                placeholder="Observações adicionais sobre o aluno..."
                 rows={3}
               />
             </div>

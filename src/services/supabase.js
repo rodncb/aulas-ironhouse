@@ -20,6 +20,7 @@ export async function testConnection(tentativas = 3) {
 
   for (let i = 1; i <= maxTentativas; i++) {
     try {
+      // eslint-disable-next-line no-unused-vars
       const { data, error } = await supabase.from("alunos").select("COUNT(*)");
 
       if (!error) {
@@ -131,36 +132,50 @@ export async function reloadSupabaseSchemaCache() {
   console.log("Tentando recarregar o cache do schema Supabase...");
 
   try {
-    // Primeira tentativa usando RPC
+    // Abordagem mais robusta: fazer consultas específicas que exercitam os relacionamentos
     try {
-      await supabase.rpc("reload_schema_cache");
-      console.log("Cache do schema recarregado com sucesso via RPC.");
+      console.log("Recarregando cache com consultas de relacionamentos...");
+
+      // 1. Consulta que exercita a relação entre aulas e alunos
+      await supabase
+        .from("aulas")
+        .select(
+          `
+          id,
+          professor_id,
+          alunos(*)
+        `
+        )
+        .limit(1);
+
+      // 2. Consulta que exercita a relação entre aula_alunos
+      await supabase
+        .from("aula_alunos")
+        .select(
+          `
+          aula_id,
+          aluno_id
+        `
+        )
+        .limit(5);
+
+      // 3. Consulta que verifica a tabela alunos
+      await supabase.from("alunos").select("*").limit(1);
+
+      // 4. Consulta que verifica a coluna exercicios nas aulas
+      await supabase.from("aulas").select("id, exercicios").limit(1);
+
+      console.log(
+        "Cache do schema recarregado com sucesso via consultas específicas."
+      );
       return true;
-    } catch (rpcError) {
-      console.warn("Falha ao recarregar cache via RPC:", rpcError);
-      // Continuar com métodos alternativos
+    } catch (specificError) {
+      console.warn("Erro nas consultas específicas:", specificError);
     }
 
-    // Segunda tentativa: fazer uma consulta específica na tabela 'alunos' incluindo 'tipoLesao'
+    // Tentativa alternativa com consultas mais simples em todas as tabelas principais
     try {
-      console.log(
-        "Tentando recarregar cache com consulta específica em 'alunos' incluindo 'tipoLesao'..."
-      );
-      await supabase.from("alunos").select("id, tipoLesao").limit(1);
-      console.log(
-        "Consulta específica em 'alunos' concluída para recarregar cache."
-      );
-      return true;
-    } catch (queryError) {
-      console.warn(
-        "Falha ao recarregar cache via consulta específica em 'alunos':",
-        queryError
-      );
-    }
-
-    // Terceira tentativa (fallback original): fazer uma consulta simples em cada tabela principal
-    try {
-      console.log("Tentando recarregar cache com consultas simples...");
+      console.log("Tentando abordagem alternativa para recarregar o cache...");
 
       const tabelas = [
         "alunos",
@@ -170,30 +185,20 @@ export async function reloadSupabaseSchemaCache() {
         "aula_alunos",
       ];
 
-      const promises = tabelas.map((tabela) =>
-        supabase.from(tabela).select("id").limit(1)
-      );
-
-      await Promise.allSettled(promises);
-      console.log("Consultas simples concluídas para recarregar cache.");
-
-      // Fazer uma consulta específica para garantir que a coluna 'exercicios' da tabela 'aulas' esteja no cache
-      await supabase.from("aulas").select("id, exercicios").limit(1);
+      for (const tabela of tabelas) {
+        await supabase.from(tabela).select("*").limit(1);
+        console.log(`Consulta na tabela ${tabela} realizada com sucesso.`);
+      }
 
       return true;
-    } catch (fallbackQueryError) {
-      console.warn(
-        "Falha ao recarregar cache via consultas de fallback:",
-        fallbackQueryError
-      );
+    } catch (fallbackError) {
+      console.warn("Falha na abordagem alternativa:", fallbackError);
     }
 
-    console.error(
-      "Falha em todas as tentativas de recarregar o cache do schema."
-    );
+    console.error("Todas as tentativas de recarregar o cache falharam.");
     return false;
   } catch (error) {
-    console.error("Erro ao recarregar cache do schema:", error);
+    console.error("Erro geral ao recarregar cache do schema:", error);
     return false;
   }
 }

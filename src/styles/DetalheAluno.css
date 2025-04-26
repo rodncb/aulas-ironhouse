@@ -1,366 +1,292 @@
-.detalhe-aluno-container {
-  width: 100%;
-  max-width: 1200px;
+/* Layout com abas para o componente DetalheAluno */
+.detalhes-aluno-container {
+  max-width: 100%;
   margin: 0 auto;
   padding: 20px;
+  background-color: #ffffff;
 }
 
-/* Header */
-.detalhe-header {
+.abas-container {
+  width: 100%;
+  margin-top: 20px;
+}
+
+.abas {
+  display: flex;
+  border-bottom: 1px solid #ccc;
+  margin-bottom: 20px;
+}
+
+.aba {
+  padding: 10px 20px;
+  background-color: #f5f5f5;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 500;
+  border-radius: 8px 8px 0 0;
+  margin-right: 5px;
+  border: 1px solid #ccc;
+  border-bottom: none;
+}
+
+.aba.ativa {
+  background-color: #4c84ff;
+  color: white;
+  border-color: #4c84ff;
+}
+
+.conteudo-aba {
+  background-color: #fff;
+  padding: 20px;
+  border: 1px solid #eee;
+  border-top: none;
+}
+
+/* Estilos para a aba de informações pessoais */
+.info-pessoal {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+}
+
+@media (min-width: 768px) {
+  .info-pessoal {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.info-section {
+  background-color: #f9f9f9;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  padding: 15px;
+}
+
+.info-section h3 {
+  margin-top: 0;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #eee;
+  color: #333;
+}
+
+.info-container {
+  padding: 10px;
+}
+
+.observacoes-section {
+  margin-top: 20px;
+  padding-top: 10px;
+  border-top: 1px solid #eee;
+}
+
+.observacoes-section h4 {
+  margin-top: 0;
+  color: #444;
+}
+
+.observacoes-section textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  margin-bottom: 10px;
+  font-family: inherit;
+}
+
+.btn-salvar-observacao {
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  padding: 8px 15px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.btn-salvar-observacao:hover {
+  background-color: #3d8b40;
+}
+
+.btn-salvar-observacao:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+/* Estilos para o último treino */
+.ultimo-treino-info {
+  padding: 10px;
+}
+
+.ultimo-treino-anotacoes {
+  margin-top: 15px;
+}
+
+.anotacoes {
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 10px;
+  min-height: 60px;
+  margin-top: 5px;
+}
+
+/* Estilos para a aba de histórico de aulas */
+.historico-aulas {
+  width: 100%;
+}
+
+.historico-aulas h3 {
+  margin-top: 0;
+  color: #333;
+  margin-bottom: 20px;
+}
+
+.historico-tabela {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+.historico-tabela th,
+.historico-tabela td {
+  border: 1px solid #ddd;
+  padding: 12px;
+  text-align: left;
+}
+
+.historico-tabela th {
+  background-color: #f4f6f8;
+  font-weight: 600;
+  color: #444;
+}
+
+.historico-tabela tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+.historico-tabela tr:hover {
+  background-color: #f0f7ff;
+}
+
+.sem-historico {
+  color: #777;
+  font-style: italic;
+  padding: 20px 0;
+}
+
+/* Estilos para botões de ação */
+.botoes-acao {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 25px;
-}
-
-.detalhe-header h2 {
-  font-size: 24px;
-  font-weight: 600;
-  color: #333;
-  margin: 0;
+  margin-top: 20px;
 }
 
 .btn-voltar {
   background-color: #f5f5f5;
-  border: 1px solid #ddd;
+  color: #333;
+  border: 1px solid #ccc;
+  padding: 10px 15px;
   border-radius: 4px;
-  padding: 8px 15px;
   cursor: pointer;
-  display: flex;
-  align-items: center;
   font-size: 14px;
-  transition: all 0.2s ease;
 }
 
 .btn-voltar:hover {
-  background-color: #e6e6e6;
+  background-color: #e8e8e8;
 }
 
-/* Loading e Error */
-.detalhe-loading,
-.detalhe-error {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 50px 0;
-  text-align: center;
-}
-
-.spinner {
-  border: 4px solid rgba(0, 0, 0, 0.1);
-  border-radius: 50%;
-  border-top: 4px solid #4caf50;
-  width: 40px;
-  height: 40px;
-  animation: spin 1s linear infinite;
-  margin-bottom: 20px;
-}
-
-@keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
-}
-
-.detalhe-error h3 {
-  color: #e74c3c;
-  margin-bottom: 8px;
-}
-
-/* Card principal */
-.detalhe-card {
-  display: flex;
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  padding: 20px;
-  margin-bottom: 25px;
-}
-
-.detalhe-foto {
-  width: 100px;
-  height: 100px;
-  margin-right: 20px;
-  flex-shrink: 0;
-}
-
-.detalhe-foto img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.foto-placeholder {
-  width: 100%;
-  height: 100%;
-  background-color: #e0e0e0;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 40px;
-  font-weight: 600;
-  color: #757575;
-}
-
-.detalhe-info {
-  flex-grow: 1;
-}
-
-.detalhe-info h3 {
-  font-size: 22px;
-  margin: 0 0 10px 0;
-  color: #333;
-}
-
-.detalhe-info-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 5px;
-}
-
-.status-badge {
-  display: inline-block;
-  padding: 3px 10px;
-  border-radius: 15px;
-  font-size: 14px;
-  font-weight: 500;
-}
-
-.status-badge[data-status="ativo"] {
-  background-color: #e6f7ea;
-  color: #43a047;
-}
-
-.status-badge[data-status="inativo"] {
-  background-color: #f9e5e5;
-  color: #e53935;
-}
-
-.lesao-badge {
-  display: inline-block;
-  padding: 3px 10px;
-  border-radius: 15px;
-  font-size: 14px;
-  font-weight: 500;
-}
-
-.lesao-badge.lesao-grave {
-  background-color: #f9e5e5;
-  color: #e53935;
-  border: 1px solid #e53935;
-}
-
-.lesao-badge.lesao-moderada {
-  background-color: #fff9e6;
-  color: #f57c00;
-  border: 1px solid #f57c00;
-}
-
-/* Tabs */
-.detalhe-tabs {
-  display: flex;
-  margin-bottom: 20px;
-  border-bottom: 1px solid #eee;
-}
-
-.tab-btn {
-  padding: 10px 20px;
-  background: none;
+.btn-finalizar {
+  background-color: #4c84ff;
+  color: white;
   border: none;
-  border-bottom: 3px solid transparent;
-  font-size: 16px;
+  padding: 10px 15px;
+  border-radius: 4px;
   cursor: pointer;
-  transition: all 0.2s;
-  margin-right: 10px;
+  font-size: 14px;
 }
 
-.tab-btn:hover {
-  background-color: #f9f9f9;
+.btn-finalizar:hover {
+  background-color: #3a70e0;
 }
 
-.tab-btn.active {
-  border-bottom-color: #4caf50;
-  color: #4caf50;
-  font-weight: 500;
-}
-
-/* Conteúdo das Tabs */
-.tab-content {
-  padding: 20px;
-  background: white;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  border-radius: 8px;
-}
-
-/* Detalhes Pessoais */
-.detalhes-pessoais {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 20px;
-}
-
-.info-group {
+/* Mensagens de sucesso e erro */
+.success-message {
+  background-color: #e8f5e9;
+  color: #1b5e20;
+  padding: 10px;
+  border-radius: 4px;
   margin-bottom: 15px;
 }
 
-.info-group label {
-  display: block;
-  font-size: 14px;
-  color: #757575;
+.error-message {
+  background-color: #ffebee;
+  color: #c62828;
+  padding: 10px;
+  border-radius: 4px;
+  margin-bottom: 15px;
+}
+
+/* Objetivo de treino */
+.objetivo-treino {
+  margin-top: 15px;
+  margin-bottom: 15px;
+}
+
+.objetivo-treino-titulo {
   margin-bottom: 5px;
 }
 
-.info-group p {
-  margin: 0;
-  font-size: 16px;
-  color: #333;
+.objetivo-treino-texto {
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 10px;
+  min-height: 40px;
 }
 
-/* Histórico de Aulas */
-.historico-aulas {
-  max-height: 600px;
+/* Mensagens de carregamento e erro */
+.loading-container,
+.error-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 40px;
+  text-align: center;
+}
+
+.loading-container {
+  color: #666;
+}
+
+.error-container .error-message {
+  margin-bottom: 20px;
+}
+
+/* Estilos para a lista de exercícios no histórico */
+.exercicios-lista {
+  list-style: none;
+  padding-left: 0;
+  margin: 0;
+  max-height: 150px;
   overflow-y: auto;
 }
 
-.lista-aulas {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
+.exercicios-lista li {
+  margin-bottom: 6px;
+  padding: 4px 0;
+  border-bottom: 1px dotted #eee;
+  font-size: 0.9rem;
 }
 
-.aula-card {
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  padding: 15px;
-  background-color: #fafafa;
+.exercicios-lista li:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
 }
 
-.aula-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 15px;
-  border-bottom: 1px solid #eee;
-  padding-bottom: 10px;
-}
-
-.aula-data {
-  font-weight: 600;
-  font-size: 16px;
-}
-
-.aula-status {
-  background-color: #e3f2fd;
-  color: #1976d2;
-  padding: 3px 10px;
-  border-radius: 15px;
-  font-size: 14px;
-}
-
-.aula-info {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 15px;
-  margin-bottom: 15px;
-}
-
-.aula-info div {
-  display: flex;
-  flex-direction: column;
-}
-
-.aula-info label,
-.aula-exercicios label,
-.aula-observacoes label {
-  font-size: 14px;
-  color: #757575;
-  margin-bottom: 5px;
-}
-
-.aula-exercicios ul {
-  margin: 0;
-  padding-left: 20px;
-}
-
-.aula-exercicios ul li {
-  margin-bottom: 5px;
-}
-
-.aula-observacoes {
-  margin-top: 15px;
-  padding-top: 15px;
-  border-top: 1px solid #eee;
-}
-
-.sem-historico {
-  text-align: center;
-  padding: 30px;
-  color: #757575;
-}
-
-/* Responsividade */
-@media (max-width: 768px) {
-  .detalhe-card {
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-  }
-
-  .detalhe-foto {
-    margin-right: 0;
-    margin-bottom: 15px;
-  }
-
-  .detalhe-info-row {
-    justify-content: center;
-  }
-
-  .aula-header {
-    flex-direction: column;
-    gap: 10px;
-    align-items: flex-start;
-  }
-
-  .detalhes-pessoais {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (max-width: 480px) {
-  .detalhe-tabs {
-    flex-direction: column;
-    border-bottom: none;
-  }
-
-  .tab-btn {
-    width: 100%;
-    text-align: left;
-    border-bottom: 1px solid #eee;
-    margin-right: 0;
-  }
-
-  .tab-btn.active {
-    border-left: 3px solid #4caf50;
-    border-bottom-color: #eee;
-    padding-left: 17px;
-  }
-}
-
-/* Classes para alunos com lesões */
-.aluno-com-lesao-grave .detalhe-info h3,
-.aluno-com-lesao-grave .info-group p {
-  color: #e53935 !important;
-  font-weight: 500;
-}
-
-.aluno-com-lesao-moderada .detalhe-info h3,
-.aluno-com-lesao-moderada .info-group p {
-  color: #f57c00 !important;
-  font-weight: 500;
+.sem-exercicios {
+  color: #999;
+  font-style: italic;
+  font-size: 0.9rem;
 }

@@ -1,8 +1,18 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import {
+  useState,
+  useEffect,
+  useCallback,
+  useRef,
+  createContext,
+  useContext,
+} from "react";
 import authService from "../services/auth.service";
 import { supabase } from "../services/supabase";
 
-// Função auxiliar para buscar o perfil e a role
+// Create the context with a default value
+const AuthContext = createContext(undefined);
+
+// --- Helper Function (remains the same) ---
 const fetchUserProfile = async (userId) => {
   if (!userId) return { role: null };
 
@@ -27,8 +37,6 @@ const fetchUserProfile = async (userId) => {
       .single();
 
     if (error) {
-      // Loga o erro, mas não impede o fluxo necessariamente
-      // Pode ser que o perfil ainda não exista, o que é tratado como 'professor' no fallback do signIn
       console.error("Erro ao buscar perfil na tabela profiles:", error.message);
       return { role: null }; // Retorna null se houve erro na busca
     }
@@ -53,280 +61,254 @@ const fetchUserProfile = async (userId) => {
   }
 };
 
-export function useAuth() {
+// --- AuthProvider Component ---
+export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [sessionChecked, setSessionChecked] = useState(false);
-  const authListenerRef = useRef(null); // Ref para controlar a inscrição do listener
-  const isUpdatingRef = useRef(false); // Ref para evitar atualizações simultâneas
+  const authListenerRef = useRef(null);
+  const isUpdatingRef = useRef(false);
 
-  // Função memoizada para atualizar o estado do usuário
-  const updateUserState = useCallback(async (session) => {
-    // Evita múltiplas atualizações simultâneas
+  // Função para atualizar o estado do usuário
+  // Removido useCallback para evitar dependências cíclicas
+  const updateUserState = async (session) => {
     if (isUpdatingRef.current) {
-      console.log("Já existe uma atualização em andamento, ignorando...");
-      return;
-    }
-
-    if (!session?.user) {
-      setUser(null);
-      setLoading(false);
+      console.log("AuthProvider: Atualização em andamento, ignorando...");
       return;
     }
 
     try {
       isUpdatingRef.current = true;
-      // Busca informações adicionais do perfil
-      const { role } = await fetchUserProfile(session.user.id);
 
-      // Prepara dados do usuário com fallbacks para valores indefinidos
+      if (!session?.user) {
+        setUser(null);
+        setLoading(false);
+        setSessionChecked(true);
+        return;
+      }
+
+      // Busca informações adicionais do perfil
+      const userId = session.user.id;
+      const { role } = await fetchUserProfile(userId);
+      let finalRole = session.user.user_metadata?.role || role || "professor";
+
+      if (finalRole !== "admin" && finalRole !== "professor") {
+        finalRole = "professor";
+      }
+
       const userData = {
-        id: session.user.id,
+        id: userId,
         email: session.user.email,
         nome: session.user.user_metadata?.nome || "Usuário",
-        // Usa role dos metadados ou do perfil, com fallback para 'professor'
-        role: session.user.user_metadata?.role || role || "professor",
+        role: finalRole,
       };
 
       // Atualiza o estado
       setUser(userData);
-      console.log(
-        "Estado de usuário atualizado:",
-        userData.email,
-        userData.role
-      );
     } catch (error) {
-      console.error("Erro ao atualizar estado do usuário:", error);
+      console.error("AuthProvider: Erro ao atualizar usuário:", error);
+      setUser(null);
     } finally {
       setLoading(false);
+      setSessionChecked(true);
       isUpdatingRef.current = false;
     }
-  }, []);
+  };
 
-  // Efeito para verificar e configurar a sessão
+  // Efeito para verificar a sessão e configurar o listener
+  // Executado apenas uma vez na montagem inicial
   useEffect(() => {
     let isMounted = true;
+    console.log("AuthProvider: useEffect inicial executando");
 
-    // Função para verificar a sessão existente
-    const checkExistingSession = async () => {
-      // Se já estiver verificando outra sessão, encerra
-      if (isUpdatingRef.current) return;
+    // Verificação de sessão inicial
+    const checkSession = async () => {
+      console.log("AuthProvider: Verificando sessão existente...");
 
       try {
-        isUpdatingRef.current = true; // Marcar que está atualizando
-        setLoading(true);
-        console.log("Verificando sessão existente...");
-
         const { data, error } = await supabase.auth.getSession();
 
+        if (!isMounted) return;
+
         if (error) {
-          console.error("Erro ao buscar sessão:", error.message);
-          if (isMounted) {
-            setUser(null);
-            setLoading(false);
-          }
-          isUpdatingRef.current = false; // Certifique-se de limpar mesmo em caso de erro
+          console.error("AuthProvider: Erro ao buscar sessão:", error);
+          setUser(null);
+          setLoading(false);
+          setSessionChecked(true);
           return;
         }
 
         if (data?.session) {
-          console.log("Sessão encontrada, atualizando usuário");
-          if (isMounted) {
-            await updateUserState(data.session);
-          }
+          console.log("AuthProvider: Sessão encontrada");
+          await updateUserState(data.session);
         } else {
-          console.log("Nenhuma sessão encontrada");
-          if (isMounted) {
-            setUser(null);
-            setLoading(false);
-          }
-        }
-      } catch (error) {
-        console.error("Exceção ao verificar sessão:", error);
-        if (isMounted) {
+          console.log("AuthProvider: Nenhuma sessão encontrada.");
           setUser(null);
           setLoading(false);
-        }
-      } finally {
-        // Garantir que estas flags sejam atualizadas independentemente do resultado
-        if (isMounted) {
           setSessionChecked(true);
-          isUpdatingRef.current = false; // Limpar a flag sempre
         }
+      } catch (err) {
+        console.error("AuthProvider: Erro ao verificar sessão:", err);
+        setUser(null);
+        setLoading(false);
+        setSessionChecked(true);
       }
     };
 
-    checkExistingSession();
+    // Configura o listener para eventos de autenticação
+    const setupAuthListener = () => {
+      if (authListenerRef.current) {
+        console.log("AuthProvider: Listener já existe, pulando configuração");
+        return;
+      }
 
-    // Configura o listener para mudanças no estado de autenticação apenas uma vez
-    if (!authListenerRef.current) {
+      console.log("AuthProvider: Configurando listener onAuthStateChange.");
+
       const { data: authListener } = supabase.auth.onAuthStateChange(
-        async (event, session) => {
-          console.log("Evento de autenticação:", event);
+        (event, session) => {
+          console.log("AuthProvider: Evento auth:", event);
 
           if (!isMounted) return;
 
-          if (session) {
-            console.log("Sessão atualizada");
-            try {
-              await updateUserState(session);
-            } catch (error) {
-              console.error(
-                "Erro ao atualizar estado do usuário após evento:",
-                error
-              );
-              // Garantir que o estado de carregamento seja definido como falso mesmo em caso de erro
-              setLoading(false);
-            }
-          } else {
-            console.log("Sessão encerrada");
+          if (event === "SIGNED_IN" && session) {
+            updateUserState(session);
+          } else if (event === "SIGNED_OUT") {
             setUser(null);
             setLoading(false);
+            setSessionChecked(true);
+          } else if (event === "USER_UPDATED" && session) {
+            updateUserState(session);
           }
         }
       );
 
       authListenerRef.current = authListener;
-    }
+    };
 
-    // Limpeza quando o componente é desmontado
+    // Executa verificação inicial e configura o listener
+    checkSession();
+    setupAuthListener();
+
+    // Limpeza ao desmontar
     return () => {
       isMounted = false;
-      // Só desinscreve se o listener existir
+      console.log("AuthProvider: Desinscrevendo listener onAuthStateChange.");
+
       if (authListenerRef.current?.subscription?.unsubscribe) {
         authListenerRef.current.subscription.unsubscribe();
         authListenerRef.current = null;
       }
     };
-  }, [updateUserState]);
+    // Não incluir dependências que podem causar loops
+  }, []); // Executar apenas uma vez na montagem inicial
 
   // Função para fazer login
   const signIn = async (email, password, expectedUserType) => {
-    // Adiciona expectedUserType
-    try {
-      setLoading(true);
-      console.log(
-        `Tentando fazer login para: ${email} como ${expectedUserType}`
-      );
+    setLoading(true);
 
-      // 1. Autentica com Supabase
+    try {
+      console.log(`AuthProvider: Tentando login para: ${email}`);
       const authResult = await authService.login(email, password);
 
       if (!authResult.success || !authResult.data?.user) {
-        console.error(
-          "Falha na autenticação:",
-          authResult.error || "Usuário não retornado"
-        );
+        console.error("AuthProvider: Falha na autenticação:", authResult.error);
+        setLoading(false);
         return {
           success: false,
           error: authResult.error || "Email ou senha incorretos.",
         };
       }
 
-      // 2. Busca o perfil/role do usuário autenticado
-      const { role: actualRole } = await fetchUserProfile(
-        authResult.data.user.id
-      );
-      const finalRole =
-        authResult.data.user.user_metadata?.role || actualRole || "professor"; // Lógica de fallback
+      // Verifica o tipo de usuário
+      const userId = authResult.data.user.id;
+      const userMetadata = authResult.data.user.user_metadata;
+      let { role: roleFromProfile } = await fetchUserProfile(userId);
+      let finalRole = userMetadata?.role || roleFromProfile || "professor";
 
-      // 3. Verifica se o tipo de usuário bate com o esperado
+      if (finalRole !== "admin" && finalRole !== "professor") {
+        finalRole = "professor";
+      }
+
       if (finalRole !== expectedUserType) {
         console.warn(
-          `Tipo de usuário incorreto. Esperado: ${expectedUserType}, Obtido: ${finalRole}`
+          `AuthProvider: Tipo de usuário incorreto. Esperado: ${expectedUserType}, Obtido: ${finalRole}`
         );
-        // Desloga o usuário que acabou de logar com tipo errado
         await authService.logout();
+        setLoading(false);
         return {
           success: false,
           error: `Este usuário não é um ${expectedUserType}. Selecione o tipo correto.`,
         };
       }
 
-      // 4. Se tudo deu certo, atualiza o estado do usuário
+      // Login bem-sucedido
       const userData = {
-        id: authResult.data.user.id,
+        id: userId,
         email: authResult.data.user.email,
-        nome: authResult.data.user.user_metadata?.nome || "Usuário",
+        nome: userMetadata?.nome || "Usuário",
         role: finalRole,
       };
 
       setUser(userData);
-      console.log(
-        "Login bem-sucedido e tipo verificado:",
-        userData.email,
-        userData.role
-      );
-      return { success: true, data: userData }; // Retorna os dados do usuário
+      setLoading(false);
+      setSessionChecked(true);
+
+      return { success: true, data: userData };
     } catch (error) {
-      console.error("Exceção ao fazer login:", error);
-      // Tenta deslogar em caso de exceção inesperada após autenticação parcial
-      await authService.logout().catch(() => {}); // Ignora erros no logout aqui
+      console.error("AuthProvider: Erro no login:", error);
+      await authService.logout().catch(() => {});
+      setLoading(false);
+
       return {
         success: false,
         error: error.message || "Erro inesperado durante o login.",
       };
-    } finally {
-      setLoading(false);
     }
   };
 
   // Função para fazer logout
   const signOut = async () => {
+    console.log("AuthProvider: Iniciando logout");
+
+    // Limpa o estado primeiro para feedback imediato na UI
+    setUser(null);
+    setLoading(false);
+
     try {
-      console.log("Iniciando processo de logout");
-
-      // Define user como null antes de chamar o logout para garantir atualização imediata da UI
-      setUser(null);
-
-      // Chama o serviço de logout
-      const { error } = await authService.logout();
-      if (error) {
-        console.error("Erro durante logout:", error);
-        throw new Error(error);
-      }
-
-      console.log("Logout concluído com sucesso");
+      await authService.logout();
+      console.log("AuthProvider: Logout concluído");
     } catch (error) {
-      console.error("Exceção durante logout:", error);
-      // Mesmo com erro, garantimos que o estado local é limpo
-      setUser(null);
+      console.error("AuthProvider: Erro no logout:", error);
     }
   };
 
-  // Verifica se o usuário tem uma determinada permissão
+  // Funções auxiliares para verificar permissões
   const hasPermission = (requiredRole) => {
     if (!user) return false;
-
     if (user.role === "admin") return true;
-
     return user.role === requiredRole;
   };
 
-  // Verifica se o usuário pode acessar uma determinada rota
   const canAccess = (route) => {
     if (!user) return false;
-
     if (user.role === "admin") return true;
-
     if (user.role === "professor") {
       const allowedRoutes = [
         "/geral",
         "/alunos/visualizar",
         "/cadastro/exercicios",
         "/alunos_historico",
+        "/sala", // Adicionando sala explicitamente
       ];
-
       return allowedRoutes.some(
         (r) => route === r || route.startsWith(r + "/")
       );
     }
-
     return false;
   };
 
-  // Retorna o objeto com os valores e funções do hook
-  return {
+  // Valor do contexto
+  const value = {
     user,
     loading,
     sessionChecked,
@@ -337,4 +319,15 @@ export function useAuth() {
     isAdmin: user?.role === "admin",
     isProfessor: user?.role === "professor",
   };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+}
+
+// Hook para usar o contexto de autenticação
+export function useAuth() {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error("useAuth deve ser usado dentro de um AuthProvider");
+  }
+  return context;
 }
