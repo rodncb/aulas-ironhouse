@@ -2,14 +2,22 @@
 const { createClient } = require("@supabase/supabase-js");
 
 // Configuração do cliente Supabase
-const supabaseUrl = process.env.REACT_APP_SUPABASE_URL || "https://rnvsemzycvhuyeatjkaq.supabase.co";
+const supabaseUrl =
+  process.env.REACT_APP_SUPABASE_URL ||
+  "https://rnvsemzycvhuyeatjkaq.supabase.co";
 const supabaseAnonKey = process.env.REACT_APP_SUPABASE_KEY;
 
 // Verificar se a chave do Supabase está definida
 if (!supabaseAnonKey) {
-  console.error("ERRO: A variável de ambiente REACT_APP_SUPABASE_KEY não está definida.");
-  console.error("Por favor, defina esta variável de ambiente com sua chave do Supabase antes de executar este script.");
-  console.error("Exemplo: REACT_APP_SUPABASE_KEY=sua_chave_aqui node inserir-professores.cjs");
+  console.error(
+    "ERRO: A variável de ambiente REACT_APP_SUPABASE_KEY não está definida."
+  );
+  console.error(
+    "Por favor, defina esta variável de ambiente com sua chave do Supabase antes de executar este script."
+  );
+  console.error(
+    "Exemplo: REACT_APP_SUPABASE_KEY=sua_chave_aqui node inserir-professores.cjs"
+  );
   process.exit(1);
 }
 

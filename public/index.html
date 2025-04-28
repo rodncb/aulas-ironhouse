@@ -25,6 +25,24 @@
       Learn how to configure a non-root public URL by running `npm run build`.
     -->
     <title>Iron House</title>
+    <!-- Redirecionamento para SPA no GitHub Pages -->
+    <script type="text/javascript">
+      (function() {
+        // Recuperar URL de redirecionamento do sessionStorage
+        const redirect = sessionStorage.redirect;
+        delete sessionStorage.redirect;
+        
+        // Se houver uma URL armazenada e não estivermos na raiz, redirecionar
+        if (redirect && redirect !== window.location.href) {
+          const url = new URL(redirect);
+          const pathname = url.pathname;
+          const search = url.search;
+          const hash = url.hash;
+          
+          history.replaceState(null, null, pathname + search + hash);
+        }
+      })();
+    </script>
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>

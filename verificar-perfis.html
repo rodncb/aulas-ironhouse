@@ -109,9 +109,11 @@
       // A chave do Supabase deve ser inserida manualmente neste arquivo HTML para testes locais
       // Não comite esta chave no GitHub - remova-a antes de fazer commit
       const SUPABASE_KEY = ""; // Removi a chave do Supabase por segurança
-      
+
       if (!SUPABASE_KEY) {
-        alert("Erro: É necessário inserir a chave do Supabase no arquivo HTML antes de executar esta ferramenta.");
+        alert(
+          "Erro: É necessário inserir a chave do Supabase no arquivo HTML antes de executar esta ferramenta."
+        );
         document.body.innerHTML = `
           <h1>Configuração necessária</h1>
           <p>Você precisa inserir sua chave do Supabase no arquivo HTML antes de usar esta ferramenta.</p>
@@ -120,7 +122,7 @@
         `;
         throw new Error("Chave do Supabase não definida");
       }
-      
+
       const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
       // Lista de usuários para verificar

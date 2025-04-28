@@ -3,7 +3,8 @@ const { createClient } = require("@supabase/supabase-js");
 
 // Configuração do cliente Supabase (mesma do projeto)
 const supabaseUrl =
-  process.env.REACT_APP_SUPABASE_URL || "https://rnvsemzycvhuyeatjkaq.supabase.co";
+  process.env.REACT_APP_SUPABASE_URL ||
+  "https://rnvsemzycvhuyeatjkaq.supabase.co";
 const supabaseAnonKey = process.env.REACT_APP_SUPABASE_KEY;
 
 // Verificar se a chave do Supabase está definida

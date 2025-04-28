@@ -9,9 +9,15 @@ const supabaseKey = process.env.REACT_APP_SUPABASE_KEY;
 
 // Verificar se a chave do Supabase está definida
 if (!supabaseKey) {
-  console.error("ERRO: A variável de ambiente REACT_APP_SUPABASE_KEY não está definida.");
-  console.error("Por favor, defina esta variável de ambiente com sua chave do Supabase antes de executar este script.");
-  console.error("Exemplo: REACT_APP_SUPABASE_KEY=sua_chave_aqui node inserir-admin-como-professores.cjs");
+  console.error(
+    "ERRO: A variável de ambiente REACT_APP_SUPABASE_KEY não está definida."
+  );
+  console.error(
+    "Por favor, defina esta variável de ambiente com sua chave do Supabase antes de executar este script."
+  );
+  console.error(
+    "Exemplo: REACT_APP_SUPABASE_KEY=sua_chave_aqui node inserir-admin-como-professores.cjs"
+  );
   process.exit(1);
 }
 
