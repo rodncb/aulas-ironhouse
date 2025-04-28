@@ -4,6 +4,9 @@ import { supabase } from "../services/supabase";
 import { reloadSupabaseSchemaCache } from "../services/supabase";
 import { navegarPara } from "../lib/utils";
 
+// Chave para armazenamento no localStorage
+const FORM_STORAGE_KEY = "gerenciamento_alunos_form_data";
+
 function GerenciamentoAlunos({ setActiveSection }) {
   const [alunos, setAlunos] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -13,6 +16,7 @@ function GerenciamentoAlunos({ setActiveSection }) {
   const [showModal, setShowModal] = useState(false);
   const [atualizandoAluno, setAtualizandoAluno] = useState(null);
   const [activeTab, setActiveTab] = useState("ativos"); // Estado para controlar qual aba está ativa
+  const [hasSavedForm, setHasSavedForm] = useState(false); // Estado para controlar se há formulário salvo
   const [novoAluno, setNovoAluno] = useState({
     nome: "",
     dataNascimento: "", // Novo campo no lugar de idade
@@ -29,12 +33,9 @@ function GerenciamentoAlunos({ setActiveSection }) {
   useEffect(() => {
     async function inicializar() {
       try {
-        console.log("Forçando atualização do cache do esquema...");
         await reloadSupabaseSchemaCache();
-        console.log("Cache do esquema atualizado com sucesso!");
         await carregarAlunos();
       } catch (err) {
-        console.error("Erro ao inicializar:", err);
         setError("Erro ao inicializar a página. Tente recarregar.");
         setLoading(false);
       }
@@ -43,19 +44,28 @@ function GerenciamentoAlunos({ setActiveSection }) {
     inicializar();
   }, []);
 
+  // Verificar se existe formulário salvo ao carregar o componente
+  useEffect(() => {
+    try {
+      const savedForm = localStorage.getItem(FORM_STORAGE_KEY);
+      if (savedForm) {
+        const parsedForm = JSON.parse(savedForm);
+        setHasSavedForm(true);
+      }
+    } catch (error) {
+      // Erro ao verificar formulário salvo
+    }
+  }, []);
+
   const carregarAlunos = async () => {
     try {
       setLoading(true);
-      console.log("Iniciando carregamento de alunos..."); // Log Adicionado
 
       // Primeiro, vamos verificar se o usuário está autenticado
       const {
         data: { session },
       } = await supabase.auth.getSession();
       if (session) {
-        console.log("Usuário autenticado:", session.user.email);
-        console.log("ID do usuário:", session.user.id);
-
         // Vamos verificar a role na tabela profiles
         const { data: profileData, error: profileError } = await supabase
           .from("profiles")
@@ -64,41 +74,32 @@ function GerenciamentoAlunos({ setActiveSection }) {
           .single();
 
         if (profileError) {
-          console.error("Erro ao buscar perfil:", profileError);
-        } else {
-          console.log("Perfil do usuário:", profileData);
+          // Erro ao buscar perfil
         }
       } else {
-        console.error("Usuário não está autenticado");
+        // Usuário não está autenticado
       }
 
-      console.log("Buscando alunos no Supabase..."); // Log Adicionado
       const { data, error } = await supabase
         .from("alunos")
         .select("*")
         .order("nome");
 
       if (error) {
-        console.error("Erro Supabase ao carregar alunos:", error); // Log de erro detalhado
         throw error;
       }
 
-      console.log(`Alunos carregados com sucesso: ${data?.length} registros.`); // Log de sucesso
       setAlunos(data || []); // Garante que alunos seja sempre um array
       setError(null);
     } catch (err) {
-      console.error("Erro geral ao carregar alunos:", err); // Log de erro geral
       setError("Erro ao carregar alunos: " + err.message);
       setAlunos([]); // Define como array vazio em caso de erro
     } finally {
-      console.log("Finalizando carregamento de alunos."); // Log Adicionado
       setLoading(false);
     }
   };
 
   const atualizarStatusAluno = async (id, novoStatus) => {
-    console.log(`Tentando atualizar aluno ID ${id} para status: ${novoStatus}`);
-
     try {
       setAtualizandoAluno(id);
       setError(null);
@@ -113,12 +114,8 @@ function GerenciamentoAlunos({ setActiveSection }) {
         .eq("id", id);
 
       if (error) {
-        console.error("ERRO SUPABASE:", error);
         // Se o erro for de cache, tentar recarregar novamente
         if (error.message.includes("schema cache")) {
-          console.warn(
-            "Erro de cache detectado novamente, tentando recarregar..."
-          );
           await reloadSupabaseSchemaCache();
           // Opcionalmente, tentar a operação novamente aqui ou apenas recarregar os dados
         }
@@ -127,13 +124,7 @@ function GerenciamentoAlunos({ setActiveSection }) {
 
       // Recarregar dados após atualização bem-sucedida
       await carregarAlunos();
-
-      // Feedback de sucesso
-      console.log(
-        `Status do aluno ${id} atualizado com sucesso para ${novoStatus}!`
-      );
     } catch (err) {
-      console.error("Erro crítico ao atualizar status:", err);
       setError(`Erro ao atualizar status: ${err.message}`);
     } finally {
       setAtualizandoAluno(null);
@@ -141,21 +132,106 @@ function GerenciamentoAlunos({ setActiveSection }) {
   };
 
   const openModal = () => {
+    // Verifica se existe formulário salvo
+    try {
+      const savedForm = localStorage.getItem(FORM_STORAGE_KEY);
+      if (savedForm && hasSavedForm) {
+        if (
+          window.confirm(
+            "Você tem um formulário salvo. Deseja continuar de onde parou?"
+          )
+        ) {
+          const parsedForm = JSON.parse(savedForm);
+          setNovoAluno(parsedForm);
+
+          // Uma vez que o formulário foi restaurado, podemos remover a indicação
+          // visual, mas mantemos os dados no localStorage até que sejam enviados
+          // ou explicitamente descartados
+          localStorage.setItem(FORM_STORAGE_KEY, JSON.stringify(parsedForm));
+        } else {
+          // Se o usuário não quiser carregar, limpar os dados
+          localStorage.removeItem(FORM_STORAGE_KEY);
+          setHasSavedForm(false);
+          // Inicializa com valores padrão
+          setNovoAluno({
+            nome: "",
+            dataNascimento: "",
+            lesao: "Não",
+            tipo_lesao: "",
+            objetivo: "",
+            plano: "8 Check-in",
+            nivel: "Iniciante",
+            observacoes: "",
+            status: "ativo",
+          });
+        }
+      } else {
+        // Não há dados salvos, inicia com valores padrão
+        setNovoAluno({
+          nome: "",
+          dataNascimento: "",
+          lesao: "Não",
+          tipo_lesao: "",
+          objetivo: "",
+          plano: "8 Check-in",
+          nivel: "Iniciante",
+          observacoes: "",
+          status: "ativo",
+        });
+      }
+    } catch (error) {
+      // Em caso de erro, iniciar com valores padrão
+      setNovoAluno({
+        nome: "",
+        dataNascimento: "",
+        lesao: "Não",
+        tipo_lesao: "",
+        objetivo: "",
+        plano: "8 Check-in",
+        nivel: "Iniciante",
+        observacoes: "",
+        status: "ativo",
+      });
+    }
+
     setShowModal(true);
-    setNovoAluno({
-      nome: "",
-      dataNascimento: "", // Novo campo no lugar de idade
-      lesao: "Não",
-      tipo_lesao: "",
-      objetivo: "",
-      plano: "8 Check-in",
-      nivel: "Iniciante",
-      observacoes: "",
-      status: "ativo",
-    });
   };
 
   const closeModal = () => {
+    // Verificar se há dados no formulário que valem a pena salvar
+    // (pelo menos nome preenchido ou qualquer outro campo significativo)
+    const temDadosImportantes =
+      novoAluno.nome ||
+      novoAluno.tipo_lesao ||
+      novoAluno.objetivo ||
+      novoAluno.observacoes;
+
+    if (temDadosImportantes) {
+      if (
+        window.confirm(
+          "Deseja salvar o progresso do formulário para continuar depois?"
+        )
+      ) {
+        try {
+          localStorage.setItem(FORM_STORAGE_KEY, JSON.stringify(novoAluno));
+          setHasSavedForm(true);
+          alert(
+            "Formulário salvo com sucesso! Você pode continuar mais tarde."
+          );
+        } catch (error) {
+          alert("Erro ao salvar o formulário: " + error.message);
+        }
+      } else {
+        // Se o usuário não quiser salvar, limpar os dados
+        try {
+          localStorage.removeItem(FORM_STORAGE_KEY);
+          setHasSavedForm(false);
+        } catch (error) {
+          // Erro ao limpar localStorage
+        }
+      }
+    }
+
     setShowModal(false);
   };
 
@@ -177,7 +253,6 @@ function GerenciamentoAlunos({ setActiveSection }) {
       let lesaoCorrigida = novoAluno.lesao;
       if (lesaoCorrigida === "Não") {
         lesaoCorrigida = "Nao";
-        console.log("Corrigindo valor de lesão de 'Não' para 'Nao'");
       }
 
       // Calcular a idade a partir da data de nascimento
@@ -212,8 +287,6 @@ function GerenciamentoAlunos({ setActiveSection }) {
         observacoes: novoAluno.observacoes || null,
       };
 
-      console.log("Dados para cadastro:", alunoParaSalvar);
-
       const { data, error } = await supabase
         .from("alunos")
         .insert([alunoParaSalvar])
@@ -221,12 +294,17 @@ function GerenciamentoAlunos({ setActiveSection }) {
 
       if (error) throw error;
 
-      console.log("Aluno cadastrado com sucesso:", data);
+      // Limpar os dados do localStorage quando o formulário é enviado com sucesso
+      try {
+        localStorage.removeItem(FORM_STORAGE_KEY);
+        setHasSavedForm(false);
+      } catch (storageError) {
+        // Erro ao limpar localStorage
+      }
 
       closeModal();
       await carregarAlunos();
     } catch (err) {
-      console.error("Erro ao cadastrar:", err);
       setError("Erro ao cadastrar aluno: " + err.message);
     }
   };

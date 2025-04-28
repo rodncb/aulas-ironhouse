@@ -94,7 +94,7 @@ const App = () => {
   useEffect(() => {
     // Event listener para navegação
     const handleNavegacao = (event) => {
-      setActiveSection(event.detail.secao);
+      handleSetActiveSection(event.detail.secao);
     };
 
     window.addEventListener("navegarPara", handleNavegacao);
@@ -186,8 +186,30 @@ const App = () => {
     }
   };
 
-  // Função para tratar mudança de seção
-  const handleSectionChange = (section) => {
+  // Função para mudar a seção ativa com verificação de formulário pendente
+  const handleSetActiveSection = (section) => {
+    // Verificar se há formulário pendente quando tentar sair da seção "cadastros"
+    const FORM_STORAGE_KEY = "cadastro_aluno_form_data";
+
+    if (activeSection === "cadastros" && section !== "cadastros") {
+      try {
+        const savedForm = localStorage.getItem(FORM_STORAGE_KEY);
+        if (savedForm) {
+          // Perguntar ao usuário se quer realmente sair e perder os dados
+          if (
+            !window.confirm(
+              "Você tem um cadastro de aluno não finalizado. Se sair agora, poderá continuar depois. Deseja realmente sair?"
+            )
+          ) {
+            // Se o usuário não confirmar, não muda de seção
+            return;
+          }
+        }
+      } catch (error) {
+        console.warn("Erro ao verificar formulário salvo:", error);
+      }
+    }
+
     // Verificar se o usuário tem acesso a esta seção
     if (!canUserAccessSection(section)) {
       // Redirecionar para a página permitida padrão
@@ -227,48 +249,53 @@ const App = () => {
     return false; // Caso não seja admin nem professor (improvável, mas seguro)
   };
 
-  // Removemos a função handleReloadSchemaCache que não será mais utilizada
-  /*
-  const handleReloadSchemaCache = async () => {
-    setRecarregandoCache(true);
-    setMensagemCache("");
-
+  // Verificar status de formulário em andamento ao inicializar
+  useEffect(() => {
+    // Verificar se há dados de formulário no localStorage
     try {
-      const sucesso = await reloadSupabaseSchemaCache();
+      const FORM_STORAGE_KEY = "cadastro_aluno_form_data";
+      const FORM_STATE_KEY = "cadastro_aluno_form_state";
+      const modalWasOpenKey = "modalWasOpen";
 
-      if (sucesso) {
-        setMensagemCache("Cache recarregado com sucesso!");
+      const savedForm = localStorage.getItem(FORM_STORAGE_KEY);
+      const formState = localStorage.getItem(FORM_STATE_KEY);
+
+      // Se há dados no formulário e o modal estava aberto (bloqueio de tela/atualização)
+      if (
+        savedForm &&
+        (formState === "open" ||
+          localStorage.getItem(modalWasOpenKey) === "true")
+      ) {
+        console.log("Detectado formulário em andamento após inicialização");
+
+        // Definir como primeiro useEffect a ser executado (prioridade alta)
         setTimeout(() => {
-          setMensagemCache("");
-          setMostrarBotaoRecarregarCache(false);
-        }, 3000);
-      } else {
-        setMensagemCache("Falha ao recarregar o cache. Tente novamente.");
+          // Redirecionar para seção de cadastros
+          setActiveSection("cadastros");
+
+          // Disparar evento depois de um tempo para garantir que o componente foi carregado
+          setTimeout(() => {
+            try {
+              // Disparar evento para abrir o modal com os dados
+              const event = new CustomEvent("abrirModalCadastroAluno", {
+                detail: { form: JSON.parse(savedForm) },
+              });
+              window.dispatchEvent(event);
+
+              console.log("Evento de abrir modal disparado");
+            } catch (error) {
+              console.warn("Erro ao disparar evento: ", error);
+            }
+          }, 800);
+        }, 300);
       }
     } catch (error) {
-      console.error("Erro no processo de recarga do cache:", error);
-      setMensagemCache("Erro inesperado ao recarregar o cache.");
-    } finally {
-      setRecarregandoCache(false);
+      console.warn(
+        "Erro ao verificar formulário salvo na inicialização:",
+        error
+      );
     }
-  };
-  */
-
-  // Removemos o listener para erros de schema cache
-  /*
-  useEffect(() => {
-    const handleSchemaCacheError = () => {
-      setMostrarBotaoRecarregarCache(true);
-      setMensagemCache("Erro de cache do esquema detectado");
-    };
-
-    window.addEventListener("schema-cache-error", handleSchemaCacheError);
-
-    return () => {
-      window.removeEventListener("schema-cache-error", handleSchemaCacheError);
-    };
   }, []);
-  */
 
   // Inicializar o scheduler de finalização automática de aulas
   useEffect(() => {
@@ -303,7 +330,10 @@ const App = () => {
       const alunoId = activeSection.split("/")[1];
       // Voltando a usar o componente DetalheAluno original em vez de DetalheCadastroAluno
       return (
-        <DetalheAluno alunoId={alunoId} onNavigateBack={handleSectionChange} />
+        <DetalheAluno
+          alunoId={alunoId}
+          onNavigateBack={handleSetActiveSection}
+        />
       );
     }
 
@@ -374,7 +404,7 @@ const App = () => {
       />
       <Sidebar
         activeSection={activeSection}
-        setActiveSection={handleSectionChange}
+        setActiveSection={handleSetActiveSection}
         collapsed={sidebarCollapsed}
         toggleSidebar={toggleSidebar}
         userRole={userRole}

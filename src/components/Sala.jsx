@@ -178,7 +178,7 @@ function Sala() {
           setAlunosEmAula([]);
           setModoSelecaoAluno(true);
           setAlunosDropdownAberto(false); // Manter dropdown fechado inicialmente
-          
+
           console.log(
             "Aula iniciada automaticamente e salva no banco de dados:",
             aulaSalva
@@ -240,7 +240,7 @@ function Sala() {
           setAulaAtiva(true);
           setAlunosEmAula(alunosDaAula);
           setModoSelecaoAluno(alunosDaAula.length === 0);
-          
+
           // Manter dropdown fechado inicialmente em todos os casos
           setAlunosDropdownAberto(false);
         } catch (alunosError) {

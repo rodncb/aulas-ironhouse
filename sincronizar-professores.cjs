@@ -2,9 +2,23 @@
 const { createClient } = require("@supabase/supabase-js");
 
 // Configuração do cliente Supabase (mesma do projeto)
-const supabaseUrl = "https://rnvsemzycvhuyeatjkaq.supabase.co";
-const supabaseAnonKey =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJudnNlbXp5Y3ZodXllYXRqa2FxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ4MDk0NTAsImV4cCI6MjA2MDM4NTQ1MH0.d2GTmTBAUIINoL52Ylz4tXsnhPLBTynOtvKlVa5sy60";
+const supabaseUrl =
+  process.env.REACT_APP_SUPABASE_URL || "https://rnvsemzycvhuyeatjkaq.supabase.co";
+const supabaseAnonKey = process.env.REACT_APP_SUPABASE_KEY;
+
+// Verificar se a chave do Supabase está definida
+if (!supabaseAnonKey) {
+  console.error(
+    "ERRO: A variável de ambiente REACT_APP_SUPABASE_KEY não está definida."
+  );
+  console.error(
+    "Por favor, defina esta variável de ambiente com sua chave do Supabase antes de executar este script."
+  );
+  console.error(
+    "Exemplo: REACT_APP_SUPABASE_KEY=sua_chave_aqui node sincronizar-professores.cjs"
+  );
+  process.exit(1);
+}
 
 // Criar cliente Supabase
 const supabase = createClient(supabaseUrl, supabaseAnonKey, {

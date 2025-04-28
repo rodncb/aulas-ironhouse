@@ -5,6 +5,12 @@ import "../styles/Modal.css";
 import "../styles/EditarAluno.css"; // Importando os estilos do EditarAluno também
 import alunosService from "../services/alunos.service";
 
+// Chave para armazenamento no localStorage
+const FORM_STORAGE_KEY = "cadastro_aluno_form_data";
+
+// Adicionar uma nova constante para armazenar o estado do modal
+const FORM_STATE_KEY = "cadastro_aluno_form_state";
+
 const CadastroAluno = () => {
   const [showModal, setShowModal] = useState(false);
   const [alunos, setAlunos] = useState([]);
@@ -16,6 +22,9 @@ const CadastroAluno = () => {
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [searchTerm, setSearchTerm] = useState("");
   const [alunoHistorico, setAlunoHistorico] = useState(null);
+
+  // Estado para verificar se há dados salvos no formulário
+  const [hasSavedForm, setHasSavedForm] = useState(false);
 
   // Estado para o formulário de cadastro, no mesmo formato do EditarAluno
   const [formData, setFormData] = useState({
@@ -29,6 +38,100 @@ const CadastroAluno = () => {
     nivel: "Iniciante",
     observacoes: "",
   });
+
+  // Verificar se há dados salvos no localStorage ao carregar o componente
+  useEffect(() => {
+    try {
+      const savedForm = localStorage.getItem(FORM_STORAGE_KEY);
+      if (savedForm) {
+        const parsedForm = JSON.parse(savedForm);
+        setHasSavedForm(true);
+
+        // Não carregar automaticamente para não abrir o modal sem ação do usuário
+        // Apenas guardar a informação de que há um formulário salvo
+      }
+    } catch (error) {
+      console.warn("Erro ao verificar formulário salvo:", error);
+    }
+  }, []);
+
+  // Adicionar listener para eventos de visibilidade da página
+  useEffect(() => {
+    // Função que será chamada quando a visibilidade da página mudar
+    const handleVisibilityChange = () => {
+      // Quando a página estiver escondida (tela bloqueada ou app em segundo plano)
+      if (document.visibilityState === "hidden" && showModal) {
+        console.log("Página escondida, salvando estado do formulário");
+        try {
+          // Salvar os dados do formulário e o estado (aberto)
+          localStorage.setItem(FORM_STORAGE_KEY, JSON.stringify(formData));
+          localStorage.setItem(FORM_STATE_KEY, "open");
+          // Salvar a seção atual para poder restaurar a navegação depois
+          localStorage.setItem("lastActiveSection", "cadastros");
+          localStorage.setItem("modalWasOpen", "true");
+        } catch (error) {
+          console.warn("Erro ao salvar formulário:", error);
+        }
+      }
+      // Quando a página voltar a ficar visível
+      else if (document.visibilityState === "visible") {
+        console.log("Página visível novamente");
+        const modalWasOpen = localStorage.getItem("modalWasOpen");
+
+        // Verificar se o modal estava aberto antes
+        if (modalWasOpen === "true") {
+          try {
+            const savedForm = localStorage.getItem(FORM_STORAGE_KEY);
+            if (savedForm) {
+              // Se tinha dados salvos, preencher o formulário
+              const parsedForm = JSON.parse(savedForm);
+              setFormData(parsedForm);
+
+              // E manter o modal aberto
+              setShowModal(true);
+
+              // Avisar o App que estamos na seção cadastros
+              const event = new CustomEvent("navegarPara", {
+                detail: { secao: "cadastros" },
+              });
+              window.dispatchEvent(event);
+
+              // Limpar o flag
+              localStorage.setItem("modalWasOpen", "false");
+            }
+          } catch (error) {
+            console.warn("Erro ao recuperar formulário:", error);
+          }
+        }
+      }
+    };
+
+    // Adicionar event listeners
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("focus", handleVisibilityChange);
+
+    // Também ajustar para quando o componente for montado
+    if (document.visibilityState === "visible") {
+      const modalWasOpen = localStorage.getItem("modalWasOpen");
+      const savedForm = localStorage.getItem(FORM_STORAGE_KEY);
+      const formState = localStorage.getItem(FORM_STATE_KEY);
+
+      if (modalWasOpen === "true" && savedForm && formState === "open") {
+        try {
+          const parsedForm = JSON.parse(savedForm);
+          setFormData(parsedForm);
+          setShowModal(true);
+        } catch (error) {
+          console.warn("Erro ao recuperar formulário:", error);
+        }
+      }
+    }
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("focus", handleVisibilityChange);
+    };
+  }, [showModal, formData]);
 
   // Carregar alunos do Supabase ao montar o componente
   useEffect(() => {
@@ -68,10 +171,19 @@ const CadastroAluno = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
+    const updatedFormData = {
+      ...formData,
       [name]: value,
-    }));
+    };
+
+    setFormData(updatedFormData);
+
+    // Salvar no localStorage a cada mudança
+    try {
+      localStorage.setItem(FORM_STORAGE_KEY, JSON.stringify(updatedFormData));
+    } catch (error) {
+      console.warn("Erro ao salvar formulário no localStorage:", error);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -149,6 +261,15 @@ const CadastroAluno = () => {
       });
       window.dispatchEvent(event);
 
+      // Limpar dados do localStorage após salvamento bem-sucedido
+      try {
+        localStorage.removeItem(FORM_STORAGE_KEY);
+        localStorage.removeItem(FORM_STATE_KEY); // Também remover o estado do modal
+        setHasSavedForm(false);
+      } catch (storageError) {
+        console.warn("Erro ao limpar dados do formulário:", storageError);
+      }
+
       // Resetar o formulário - garantir que todos os campos são resetados
       setFormData({
         nome: "",
@@ -180,7 +301,7 @@ const CadastroAluno = () => {
 
       // Salvar o formulário no localStorage para recuperação em caso de erro
       try {
-        localStorage.setItem("formDataBackup", JSON.stringify(formData));
+        localStorage.setItem(FORM_STORAGE_KEY, JSON.stringify(formData));
       } catch (storageError) {
         console.warn(
           "Não foi possível salvar o backup do formulário:",
@@ -254,24 +375,91 @@ const CadastroAluno = () => {
     item.nome.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  // Modificar a função openModal para também salvar o estado do modal
   const openModal = () => {
-    setFormData({
-      nome: "",
-      dataNascimento: "",
-      objetivo: "",
-      lesao: "Nao",
-      tipoLesao: "",
-      status: "ativo",
-      plano: "8 Check-in",
-      nivel: "Iniciante",
-      observacoes: "",
-    });
+    // Verificar se existem dados salvos anteriormente
+    try {
+      const savedForm = localStorage.getItem(FORM_STORAGE_KEY);
+      if (savedForm) {
+        const parsedForm = JSON.parse(savedForm);
+        // Perguntar ao usuário se deseja continuar com o formulário anterior
+        if (
+          window.confirm(
+            "Foi encontrado um formulário de cadastro não concluído. Deseja continuar preenchendo?"
+          )
+        ) {
+          setFormData(parsedForm);
+        } else {
+          // Se o usuário não quiser continuar, limpar os dados salvos
+          localStorage.removeItem(FORM_STORAGE_KEY);
+          localStorage.removeItem(FORM_STATE_KEY); // Também remover o estado do modal
+          setFormData({
+            nome: "",
+            dataNascimento: "",
+            objetivo: "",
+            lesao: "Nao",
+            tipoLesao: "",
+            status: "ativo",
+            plano: "8 Check-in",
+            nivel: "Iniciante",
+            observacoes: "",
+          });
+        }
+      }
+    } catch (error) {
+      console.warn("Erro ao verificar formulário salvo:", error);
+    }
+
     setError(null);
     setSuccess(false);
     setShowModal(true);
+
+    // Salvar o estado do modal como aberto
+    try {
+      localStorage.setItem(FORM_STATE_KEY, "open");
+    } catch (error) {
+      console.warn("Erro ao salvar estado do modal:", error);
+    }
+
+    setHasSavedForm(false);
   };
 
+  // Modificar a função closeModal para também salvar o estado do modal
   const closeModal = () => {
+    console.log("FUNÇÃO CANCELAR EXECUTADA");
+
+    // SEMPRE confirmar se deseja salvar, independente do conteúdo
+    // Isso garante que a funcionalidade será testada
+    if (
+      window.confirm(
+        "Deseja salvar o progresso do formulário para continuar depois?"
+      )
+    ) {
+      try {
+        console.log("SALVANDO FORMULÁRIO:", formData);
+        localStorage.setItem(FORM_STORAGE_KEY, JSON.stringify(formData));
+        localStorage.setItem(FORM_STATE_KEY, "saved"); // Estado: formulário salvo, modal fechado
+        setHasSavedForm(true);
+        alert(
+          "Formulário salvo com sucesso! Feche esta mensagem para continuar."
+        );
+      } catch (error) {
+        console.error("ERRO AO SALVAR:", error);
+        alert("Erro ao salvar o formulário: " + error.message);
+      }
+    } else {
+      // Se o usuário não quiser salvar, limpar os dados
+      try {
+        localStorage.removeItem(FORM_STORAGE_KEY);
+        localStorage.removeItem(FORM_STATE_KEY); // Também remover o estado do modal
+        setHasSavedForm(false);
+        console.log("FORMULÁRIO DESCARTADO");
+      } catch (error) {
+        console.error("ERRO AO LIMPAR:", error);
+      }
+    }
+
+    console.log("FECHANDO MODAL");
     setShowModal(false);
   };
 
@@ -288,6 +476,55 @@ const CadastroAluno = () => {
     }
   };
 
+  // Adicionar um listener para o evento personalizado que abre o modal
+  useEffect(() => {
+    // Função para abrir modal quando o evento for disparado
+    const handleAbrirModal = (event) => {
+      if (event.detail && event.detail.form) {
+        // Se recebeu dados do formulário, preencher
+        setFormData(event.detail.form);
+      }
+      // Abrir o modal
+      setShowModal(true);
+    };
+
+    // Adicionar o listener para o evento personalizado
+    window.addEventListener("abrirModalCadastroAluno", handleAbrirModal);
+
+    // Limpar o listener ao desmontar o componente
+    return () => {
+      window.removeEventListener("abrirModalCadastroAluno", handleAbrirModal);
+    };
+  }, []);
+
+  // Adicionar tratamento para evento de atualização/fechamento da página
+  useEffect(() => {
+    const handleBeforeUnload = (event) => {
+      // Se o modal estiver aberto, salva o estado
+      if (showModal) {
+        try {
+          localStorage.setItem(FORM_STORAGE_KEY, JSON.stringify(formData));
+          localStorage.setItem(FORM_STATE_KEY, "open");
+
+          // Mensagem padrão para navegadores que suportam
+          event.preventDefault();
+          event.returnValue =
+            "Você tem alterações não salvas. Tem certeza que deseja sair?";
+          return event.returnValue;
+        } catch (error) {
+          console.warn("Erro ao salvar estado do formulário:", error);
+        }
+      }
+    };
+
+    // Adicionar evento para detectar atualização/fechamento da página
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [showModal, formData]);
+
   return (
     <div className="cadastro-container">
       {/* Exibir mensagem de erro, se houver */}
@@ -295,6 +532,29 @@ const CadastroAluno = () => {
 
       {/* Exibir indicador de carregamento */}
       {loading && <div className="loading-indicator">Carregando...</div>}
+
+      {/* Mostrar notificação de formulário salvo */}
+      {hasSavedForm && !showModal && (
+        <div className="form-saved-notification">
+          <p>Você tem um formulário de cadastro em andamento.</p>
+          <button className="btn-continue" onClick={openModal}>
+            Continuar Cadastro
+          </button>
+          <button
+            className="btn-discard"
+            onClick={() => {
+              try {
+                localStorage.removeItem(FORM_STORAGE_KEY);
+                setHasSavedForm(false);
+              } catch (error) {
+                console.warn("Erro ao descartar formulário:", error);
+              }
+            }}
+          >
+            Descartar
+          </button>
+        </div>
+      )}
 
       <div className="voltar-container">
         <button className="btn-voltar" onClick={voltarParaGeral}>

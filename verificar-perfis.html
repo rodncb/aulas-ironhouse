@@ -104,10 +104,23 @@
       // Importar o módulo Supabase
       import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
 
-      // Configurar Supabase
+      // Configurar Supabase - ATENÇÃO: Use variáveis de ambiente em produção
       const SUPABASE_URL = "https://lnuhiwvbjvwwxuauhvst.supabase.co";
-      const SUPABASE_KEY =
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxudWhpd3ZianZ3d3h1YXVodnN0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTU4Njk3MzEsImV4cCI6MjAzMTQ0NTczMX0.vJ7R_BCMaD473OkKX5f-0cSYi6hHgQ3D3Au6fVOl3j0";
+      // A chave do Supabase deve ser inserida manualmente neste arquivo HTML para testes locais
+      // Não comite esta chave no GitHub - remova-a antes de fazer commit
+      const SUPABASE_KEY = ""; // Removi a chave do Supabase por segurança
+      
+      if (!SUPABASE_KEY) {
+        alert("Erro: É necessário inserir a chave do Supabase no arquivo HTML antes de executar esta ferramenta.");
+        document.body.innerHTML = `
+          <h1>Configuração necessária</h1>
+          <p>Você precisa inserir sua chave do Supabase no arquivo HTML antes de usar esta ferramenta.</p>
+          <p>Abra o arquivo em um editor de texto e insira sua chave na linha com <code>const SUPABASE_KEY = ""</code></p>
+          <p>IMPORTANTE: Não comite este arquivo com a chave no GitHub.</p>
+        `;
+        throw new Error("Chave do Supabase não definida");
+      }
+      
       const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
       // Lista de usuários para verificar

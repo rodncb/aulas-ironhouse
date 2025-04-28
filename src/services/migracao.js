@@ -2,6 +2,7 @@ import { supabase } from "./supabase";
 
 const migracaoService = {
   async migrarTodosDados() {
+    // Log inicial mantido para indicar o início do processo
     console.log("Iniciando migração de dados para o Supabase...");
 
     try {
@@ -20,13 +21,10 @@ const migracaoService = {
   },
 
   async migrarProfessores() {
-    console.log("Migrando professores para o Supabase...");
-
     try {
       // Obter professores do localStorage
       const professoresSalvos = localStorage.getItem("todosProfessores");
       if (!professoresSalvos) {
-        console.log("Nenhum professor para migrar.");
         return { success: true, count: 0 };
       }
 
@@ -46,7 +44,6 @@ const migracaoService = {
       for (const professor of professores) {
         // Pular se já existir
         if (nomesExistentes.has(professor.nome.toLowerCase())) {
-          console.log(`Professor já existe: ${professor.nome}`);
           continue;
         }
 
@@ -66,7 +63,6 @@ const migracaoService = {
         }
       }
 
-      console.log(`${contMigrados} professores migrados com sucesso.`);
       return { success: true, count: contMigrados };
     } catch (error) {
       console.error("Erro ao migrar professores:", error);
@@ -75,13 +71,10 @@ const migracaoService = {
   },
 
   async migrarAlunos() {
-    console.log("Migrando alunos para o Supabase...");
-
     try {
       // Obter alunos do localStorage
       const alunosSalvos = localStorage.getItem("alunos");
       if (!alunosSalvos) {
-        console.log("Nenhum aluno para migrar.");
         return { success: true, count: 0 };
       }
 
@@ -101,7 +94,6 @@ const migracaoService = {
       for (const aluno of alunos) {
         // Pular se já existir
         if (nomesExistentes.has(aluno.nome.toLowerCase())) {
-          console.log(`Aluno já existe: ${aluno.nome}`);
           continue;
         }
 
@@ -121,7 +113,6 @@ const migracaoService = {
         }
       }
 
-      console.log(`${contMigrados} alunos migrados com sucesso.`);
       return { success: true, count: contMigrados };
     } catch (error) {
       console.error("Erro ao migrar alunos:", error);
@@ -130,13 +121,10 @@ const migracaoService = {
   },
 
   async migrarExercicios() {
-    console.log("Migrando exercícios para o Supabase...");
-
     try {
       // Obter exercícios do localStorage
       const exerciciosSalvos = localStorage.getItem("exercicios");
       if (!exerciciosSalvos) {
-        console.log("Nenhum exercício para migrar.");
         return { success: true, count: 0 };
       }
 
@@ -156,7 +144,6 @@ const migracaoService = {
       for (const exercicio of exercicios) {
         // Pular se já existir
         if (nomesExistentes.has(exercicio.nome.toLowerCase())) {
-          console.log(`Exercício já existe: ${exercicio.nome}`);
           continue;
         }
 
@@ -173,7 +160,6 @@ const migracaoService = {
         }
       }
 
-      console.log(`${contMigrados} exercícios migrados com sucesso.`);
       return { success: true, count: contMigrados };
     } catch (error) {
       console.error("Erro ao migrar exercícios:", error);
@@ -182,13 +168,10 @@ const migracaoService = {
   },
 
   async migrarAulas() {
-    console.log("Migrando aulas para o Supabase...");
-
     try {
       // Obter aulas do localStorage
       const aulasSalvas = localStorage.getItem("historicoAulas");
       if (!aulasSalvas) {
-        console.log("Nenhuma aula para migrar.");
         return { success: true, count: 0 };
       }
 
@@ -279,15 +262,11 @@ const migracaoService = {
           }
 
           contMigrados++;
-        } catch (aulaError) {
-          console.warn(
-            `Erro ao processar aula (data: ${aula.data}):`,
-            aulaError
-          );
+        } catch (error) {
+          console.error(`Erro ao processar aula:`, error);
         }
       }
 
-      console.log(`${contMigrados} aulas migradas com sucesso.`);
       return { success: true, count: contMigrados };
     } catch (error) {
       console.error("Erro ao migrar aulas:", error);

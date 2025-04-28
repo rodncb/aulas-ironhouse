@@ -1,26 +1,16 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import "../styles/Cadastros.css";
 import CadastroMusculatura from "./CadastroMusculatura";
 import CadastroExercicio from "./CadastroExercicio";
-import { voltarPagina, navegarPara } from "../lib/utils"; // Importar funções utilitárias
 
 const Cadastros = ({ userRole }) => {
   const [activeCadastro, setActiveCadastro] = useState(null);
 
-  // Se o usuário for professor, mostrar diretamente a tela de exercícios
-  useEffect(() => {
-    if (userRole === "professor") {
-      setActiveCadastro("exercicio");
-    }
-  }, [userRole]);
+  // Removemos o useEffect que forçava professores a verem apenas exercícios
+  // Agora todos os usuários (admin e professores) terão a mesma experiência
 
   const renderCadastroContent = () => {
-    // Se for professor, mostrar apenas o cadastro de exercícios
-    if (userRole === "professor") {
-      return <CadastroExercicio />;
-    }
-
-    // Para administradores, mostrar todas as opções
+    // Todos os usuários (admin e professores) agora têm acesso a todos os cadastros
     switch (activeCadastro) {
       case "musculatura":
         return <CadastroMusculatura />;
@@ -46,18 +36,8 @@ const Cadastros = ({ userRole }) => {
     }
   };
 
-  // Ajustar o título da página com base no papel do usuário
+  // Mesmo título para todos os usuários agora
   const renderTitle = () => {
-    if (userRole === "professor") {
-      return (
-        <h2 className="page-title">
-          <span>
-            <i className="icon">➕</i> Cadastro de Exercícios
-          </span>
-        </h2>
-      );
-    }
-
     return (
       <h2 className="page-title">
         <span onClick={() => setActiveCadastro(null)}>

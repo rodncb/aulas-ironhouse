@@ -53,21 +53,15 @@ const professoresAuth = [
  * Função principal para sincronizar os IDs dos professores
  */
 async function sincronizarProfessores() {
-  console.log("Iniciando sincronização de IDs de professores...");
-
   try {
     // 1. Buscar todos os professores no banco de dados
-    console.log("Buscando todos os professores no banco de dados...");
     const { data: professoresBD, error: errorBD } = await supabase
       .from("professores")
       .select("*");
 
     if (errorBD) {
-      console.error("Erro ao buscar professores:", errorBD);
-      return;
+      return { success: false, error: errorBD };
     }
-
-    console.log(`Encontrados ${professoresBD.length} professores na tabela.`);
 
     // 2. Para cada professor no banco, verificar se há correspondência com um ID de autenticação
     let atualizados = 0;
@@ -76,7 +70,7 @@ async function sincronizarProfessores() {
     for (const professor of professoresBD) {
       const email = professor.email?.toLowerCase();
       if (!email) {
-        console.warn(`Professor ID ${professor.id} não tem email definido.`);
+        naoEncontrados.push("Professor sem email");
         continue;
       }
 
@@ -86,10 +80,6 @@ async function sincronizarProfessores() {
       );
 
       if (professorAuth) {
-        console.log(
-          `Encontrada correspondência para ${email}: ${professorAuth.authId}`
-        );
-
         // 3. Atualizar o ID do professor para corresponder ao ID de autenticação
         const { error: updateError } = await supabase
           .from("professores")
@@ -97,9 +87,8 @@ async function sincronizarProfessores() {
           .eq("id", professor.id);
 
         if (updateError) {
-          console.error(`Erro ao atualizar professor ${email}:`, updateError);
+          return { success: false, error: updateError };
         } else {
-          console.log(`Professor ${email} atualizado com sucesso!`);
           atualizados++;
 
           // 4. Atualizar também as referências na tabela aulas (professor_id)
@@ -109,36 +98,25 @@ async function sincronizarProfessores() {
             .eq("professor_id", professor.id);
 
           if (aulasError) {
-            console.error(
-              `Erro ao atualizar aulas do professor ${email}:`,
-              aulasError
-            );
+            return { success: false, error: aulasError };
           }
         }
       } else {
-        console.warn(`Não foi encontrada correspondência para ${email}`);
         naoEncontrados.push(email);
       }
     }
 
     // Resumo da operação
-    console.log("\n=== RESUMO DA SINCRONIZAÇÃO ===");
-    console.log(`Total de professores processados: ${professoresBD.length}`);
-    console.log(`Professores sincronizados com sucesso: ${atualizados}`);
-    console.log(`Professores sem correspondência: ${naoEncontrados.length}`);
-    if (naoEncontrados.length > 0) {
-      console.log("Lista de emails sem correspondência:");
-      naoEncontrados.forEach((email) => console.log(`- ${email}`));
-    }
+    return {
+      success: true,
+      total: professoresBD.length,
+      atualizados,
+      naoEncontrados,
+    };
   } catch (error) {
-    console.error("Erro durante a sincronização dos professores:", error);
+    return { success: false, error };
   }
 }
-
-// Executa a função de sincronização
-sincronizarProfessores()
-  .then(() => console.log("Processo de sincronização finalizado."))
-  .catch((err) => console.error("Erro no processo principal:", err));
 
 // Exporta a função para uso em outros módulos se necessário
 export default sincronizarProfessores;

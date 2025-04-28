@@ -22,14 +22,10 @@ const fetchUserProfile = async (userId) => {
     const roleFromMetadata = userData?.user?.user_metadata?.role;
 
     if (roleFromMetadata) {
-      console.log("Role encontrada nos metadados:", roleFromMetadata);
       return { role: roleFromMetadata };
     }
 
     // 2. Se não encontrou nos metadados, busca na tabela profiles
-    console.log(
-      "Role não encontrada nos metadados, buscando na tabela profiles..."
-    );
     const { data: profile, error } = await supabase
       .from("profiles") // Consulta a tabela 'profiles'
       .select("role")
@@ -37,26 +33,16 @@ const fetchUserProfile = async (userId) => {
       .single();
 
     if (error) {
-      console.error("Erro ao buscar perfil na tabela profiles:", error.message);
       return { role: null }; // Retorna null se houve erro na busca
     }
 
     if (profile?.role) {
-      console.log("Role encontrada na tabela profiles:", profile.role);
       return { role: profile.role };
     }
 
     // Se não encontrou em nenhum lugar
-    console.warn(
-      "Role não encontrada nem nos metadados nem na tabela profiles para o usuário:",
-      userId
-    );
     return { role: null };
   } catch (fetchError) {
-    console.error(
-      "Exceção ao buscar perfil (metadados ou profiles):",
-      fetchError
-    );
     return { role: null };
   }
 };
@@ -73,7 +59,6 @@ export function AuthProvider({ children }) {
   // Removido useCallback para evitar dependências cíclicas
   const updateUserState = async (session) => {
     if (isUpdatingRef.current) {
-      console.log("AuthProvider: Atualização em andamento, ignorando...");
       return;
     }
 
@@ -106,7 +91,6 @@ export function AuthProvider({ children }) {
       // Atualiza o estado
       setUser(userData);
     } catch (error) {
-      console.error("AuthProvider: Erro ao atualizar usuário:", error);
       setUser(null);
     } finally {
       setLoading(false);
@@ -119,19 +103,15 @@ export function AuthProvider({ children }) {
   // Executado apenas uma vez na montagem inicial
   useEffect(() => {
     let isMounted = true;
-    console.log("AuthProvider: useEffect inicial executando");
 
     // Verificação de sessão inicial
     const checkSession = async () => {
-      console.log("AuthProvider: Verificando sessão existente...");
-
       try {
         const { data, error } = await supabase.auth.getSession();
 
         if (!isMounted) return;
 
         if (error) {
-          console.error("AuthProvider: Erro ao buscar sessão:", error);
           setUser(null);
           setLoading(false);
           setSessionChecked(true);
@@ -139,16 +119,13 @@ export function AuthProvider({ children }) {
         }
 
         if (data?.session) {
-          console.log("AuthProvider: Sessão encontrada");
           await updateUserState(data.session);
         } else {
-          console.log("AuthProvider: Nenhuma sessão encontrada.");
           setUser(null);
           setLoading(false);
           setSessionChecked(true);
         }
       } catch (err) {
-        console.error("AuthProvider: Erro ao verificar sessão:", err);
         setUser(null);
         setLoading(false);
         setSessionChecked(true);
@@ -158,16 +135,11 @@ export function AuthProvider({ children }) {
     // Configura o listener para eventos de autenticação
     const setupAuthListener = () => {
       if (authListenerRef.current) {
-        console.log("AuthProvider: Listener já existe, pulando configuração");
         return;
       }
 
-      console.log("AuthProvider: Configurando listener onAuthStateChange.");
-
       const { data: authListener } = supabase.auth.onAuthStateChange(
         (event, session) => {
-          console.log("AuthProvider: Evento auth:", event);
-
           if (!isMounted) return;
 
           if (event === "SIGNED_IN" && session) {
@@ -192,7 +164,6 @@ export function AuthProvider({ children }) {
     // Limpeza ao desmontar
     return () => {
       isMounted = false;
-      console.log("AuthProvider: Desinscrevendo listener onAuthStateChange.");
 
       if (authListenerRef.current?.subscription?.unsubscribe) {
         authListenerRef.current.subscription.unsubscribe();
@@ -207,11 +178,9 @@ export function AuthProvider({ children }) {
     setLoading(true);
 
     try {
-      console.log(`AuthProvider: Tentando login para: ${email}`);
       const authResult = await authService.login(email, password);
 
       if (!authResult.success || !authResult.data?.user) {
-        console.error("AuthProvider: Falha na autenticação:", authResult.error);
         setLoading(false);
         return {
           success: false,
@@ -230,9 +199,6 @@ export function AuthProvider({ children }) {
       }
 
       if (finalRole !== expectedUserType) {
-        console.warn(
-          `AuthProvider: Tipo de usuário incorreto. Esperado: ${expectedUserType}, Obtido: ${finalRole}`
-        );
         await authService.logout();
         setLoading(false);
         return {
@@ -255,7 +221,6 @@ export function AuthProvider({ children }) {
 
       return { success: true, data: userData };
     } catch (error) {
-      console.error("AuthProvider: Erro no login:", error);
       await authService.logout().catch(() => {});
       setLoading(false);
 
@@ -268,17 +233,14 @@ export function AuthProvider({ children }) {
 
   // Função para fazer logout
   const signOut = async () => {
-    console.log("AuthProvider: Iniciando logout");
-
     // Limpa o estado primeiro para feedback imediato na UI
     setUser(null);
     setLoading(false);
 
     try {
       await authService.logout();
-      console.log("AuthProvider: Logout concluído");
     } catch (error) {
-      console.error("AuthProvider: Erro no logout:", error);
+      // Ignora erro silenciosamente
     }
   };
 

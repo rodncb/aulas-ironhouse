@@ -5,9 +5,15 @@ const { createClient } = require("@supabase/supabase-js");
 const supabaseUrl =
   process.env.REACT_APP_SUPABASE_URL ||
   "https://mpcchupbibmhwkhxqqnm.supabase.co";
-const supabaseKey =
-  process.env.REACT_APP_SUPABASE_KEY ||
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1wY2NodXBiaWJtaHdraHhxcW5tIiwicm9sZSI6ImFub24iLCJpYXQiOjE2OTc3MzM5NzIsImV4cCI6MjAxMzMwOTk3Mn0.wc7eb0aMqDGCsfELWWRxsrkE_qx7KQr5xU5hKLkO9YA";
+const supabaseKey = process.env.REACT_APP_SUPABASE_KEY;
+
+// Verificar se a chave do Supabase está definida
+if (!supabaseKey) {
+  console.error("ERRO: A variável de ambiente REACT_APP_SUPABASE_KEY não está definida.");
+  console.error("Por favor, defina esta variável de ambiente com sua chave do Supabase antes de executar este script.");
+  console.error("Exemplo: REACT_APP_SUPABASE_KEY=sua_chave_aqui node inserir-admin-como-professores.cjs");
+  process.exit(1);
+}
 
 // Criar cliente do Supabase
 const supabase = createClient(supabaseUrl, supabaseKey);
