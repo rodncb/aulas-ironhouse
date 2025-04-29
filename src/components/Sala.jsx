@@ -836,20 +836,43 @@ function Sala() {
       // Verificar se o aluno já está na lista local
       const alunoJaNaLista = alunosEmAula.some((a) => a.id === aluno.id);
 
-      // Adicionar ao estado local se não estiver já na lista
+      // Se o aluno não estiver na lista, buscar dados completos do banco antes de adicionar
+      let alunoCompleto = aluno;
       if (!alunoJaNaLista) {
-        console.log(`Adicionando aluno ${aluno.nome} localmente`);
-        setAlunosEmAula((prev) => [...prev, aluno]);
+        try {
+          // Buscar dados completos do aluno do banco de dados
+          console.log(`Buscando dados completos do aluno ${aluno.id}`);
+          const { data: dadosCompletos, error: dadosError } = await supabase
+            .from("alunos")
+            .select("*")
+            .eq("id", aluno.id)
+            .single();
+            
+          if (!dadosError && dadosCompletos) {
+            console.log("Dados completos do aluno obtidos:", dadosCompletos);
+            alunoCompleto = dadosCompletos;
+          } else {
+            console.error("Erro ao buscar dados completos do aluno:", dadosError);
+          }
+        } catch (dataError) {
+          console.error("Erro ao buscar dados do aluno:", dataError);
+        }
+      }
+
+      // Adicionar aluno completo ao estado local se não estiver já na lista
+      if (!alunoJaNaLista) {
+        console.log(`Adicionando aluno ${alunoCompleto.nome} localmente`);
+        setAlunosEmAula((prev) => [...prev, alunoCompleto]);
       }
 
       // Atualizamos o backend se o aluno não estiver já na lista
       if (!alunoJaNaLista) {
-        console.log(`Atualizando aula com novo aluno ${aluno.id}`);
+        console.log(`Atualizando aula com novo aluno ${alunoCompleto.id}`);
         try {
           // Chamada ao serviço para adicionar o aluno
           const aulaAtualizada = await aulasService.adicionarAluno(
             aulaAtual.id,
-            aluno.id
+            alunoCompleto.id
           );
 
           console.log("Resultado da atualização:", aulaAtualizada);
@@ -861,11 +884,18 @@ function Sala() {
 
             // Se a aula tem um campo alunos com dados, usá-lo para atualizar o estado
             if (aulaAtualizada.alunos && Array.isArray(aulaAtualizada.alunos)) {
-              // Garantir que nosso aluno atual esteja na lista
-              const alunosAtualizados = [...aulaAtualizada.alunos];
-              if (!alunosAtualizados.some((a) => a.id === aluno.id)) {
-                alunosAtualizados.push(aluno);
-              }
+              // Mapear os dados atuais para preservar os dados completos dos alunos já adicionados
+              const alunosAtualizados = aulaAtualizada.alunos.map(alunoAula => {
+                // Verificar se o aluno é o que acabamos de adicionar
+                if (alunoAula.id === alunoCompleto.id) {
+                  return alunoCompleto; // Usar a versão completa que buscamos
+                }
+                
+                // Para os outros alunos, manter os dados existentes de alunosEmAula
+                const alunoExistente = alunosEmAula.find(a => a.id === alunoAula.id);
+                return alunoExistente || alunoAula;
+              });
+              
               setAlunosEmAula(alunosAtualizados);
             }
           }
