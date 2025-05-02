@@ -76,7 +76,20 @@ class AulaScheduler {
   }
 }
 
-// Criar instância única
+// Criar instância única (mantida internamente)
 const aulaScheduler = new AulaScheduler();
 
-export default aulaScheduler;
+/**
+ * Função para iniciar o scheduler e retornar a função de parada.
+ * Garante que o scheduler seja iniciado apenas uma vez.
+ */
+const startAutoEndScheduler = () => {
+  if (!aulaScheduler.isRunning) {
+    aulaScheduler.iniciarAgendamento();
+  }
+  // Retorna a função de parada vinculada à instância correta
+  return aulaScheduler.pararAgendamento.bind(aulaScheduler);
+};
+
+// Exportar a função de inicialização como padrão
+export default startAutoEndScheduler;

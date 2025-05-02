@@ -1,431 +1,519 @@
-import React, { useState, useEffect } from "react";
-import "./App.css";
-import "./styles/Apple.css";
-import Sidebar from "./components/Sidebar";
+import React, { useState, useEffect, useCallback } from "react";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import {
+  useNavigate,
+  Routes,
+  Route,
+  Navigate,
+  useParams,
+} from "react-router-dom";
+import supabase from "./config/supabaseConfig";
+import Login from "./components/Login";
 import Header from "./components/Header";
-import AlunosEmAula from "./components/AlunosEmAula";
+import Sidebar from "./components/Sidebar";
+// Componentes
+import Sala from "./components/Sala";
 import Cadastros from "./components/Cadastros";
+import Configuracoes from "./components/Configuracoes";
+import HistoricoAlunos from "./components/HistoricoAlunos";
 import GerenciamentoAlunos from "./components/GerenciamentoAlunos";
 import GerenciamentoProfessores from "./components/GerenciamentoProfessores";
-import Geral from "./components/Geral";
-import Login from "./components/Login";
-import HistoricoAlunos from "./components/HistoricoAlunos";
-import CadastroExercicio from "./components/CadastroExercicio";
-import Configuracoes from "./components/Configuracoes";
-import { useAuth } from "./hooks/useAuth";
-import { reloadSupabaseSchemaCache } from "./services/supabase";
-import DetalheAluno from "./components/DetalheAluno";
+import DetalheCadastroAluno from "./components/DetalheCadastroAluno";
 import EditarAluno from "./components/EditarAluno";
-import Sala from "./components/Sala"; // Importando o componente Sala
-import aulaScheduler from "./services/scheduler"; // Importando o scheduler para finalização automática de aulas
-import { ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { SalaProvider } from "./contexts/SalaContext";
+import { CadastroAlunoProvider } from "./contexts/CadastroAlunoContext";
+import startAutoEndScheduler from "./services/scheduler";
+import "./App.css";
+
+// Chaves do localStorage
+const CADASTRO_FORM_STORAGE_KEY = "ironhouse_cadastroAlunoForm";
+const AULA_ATUAL_STORAGE_KEY = "ironhouse_aulaAtual";
+
+// Componente wrapper para DetalheCadastroAluno
+const DetalheAlunoWrapper = ({ onNavigateBack }) => {
+  const { id } = useParams();
+  return <DetalheCadastroAluno alunoId={id} onNavigateBack={onNavigateBack} />;
+};
+
+// Componente wrapper para EditarAluno
+const EditarAlunoWrapper = ({ navigate }) => {
+  const { id } = useParams();
+  return <EditarAluno alunoId={id} navigate={navigate} />;
+};
 
 const App = () => {
-  // Usando o hook de autenticação
-  const { user, loading, signIn, signOut, canAccess } = useAuth();
+  const [user, setUser] = useState(null);
+  const [userRole, setUserRole] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(
+    window.innerWidth <= 768
+  );
+  const [alunosEmAula, setAlunosEmAula] = useState([]);
+  const navigate = useNavigate();
 
-  // Estado de autenticação
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [currentUser, setCurrentUser] = useState(null);
-  const [userRole, setUserRole] = useState(null); // 'professor' ou 'admin'
-
-  const [activeSection, setActiveSection] = useState("sala"); // Alterado de "geral" para "sala"
-  // Estado para armazenar os alunos em aula, compartilhado entre os componentes
-  const [alunosEmAulaApp, setAlunosEmAulaApp] = useState([]);
-  // Estado para controlar se o sidebar está colapsado
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-
-  // Removemos os estados relacionados ao botão de recarga de cache
-  // const [mostrarBotaoRecarregarCache, setMostrarBotaoRecarregarCache] = useState(false);
-  // const [recarregandoCache, setRecarregandoCache] = useState(false);
-  // const [mensagemCache, setMensagemCache] = useState("");
-
-  // Verificar se há um usuário no localStorage ao carregar
+  // Efeito principal para autenticação e verificação de sessão
   useEffect(() => {
-    if (user) {
-      setCurrentUser(user);
-      setUserRole(user.role);
-      setIsAuthenticated(true);
-      setActiveSection("sala"); // Alterado de "geral" para "sala"
-    } else if (!loading) {
-      setIsAuthenticated(false);
-      setCurrentUser(null);
-      setUserRole(null);
-    }
-  }, [user, loading]);
+    console.log("[App.jsx] useEffect principal MONTADO/EXECUTADO");
+    let isMounted = true;
 
-  // Escuta eventos de redimensionamento da janela
-  useEffect(() => {
-    const handleResize = () => {
-      // Auto-recolhe o sidebar em dispositivos móveis
-      if (window.innerWidth <= 768 && !sidebarCollapsed) {
-        setSidebarCollapsed(true);
+    // Função para inicializar a aplicação (simplificada)
+    const initializeApp = async () => {
+      console.log("[App.jsx] Iniciando initializeApp SIMPLIFICADA...");
+
+      try {
+        // 1. Obter sessão atual
+        const { data: sessionData, error: sessionError } =
+          await supabase.auth.getSession();
+
+        if (sessionError) {
+          console.error("[App.jsx] Erro ao obter sessão:", sessionError);
+          if (isMounted) {
+            setUser(null);
+            setUserRole(null);
+            navigate("/login");
+            setLoading(false);
+          }
+          return;
+        }
+
+        const currentUser = sessionData?.session?.user;
+
+        // 2. Se não tem usuário logado, mostrar login
+        if (!currentUser) {
+          console.log("[App.jsx] Nenhum usuário logado.");
+          if (isMounted) {
+            setUser(null);
+            setUserRole(null);
+            navigate("/login");
+            setLoading(false);
+          }
+          return;
+        }
+
+        // 3. Usuário logado, definir usuário e buscar role
+        if (isMounted) {
+          setUser(currentUser);
+          console.log("[App.jsx] Usuário logado encontrado:", currentUser.id);
+        }
+
+        // 4. Buscar role do usuário
+        let userRoleValue = null;
+        try {
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("role")
+            .eq("id", currentUser.id)
+            .single();
+
+          if (profile) {
+            userRoleValue = profile.role;
+            console.log("[App.jsx] Role definida:", userRoleValue);
+          }
+        } catch (error) {
+          console.error("[App.jsx] Erro ao buscar role:", error);
+        }
+
+        // 5. IMPORTANTE: Atualizar estados MESMO QUE HAJA ERROS nas etapas anteriores
+        if (isMounted) {
+          setUserRole(userRoleValue);
+          setLoading(false);
+          console.log("[App.jsx] Inicialização concluída. Loading = false");
+        }
+      } catch (error) {
+        console.error("[App.jsx] Erro GERAL em initializeApp:", error);
+        // Mesmo com erro, definir tela de login e sair do loading
+        if (isMounted) {
+          setUser(null);
+          setUserRole(null);
+          navigate("/login");
+          setLoading(false);
+          console.log("[App.jsx] Erro na inicialização. Loading = false");
+        }
       }
     };
 
-    window.addEventListener("resize", handleResize);
+    // Chamar inicialização
+    initializeApp();
 
-    // Limpa o listener ao desmontar o componente
-    return () => {
-      window.removeEventListener("resize", handleResize);
-    };
-  }, [sidebarCollapsed]);
+    // Configurar listener de autenticação simplificado
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        console.log("[App.jsx] onAuthStateChange:", _event);
 
-  // Adicionar um novo useEffect para gerenciar o comportamento responsivo
-  useEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth <= 768) {
-        setSidebarCollapsed(true);
+        if (!isMounted) return;
+
+        const currentUser = session?.user;
+        setUser(currentUser);
+
+        if (!currentUser) {
+          // Se não tem usuário (logout), ir para login
+          setUserRole(null);
+          navigate("/login");
+          setLoading(false);
+        } else if (_event === "SIGNED_IN") {
+          // Se acabou de logar, buscar role
+          supabase
+            .from("profiles")
+            .select("role")
+            .eq("id", currentUser.id)
+            .single()
+            .then(({ data }) => {
+              if (isMounted) {
+                const role = data?.role || null;
+                setUserRole(role);
+                setLoading(false);
+              }
+            })
+            .catch((error) => {
+              console.error("[App.jsx] Erro ao buscar role após login:", error);
+              if (isMounted) {
+                setUserRole(null);
+                setLoading(false);
+              }
+            });
+        }
       }
-    };
+    );
 
-    // Executar no mount
-    handleResize();
-
-    // Adicionar listener para redimensionamento
-    window.addEventListener("resize", handleResize);
+    // Definir um fallback para garantir que loading sempre termine
+    const timeoutId = setTimeout(() => {
+      if (isMounted && loading) {
+        console.log(
+          "[App.jsx] FALLBACK: Forçando loading = false após timeout"
+        );
+        setLoading(false);
+      }
+    }, 5000); // 5 segundos
 
     // Cleanup
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
-  // Adicionando um listener para eventos de navegação
-  useEffect(() => {
-    // Event listener para navegação
-    const handleNavegacao = (event) => {
-      handleSetActiveSection(event.detail.secao);
+    return () => {
+      isMounted = false;
+      clearTimeout(timeoutId);
+      console.log("[App.jsx] Executando cleanup do useEffect principal.");
+      if (authListener && authListener.subscription) {
+        authListener.subscription.unsubscribe();
+        console.log("[App.jsx] Listener de autenticação removido.");
+      }
     };
+  }, []); // Sem dependências para evitar re-execuções
 
-    window.addEventListener("navegarPara", handleNavegacao);
+  // Efeito para o Scheduler (separado)
+  useEffect(() => {
+    let isMounted = true;
+    let stopScheduler = null;
+
+    console.log("[App.jsx] Efeito do Scheduler montado/executado.");
+
+    // Iniciar apenas se não estivermos no estado de loading inicial
+    // e se o componente ainda estiver montado
+    if (!loading && isMounted) {
+      console.log(
+        "[App.jsx] Iniciando agendamento de finalização automática..."
+      );
+      stopScheduler = startAutoEndScheduler();
+    } else {
+      console.log(
+        `[App.jsx] Scheduler não iniciado (loading: ${loading}, isMounted: ${isMounted}).`
+      );
+    }
 
     return () => {
-      window.removeEventListener("navegarPara", handleNavegacao);
-    };
-  }, []);
-
-  // Função para lidar com o login (recebe userType do componente Login)
-  const handleLogin = async (email, password, userType) => {
-    try {
-      // Chama o signIn do useAuth, passando o userType esperado
-      const result = await signIn(email, password, userType);
-
-      if (!result || !result.success) {
-        console.error(
-          "Erro durante login (App.jsx):",
-          result?.error || "Falha na autenticação"
+      isMounted = false;
+      console.log("[App.jsx] Executando cleanup do useEffect do Scheduler.");
+      if (stopScheduler) {
+        console.log(
+          "[App.jsx] Parando agendamento de finalização automática..."
         );
-        // Retorna o erro para ser exibido no componente Login
-        return {
-          success: false,
-          error:
-            result?.error ||
-            "Credenciais inválidas ou tipo de usuário incorreto.",
-        };
+        stopScheduler();
       }
+    };
+  }, [loading]); // Depende apenas do estado de loading
 
-      // Login bem-sucedido, o estado do usuário já foi atualizado pelo useAuth
-      // O useEffect que depende de [user, loading] cuidará de atualizar isAuthenticated e redirecionar
-      console.log("Login bem-sucedido (App.jsx), estado será atualizado.");
-      return { success: true, data: result.data };
+  // Adicionar um efeito para lidar com eventos de navegação customizada
+  useEffect(() => {
+    const handleNavigation = (event) => {
+      const { secao } = event.detail;
+      console.log(`[App.jsx] Evento navegarPara recebido: ${secao}`);
+
+      if (secao.startsWith("detalhe-aluno/")) {
+        const id = secao.split("/")[1];
+        navigate(`/detalhe-aluno/${id}`);
+      } else if (secao.startsWith("editar-aluno/")) {
+        const id = secao.split("/")[1];
+        navigate(`/editar-aluno/${id}`);
+      } else {
+        navigate(`/${secao}`);
+      }
+    };
+
+    window.addEventListener("navegarPara", handleNavigation);
+
+    return () => {
+      window.removeEventListener("navegarPara", handleNavigation);
+      console.log("[App.jsx] Listener de navegação removido.");
+    };
+  }, [navigate]);
+
+  // Função para verificar se o usuário pode acessar uma seção
+  const canUserAccessSection = useCallback(
+    (section) => {
+      // Seção sala é acessível por padrão para usuários logados
+      if (section === "sala" || section === "cadastros") return true;
+
+      // Verificações adicionais baseadas em role
+      if (!userRole) return false; // Para outras seções, precisa de role
+      if (userRole === "admin") return true; // Admin acessa tudo
+      if (userRole === "professor") {
+        // Professor não acessa configuracoes
+        return section !== "configuracoes";
+      }
+      return false; // Por padrão, nega acesso
+    },
+    [userRole]
+  );
+
+  // Função para lidar com o login
+  const handleLogin = async (email, password) => {
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      if (error) throw error;
+      toast.success("Login realizado com sucesso!");
+      navigate("/sala"); // Ir para sala após login bem-sucedido
     } catch (error) {
-      console.error("Exceção durante login (App.jsx):", error);
-      return {
-        success: false,
-        error: "Erro ao processar login. Tente novamente mais tarde.",
-      };
+      console.error("Erro no login:", error);
+      toast.error(`Falha no login: ${error.message}`);
     }
   };
 
   // Função para lidar com o logout
   const handleLogout = async () => {
     try {
-      // Limpar estados locais relacionados ao usuário e autenticação
-      setCurrentUser(null);
-      setIsAuthenticated(false);
-      setUserRole(null);
-      setActiveSection("sala"); // Alterado de "geral" para "sala"
-
-      // Chamar o método de signOut do hook de autenticação
-      await signOut();
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      // Limpeza de estados gerenciada pelo onAuthStateChange/useEffect
+      toast.info("Você foi desconectado.");
     } catch (error) {
-      // Forçar limpeza local mesmo com erro
-      setIsAuthenticated(false);
-      setCurrentUser(null);
-      setUserRole(null);
+      console.error("Erro no logout:", error);
+      toast.error(`Falha ao sair: ${error.message}`);
     }
   };
 
-  // Função para atualizar os alunos em aula
-  const atualizarAlunosEmAula = (alunos) => {
-    // Evitar atualizações desnecessárias comparando os IDs dos alunos
-    if (alunos.length === alunosEmAulaApp.length) {
-      const idsAtuais = new Set(alunosEmAulaApp.map((a) => a.id));
-      const todosIguais = alunos.every((aluno) => idsAtuais.has(aluno.id));
-
-      if (todosIguais) {
-        return;
-      }
-    }
-
-    // Se chegou aqui, é porque há diferença entre os arrays
-    setAlunosEmAulaApp(alunos);
-  };
+  // Função para atualizar os alunos em aula (passada para Sala)
+  const atualizarAlunosEmAula = useCallback((alunos) => {
+    setAlunosEmAula(alunos);
+  }, []);
 
   // Função para controlar o estado do sidebar
-  const toggleSidebar = () => {
-    setSidebarCollapsed(!sidebarCollapsed);
-
-    // Controle do scroll do body no mobile
-    if (window.innerWidth <= 768) {
-      if (!sidebarCollapsed) {
-        document.body.style.overflow = "";
-      } else {
-        document.body.style.overflow = "hidden";
-      }
-    }
-  };
-
-  // Função para mudar a seção ativa com verificação de formulário pendente
-  const handleSetActiveSection = (section) => {
-    // Verificar se há formulário pendente quando tentar sair da seção "cadastros"
-    const FORM_STORAGE_KEY = "cadastro_aluno_form_data";
-
-    if (activeSection === "cadastros" && section !== "cadastros") {
-      try {
-        const savedForm = localStorage.getItem(FORM_STORAGE_KEY);
-        if (savedForm) {
-          // Perguntar ao usuário se quer realmente sair e perder os dados
-          if (
-            !window.confirm(
-              "Você tem um cadastro de aluno não finalizado. Se sair agora, poderá continuar depois. Deseja realmente sair?"
-            )
-          ) {
-            // Se o usuário não confirmar, não muda de seção
-            return;
-          }
-        }
-      } catch (error) {
-        console.warn("Erro ao verificar formulário salvo:", error);
-      }
-    }
-
-    // Verificar se o usuário tem acesso a esta seção
-    if (!canUserAccessSection(section)) {
-      // Redirecionar para a página permitida padrão
-      setActiveSection("geral");
-      return;
-    }
-
-    setActiveSection(section);
-    // Em dispositivos móveis, fechar o sidebar após selecionar uma seção
-    if (window.innerWidth <= 768) {
-      setSidebarCollapsed(true);
+  const toggleSidebar = useCallback(() => {
+    setSidebarCollapsed((prev) => !prev);
+    if (window.innerWidth <= 768 && !sidebarCollapsed) {
+      document.body.style.overflow = "hidden";
+    } else {
       document.body.style.overflow = "";
     }
-  };
+  }, [sidebarCollapsed]);
 
-  // Função para verificar se o usuário pode acessar uma seção
-  const canUserAccessSection = (section) => {
-    // Administradores podem acessar todas as seções
-    if (userRole === "admin") return true;
+  // Função para mudar a rota com verificações
+  const handleNavigate = useCallback(
+    (path) => {
+      console.log(`[App.jsx] handleNavigate chamado com: ${path}`);
 
-    // Seções permitidas para professores
-    if (userRole === "professor") {
-      // Permitir acesso a todas as seções para professores também, incluindo 'sala'
-      // Removendo a lista restrita de seções
-      return true; // Professor pode acessar tudo agora
-      /*
-      const allowedSections = [
-        \"geral\",
-        \"alunos_historico\",
-        \"cadastro_exercicios\",
-        \"sala\", // Adicionando a nova seção \"sala\"
-      ];
-      return allowedSections.includes(section);
-      */
-    }
+      // Extrair a seção base da rota
+      const section = path.split("/")[1] || path;
 
-    return false; // Caso não seja admin nem professor (improvável, mas seguro)
-  };
-
-  // Verificar status de formulário em andamento ao inicializar
-  useEffect(() => {
-    // Verificar se há dados de formulário no localStorage
-    try {
-      const FORM_STORAGE_KEY = "cadastro_aluno_form_data";
-      const FORM_STATE_KEY = "cadastro_aluno_form_state";
-      const modalWasOpenKey = "modalWasOpen";
-
-      const savedForm = localStorage.getItem(FORM_STORAGE_KEY);
-      const formState = localStorage.getItem(FORM_STATE_KEY);
-
-      // Se há dados no formulário e o modal estava aberto (bloqueio de tela/atualização)
+      // 1. Verificar se está tentando sair de 'cadastros' com dados pendentes
       if (
-        savedForm &&
-        (formState === "open" ||
-          localStorage.getItem(modalWasOpenKey) === "true")
+        window.location.pathname.includes("/cadastros") &&
+        !path.includes("/cadastros")
       ) {
-        console.log("Detectado formulário em andamento após inicialização");
-
-        // Definir como primeiro useEffect a ser executado (prioridade alta)
-        setTimeout(() => {
-          // Redirecionar para seção de cadastros
-          setActiveSection("cadastros");
-
-          // Disparar evento depois de um tempo para garantir que o componente foi carregado
-          setTimeout(() => {
-            try {
-              // Disparar evento para abrir o modal com os dados
-              const event = new CustomEvent("abrirModalCadastroAluno", {
-                detail: { form: JSON.parse(savedForm) },
-              });
-              window.dispatchEvent(event);
-
-              console.log("Evento de abrir modal disparado");
-            } catch (error) {
-              console.warn("Erro ao disparar evento: ", error);
+        try {
+          const savedForm = localStorage.getItem(CADASTRO_FORM_STORAGE_KEY);
+          if (savedForm && savedForm !== "{}") {
+            if (
+              !window.confirm(
+                "Você tem dados não salvos no cadastro de aluno. Se sair agora, poderá continuar depois. Deseja realmente sair?"
+              )
+            ) {
+              return; // Não muda de seção se o usuário cancelar
             }
-          }, 800);
-        }, 300);
+          }
+        } catch (error) {
+          console.warn(
+            "Erro ao verificar formulário salvo ao sair da seção:",
+            error
+          );
+        }
       }
-    } catch (error) {
-      console.warn(
-        "Erro ao verificar formulário salvo na inicialização:",
-        error
-      );
-    }
-  }, []);
 
-  // Inicializar o scheduler de finalização automática de aulas
-  useEffect(() => {
-    // Iniciar o agendamento quando o aplicativo carregar
-    console.log(
-      "Iniciando agendamento de finalização automática de aulas às 23:59h"
-    );
-    aulaScheduler.iniciarAgendamento();
-
-    // Limpar o agendamento quando o componente for desmontado
-    return () => {
-      console.log("Parando agendamento de finalização automática de aulas");
-      aulaScheduler.pararAgendamento();
-    };
-  }, []);
-
-  // Renderiza o componente apropriado com base na seção ativa
-  const renderContent = () => {
-    // Verificar novamente se o usuário pode acessar esta seção
-    if (!canUserAccessSection(activeSection)) {
-      setActiveSection("geral");
-      return (
-        <Geral
-          alunosEmAula={alunosEmAulaApp}
-          atualizarAlunosEmAula={atualizarAlunosEmAula}
-        />
-      );
-    }
-
-    // Verificar se a seção ativa começa com "detalhe-aluno/" ou "editar-aluno/"
-    if (activeSection.startsWith("detalhe-aluno/")) {
-      const alunoId = activeSection.split("/")[1];
-      // Voltando a usar o componente DetalheAluno original em vez de DetalheCadastroAluno
-      return (
-        <DetalheAluno
-          alunoId={alunoId}
-          onNavigateBack={handleSetActiveSection}
-        />
-      );
-    }
-
-    if (activeSection.startsWith("editar-aluno/")) {
-      const editAlunoId = activeSection.split("/")[1];
-      return (
-        <EditarAluno
-          alunoId={editAlunoId}
-          setActiveSection={setActiveSection}
-        />
-      );
-    }
-
-    // Renderizando o componente Sala quando a seção ativa for "sala"
-    if (activeSection === "sala") {
-      return <Sala />;
-    }
-
-    switch (activeSection) {
-      case "geral":
-        return (
-          <Geral
-            alunosEmAula={alunosEmAulaApp}
-            atualizarAlunosEmAula={atualizarAlunosEmAula}
-          />
+      // 2. Verificar permissão de acesso
+      if (!canUserAccessSection(section)) {
+        console.warn(
+          `Usuário ${userRole} não tem permissão para acessar ${section}.`
         );
-      case "cadastros":
-        return <Cadastros userRole={userRole} />;
-      case "alunos":
-        return <GerenciamentoAlunos setActiveSection={setActiveSection} />;
-      case "professores":
-        return <GerenciamentoProfessores />;
-      case "alunos_em_aula":
-        return <AlunosEmAula atualizarAlunosEmAula={atualizarAlunosEmAula} />;
-      case "alunos_historico":
-        return <HistoricoAlunos />;
-      case "cadastro_exercicios":
-        return <CadastroExercicio />;
-      case "configuracoes":
-        return <Configuracoes />;
-      default:
-        return (
-          <Geral
-            alunosEmAula={alunosEmAulaApp}
-            atualizarAlunosEmAula={atualizarAlunosEmAula}
-          />
-        );
+        toast.warn("Você não tem permissão para acessar esta área.");
+        return; // Impede a navegação
+      }
+
+      // 3. Navegar para a rota
+      navigate(path);
+
+      // 4. Fechar sidebar em mobile
+      if (window.innerWidth <= 768) {
+        setSidebarCollapsed(true);
+        document.body.style.overflow = "";
+      }
+    },
+    [navigate, userRole, canUserAccessSection]
+  );
+
+  // Componente para verificar autenticação e redirecionar, se necessário
+  const ProtectedRoute = ({ children, requiredSection = null }) => {
+    if (loading) {
+      return <div className="loading-indicator">Carregando...</div>;
     }
+
+    if (!user) {
+      return <Navigate to="/login" replace />;
+    }
+
+    if (requiredSection && !canUserAccessSection(requiredSection)) {
+      toast.warn("Você não tem permissão para acessar esta área.");
+      return <Navigate to="/sala" replace />;
+    }
+
+    return children;
   };
-
-  // Aguardar o carregamento inicial da autenticação
-  if (loading) {
-    return <div className="loading">Carregando...</div>;
-  }
-
-  // Se não estiver autenticado, mostra a tela de login
-  if (!isAuthenticated) {
-    // Passa a função handleLogin atualizada para o componente Login
-    return <Login onLogin={handleLogin} />;
-  }
 
   return (
-    <div className="app-container">
-      <Header
-        toggleSidebar={toggleSidebar}
-        user={currentUser}
-        onLogout={handleLogout}
-      />
-      <Sidebar
-        activeSection={activeSection}
-        setActiveSection={handleSetActiveSection}
-        collapsed={sidebarCollapsed}
-        toggleSidebar={toggleSidebar}
-        userRole={userRole}
-        currentUser={currentUser}
-        onLogout={handleLogout}
-      />
-      <main className={`main-content ${sidebarCollapsed ? "expanded" : ""}`}>
-        <div className="content-wrapper">
-          {/* Removemos o botão de recarregar cache */}
-          {renderContent()}
-        </div>
-      </main>
-      <ToastContainer
-        position="top-right"
-        autoClose={3000}
-        hideProgressBar={false}
-        newestOnTop
-        closeOnClick
-        pauseOnHover
-      />
-    </div>
+    <CadastroAlunoProvider>
+      <div className="app-container">
+        {user && !loading && (
+          <>
+            <Header
+              user={user}
+              onLogout={handleLogout}
+              toggleSidebar={toggleSidebar}
+              sidebarCollapsed={sidebarCollapsed}
+            />
+            <Sidebar
+              userRole={userRole}
+              navigate={handleNavigate}
+              collapsed={sidebarCollapsed}
+              toggleSidebar={toggleSidebar}
+            />
+          </>
+        )}
+        <main
+          className={`main-content ${
+            user && !loading && !sidebarCollapsed ? "" : "expanded"
+          }`}
+        >
+          <div className="content-wrapper">
+            <Routes>
+              <Route
+                path="/login"
+                element={
+                  loading ? (
+                    <div className="loading-indicator">Carregando...</div>
+                  ) : user ? (
+                    <Navigate to="/sala" replace />
+                  ) : (
+                    <Login onLogin={handleLogin} />
+                  )
+                }
+              />
+
+              <Route
+                path="/sala"
+                element={
+                  <ProtectedRoute>
+                    <SalaProvider>
+                      <Sala
+                        userRole={userRole}
+                        alunosEmAula={alunosEmAula}
+                        atualizarAlunosEmAula={atualizarAlunosEmAula}
+                      />
+                    </SalaProvider>
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
+                path="/alunos"
+                element={
+                  <ProtectedRoute requiredSection="alunos">
+                    <GerenciamentoAlunos navigate={handleNavigate} />
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
+                path="/cadastros"
+                element={
+                  <ProtectedRoute>
+                    <Cadastros userRole={userRole} />
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
+                path="/configuracoes"
+                element={
+                  <ProtectedRoute requiredSection="configuracoes">
+                    <Configuracoes />
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
+                path="/historico"
+                element={
+                  <ProtectedRoute requiredSection="historico">
+                    <HistoricoAlunos />
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
+                path="/detalhe-aluno/:id"
+                element={
+                  <ProtectedRoute requiredSection="alunos">
+                    <DetalheAlunoWrapper onNavigateBack={handleNavigate} />
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
+                path="/editar-aluno/:id"
+                element={
+                  <ProtectedRoute requiredSection="alunos">
+                    <EditarAlunoWrapper navigate={handleNavigate} />
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
+                path="/professores"
+                element={
+                  <ProtectedRoute>
+                    <GerenciamentoProfessores navigate={handleNavigate} />
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route path="/" element={<Navigate to="/sala" replace />} />
+
+              <Route path="*" element={<Navigate to="/sala" replace />} />
+            </Routes>
+          </div>
+        </main>
+        <ToastContainer position="bottom-right" autoClose={3000} />
+      </div>
+    </CadastroAlunoProvider>
   );
 };
 

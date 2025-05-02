@@ -5,14 +5,30 @@ import alunosService from "../services/alunos.service";
 import exerciciosService from "../services/exercicios.service"; // Adicionando import para o serviço de exercícios
 import { useAuth } from "../hooks/useAuth";
 import professoresService from "../services/professores.service";
-import { supabase } from "../services/supabase";
+import supabase from "../config/supabaseConfig.js"; // Corrigido: Importação default do caminho correto
 import { toast } from "react-toastify";
 import AulaAlunosService from "../services/AulaAlunosService";
+import { useSala } from "../contexts/SalaContext"; // Importando o hook useSala
 
 function Sala() {
   const { user, loading: authLoading, isAdmin } = useAuth();
   const [salaLoading, setSalaLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // Usando o contexto SalaContext para acessar os estados persistentes
+  const {
+    alunoObservacoes,
+    exerciciosPorAluno,
+    aulaAtual: aulaAtualContext,
+    updateAlunoObservacao,
+    updateExerciciosPorAluno,
+    adicionarExercicio: addExercicio,
+    atualizarExercicio: updateExercicio,
+    removerExercicio: removeExercicio,
+    limparDadosSala,
+    removerDadosAluno,
+    setAulaAtual: setAulaAtualContext,
+  } = useSala();
 
   // Estados do professor
   const [professorAtual, setProfessorAtual] = useState(null);
@@ -24,15 +40,21 @@ function Sala() {
 
   // Estados do aluno
   const [todosAlunos, setTodosAlunos] = useState([]);
+  const [todosExercicios, setTodosExercicios] = useState([]);
   const [alunoSelecionado, setAlunoSelecionado] = useState(null);
   const [ultimosTreinos, setUltimosTreinos] = useState({});
   // Observações do cadastro do aluno (não editáveis)
   const [alunoObservacoesCadastro, setAlunoObservacoesCadastro] = useState({});
-  // Observações editáveis no campo "Adicionar Observação"
-  const [alunoObservacoes, setAlunoObservacoes] = useState({});
-  // Estados para gerenciar exercícios
-  const [todosExercicios, setTodosExercicios] = useState([]);
-  const [exerciciosPorAluno, setExerciciosPorAluno] = useState({});
+  // Mantenha setAlunoObservacoes como uma função que usa updateAlunoObservacao
+  const setAlunoObservacoes = (newObservacoes) => {
+    // Se receber um objeto, assumimos que é um conjunto de observações
+    if (typeof newObservacoes === "object") {
+      // Para cada par chave-valor no objeto, atualizar a observação daquele aluno
+      Object.entries(newObservacoes).forEach(([alunoId, observacao]) => {
+        updateAlunoObservacao(alunoId, observacao);
+      });
+    }
+  };
 
   // Estados para gerenciar feedback e processamento
   const [processandoFinalizacao, setProcessandoFinalizacao] = useState(false);
@@ -288,6 +310,11 @@ function Sala() {
   // Buscar último treino para alunos visíveis
   useEffect(() => {
     const buscarUltimosTreinosParaAlunosVisiveis = async () => {
+      console.log(
+        "[SALA] Iniciando busca de treinos, observações atuais do contexto:",
+        alunoObservacoes
+      );
+
       // Garantir que alunosEmAula é um array
       if (!Array.isArray(alunosEmAula)) {
         console.warn(
@@ -295,7 +322,6 @@ function Sala() {
           alunosEmAula
         );
         setUltimosTreinos({});
-        setAlunoObservacoes({});
         setAlunoObservacoesCadastro({});
         return;
       }
@@ -305,7 +331,6 @@ function Sala() {
           "[INFO] alunosEmAula está vazio, limpando treinos e observações."
         );
         setUltimosTreinos({});
-        setAlunoObservacoes({});
         setAlunoObservacoesCadastro({});
         return;
       }
@@ -328,6 +353,14 @@ function Sala() {
         console.log(
           `[DB_FETCH_START] Buscando dados para aluno ID: ${aluno.id} (${aluno.nome})`
         );
+
+        // Verificar se já existe uma observação no contexto para este aluno
+        if (alunoObservacoes[aluno.id]) {
+          console.log(
+            `[INFO] Observação encontrada no contexto para aluno ${aluno.id}:`,
+            alunoObservacoes[aluno.id]
+          );
+        }
 
         try {
           // 1. Buscar os dados cadastrais do aluno diretamente
@@ -456,15 +489,6 @@ function Sala() {
         }
       }
 
-      // Inicializar o campo "Adicionar Observação" em branco para todos os alunos
-      // Como solicitado, este campo deve estar vazio e não vir preenchido
-      const novasCaixasObservacao = {};
-      alunosEmAula.forEach((aluno) => {
-        if (aluno && aluno.id) {
-          novasCaixasObservacao[aluno.id] = "";
-        }
-      });
-
       // Atualizar os estados com todos os dados coletados
       console.log(
         `[UPDATE] Atualizando dados para ${
@@ -473,7 +497,11 @@ function Sala() {
       );
       setUltimosTreinos(novosUltimosTreinos);
       setAlunoObservacoesCadastro(novasObservacoesCadastro); // Observações do cadastro
-      setAlunoObservacoes(novasCaixasObservacao); // Campo editável sempre inicia vazio
+
+      // NÃO inicialize as observações vazias aqui!
+      // O Context API já deve ter carregado as observações salvas do localStorage
+      // Apenas inicialize observações para novos alunos que não têm observações ainda
+      console.log("[INFO] Preservando observações salvas no localStorage");
     };
 
     buscarUltimosTreinosParaAlunosVisiveis();
@@ -672,6 +700,9 @@ function Sala() {
           .eq("id", aula.id);
       }
 
+      // Limpar os dados do localStorage ao finalizar a aula
+      limparDadosSala();
+
       // Limpar o estado local
       setAulaAtiva(false);
       setAulaAtual(null);
@@ -735,6 +766,9 @@ function Sala() {
         console.error(`ERRO AO CANCELAR AULA: ${aulaError.message}`);
         throw aulaError;
       }
+
+      // Limpar os dados do localStorage ao cancelar a aula
+      limparDadosSala();
 
       // Limpar o estado local
       setAulaAtiva(false);
@@ -847,12 +881,15 @@ function Sala() {
             .select("*")
             .eq("id", aluno.id)
             .single();
-            
+
           if (!dadosError && dadosCompletos) {
             console.log("Dados completos do aluno obtidos:", dadosCompletos);
             alunoCompleto = dadosCompletos;
           } else {
-            console.error("Erro ao buscar dados completos do aluno:", dadosError);
+            console.error(
+              "Erro ao buscar dados completos do aluno:",
+              dadosError
+            );
           }
         } catch (dataError) {
           console.error("Erro ao buscar dados do aluno:", dataError);
@@ -885,17 +922,21 @@ function Sala() {
             // Se a aula tem um campo alunos com dados, usá-lo para atualizar o estado
             if (aulaAtualizada.alunos && Array.isArray(aulaAtualizada.alunos)) {
               // Mapear os dados atuais para preservar os dados completos dos alunos já adicionados
-              const alunosAtualizados = aulaAtualizada.alunos.map(alunoAula => {
-                // Verificar se o aluno é o que acabamos de adicionar
-                if (alunoAula.id === alunoCompleto.id) {
-                  return alunoCompleto; // Usar a versão completa que buscamos
+              const alunosAtualizados = aulaAtualizada.alunos.map(
+                (alunoAula) => {
+                  // Verificar se o aluno é o que acabamos de adicionar
+                  if (alunoAula.id === alunoCompleto.id) {
+                    return alunoCompleto; // Usar a versão completa que buscamos
+                  }
+
+                  // Para os outros alunos, manter os dados existentes de alunosEmAula
+                  const alunoExistente = alunosEmAula.find(
+                    (a) => a.id === alunoAula.id
+                  );
+                  return alunoExistente || alunoAula;
                 }
-                
-                // Para os outros alunos, manter os dados existentes de alunosEmAula
-                const alunoExistente = alunosEmAula.find(a => a.id === alunoAula.id);
-                return alunoExistente || alunoAula;
-              });
-              
+              );
+
               setAlunosEmAula(alunosAtualizados);
             }
           }
@@ -1101,40 +1142,20 @@ function Sala() {
 
   // Função para adicionar um novo exercício para um aluno específico
   const adicionarExercicio = (alunoId, exercicioId = null) => {
-    // Inicializar a estrutura para este aluno se ainda não existir
-    if (!exerciciosPorAluno[alunoId]) {
-      setExerciciosPorAluno((prev) => ({
-        ...prev,
-        [alunoId]: [],
-      }));
-    }
-
-    // Adicionar um novo item vazio à lista de exercícios deste aluno
-    setExerciciosPorAluno((prev) => ({
-      ...prev,
-      [alunoId]: [
-        ...(prev[alunoId] || []),
-        { id: exercicioId, exercicio_id: exercicioId },
-      ],
-    }));
+    // Usar a função do contexto para adicionar exercício e persistir no localStorage
+    addExercicio(alunoId, exercicioId);
   };
 
   // Função para atualizar um exercício selecionado
   const atualizarExercicio = (alunoId, index, exercicioId) => {
-    setExerciciosPorAluno((prev) => {
-      const exerciciosDoAluno = [...(prev[alunoId] || [])];
-      exerciciosDoAluno[index] = { id: exercicioId, exercicio_id: exercicioId };
-      return { ...prev, [alunoId]: exerciciosDoAluno };
-    });
+    // Usar a função do contexto para atualizar exercício e persistir no localStorage
+    updateExercicio(alunoId, index, exercicioId);
   };
 
   // Função para remover um exercício
   const removerExercicio = (alunoId, index) => {
-    setExerciciosPorAluno((prev) => {
-      const exerciciosDoAluno = [...(prev[alunoId] || [])];
-      exerciciosDoAluno.splice(index, 1);
-      return { ...prev, [alunoId]: exerciciosDoAluno };
-    });
+    // Usar a função do contexto para remover exercício e persistir no localStorage
+    removeExercicio(alunoId, index);
   };
 
   return (
@@ -1316,77 +1337,36 @@ function Sala() {
                         </div>
                       </div>
 
-                      {/* Seleção de exercícios */}
-                      <div className="painel-exercicios">
-                        <div className="card-container">
-                          <h4>Exercícios</h4>
-                          <div className="exercicios-container">
-                            {/* Lista de exercícios adicionados */}
-                            {exerciciosPorAluno[aluno.id]?.map(
-                              (exercicioItem, idx) => (
-                                <div key={idx} className="exercicio-row">
-                                  <select
-                                    value={exercicioItem.exercicio_id || ""}
-                                    onChange={(e) =>
-                                      atualizarExercicio(
-                                        aluno.id,
-                                        idx,
-                                        e.target.value
-                                      )
-                                    }
-                                    className="exercicio-dropdown"
-                                  >
-                                    <option value="">
-                                      Selecione um exercício
-                                    </option>
-                                    {todosExercicios.map((ex) => (
-                                      <option key={ex.id} value={ex.id}>
-                                        {ex.nome} - {ex.musculatura} (
-                                        {ex.aparelho || "N/A"})
-                                      </option>
-                                    ))}
-                                  </select>
-                                  <button
-                                    className="btn-remover-exercicio"
-                                    onClick={() =>
-                                      removerExercicio(aluno.id, idx)
-                                    }
-                                  >
-                                    x
-                                  </button>
-                                </div>
-                              )
-                            )}
-
-                            {/* Botão para adicionar novo exercício */}
-                            <button
-                              className="btn-adicionar-exercicio"
-                              onClick={() => adicionarExercicio(aluno.id)}
-                            >
-                              + Adicionar exercício
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-
                       {/* Adicionar observação */}
                       <div className="painel-adicionar-observacao">
                         <div className="card-container">
                           <h4>Adicionar Observação</h4>
                           <div className="adicionar-observacao-content">
-                            <textarea
-                              className="observacao-textarea"
-                              value={alunoObservacoes[aluno.id] || ""}
-                              onChange={(e) =>
-                                setAlunoObservacoes({
-                                  ...alunoObservacoes,
-                                  [aluno.id]: e.target.value,
-                                })
-                              }
-                              placeholder={`Adicione observações para ${aluno.nome} ...`}
-                              rows={5}
-                            ></textarea>
-
+                            {(() => {
+                              // Log para depurar o valor passado para o textarea
+                              const observacaoAtual =
+                                alunoObservacoes[aluno.id] || "";
+                              console.log(
+                                `[SALA RENDER] Aluno ${aluno.id} (${aluno.nome}) - Valor da observação para textarea:`,
+                                observacaoAtual
+                              );
+                              return (
+                                <textarea
+                                  className="observacao-textarea"
+                                  value={observacaoAtual}
+                                  onChange={(e) => {
+                                    // Usar a função do contexto para atualizar a observação do aluno
+                                    // e persistir no localStorage
+                                    updateAlunoObservacao(
+                                      aluno.id,
+                                      e.target.value
+                                    );
+                                  }}
+                                  placeholder={`Adicione observações para ${aluno.nome} ...`}
+                                  rows={5}
+                                ></textarea>
+                              );
+                            })()}
                             <div className="observacao-actions">
                               <button
                                 className="btn-cancelar-aluno"

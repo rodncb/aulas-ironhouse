@@ -1,7 +1,7 @@
 .sidebar {
   width: var(--sidebar-width);
-  background-color: var(--apple-dark);
-  color: var(--apple-text-dark);
+  background-color: #000000; /* Alterado para preto */
+  color: #ffffff; /* Alterado para branco */
   height: 100vh;
   position: fixed;
   left: 0;
@@ -27,39 +27,24 @@
   padding: 1rem;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end; /* Alterado para alinhar à direita */
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.logo-container {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  min-width: 30px;
-}
-
-.logo {
-  height: 40px;
-  transition: all var(--transition-speed) ease;
-}
-
-.logo.icon {
-  height: 30px;
 }
 
 .collapse-button {
   background: none;
   border: none;
-  color: var(--apple-text-dark);
+  color: #ffffff;
   cursor: pointer;
-  width: 30px;
-  height: 30px;
+  width: 32px; /* Aumentado para dar mais espaço */
+  height: 32px; /* Aumentado para dar mais espaço */
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 50%;
   transition: all 0.2s;
+  margin: 0; /* Resetando margens */
+  padding: 0; /* Resetando padding */
 }
 
 .collapse-button:hover {
@@ -67,7 +52,7 @@
 }
 
 .collapse-icon {
-  font-size: 0.8rem;
+  font-size: 1rem; /* Aumentado para melhor visibilidade */
 }
 
 /* Ajustes na seção de informações do usuário */
@@ -133,7 +118,7 @@
   gap: 1rem;
   cursor: pointer;
   transition: all 0.2s;
-  color: var(--apple-text-dark);
+  color: var(--apple-text-light, #ffffff); /* Garantindo cor branca ou clara */
   text-decoration: none;
   position: relative;
 }
@@ -155,6 +140,10 @@
   width: 20px;
   text-align: center;
   font-size: 1.1rem;
+  color: var(
+    --apple-text-light,
+    #ffffff
+  ); /* Garantindo que o ícone também seja visível */
 }
 
 .sidebar-item span {

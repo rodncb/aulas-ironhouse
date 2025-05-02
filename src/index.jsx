@@ -5,15 +5,18 @@ import App from "./App.jsx";
 import reportWebVitals from "./reportWebVitals";
 import { BrowserRouter } from "react-router-dom";
 import { AuthProvider } from "./hooks/useAuth"; // Importar o AuthProvider
+import { CadastroAlunoProvider } from "./contexts/CadastroAlunoContext"; // Importar o CadastroAlunoProvider
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
   <React.StrictMode>
     <BrowserRouter basename="/">
       <AuthProvider>
-        {" "}
-        {/* Envolver o App com o AuthProvider */}
-        <App />
+        <CadastroAlunoProvider>
+          {" "}
+          {/* Envolver com CadastroAlunoProvider */}
+          <App />
+        </CadastroAlunoProvider>
       </AuthProvider>
     </BrowserRouter>
   </React.StrictMode>

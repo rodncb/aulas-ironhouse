@@ -1,4 +1,4 @@
-import { supabase } from "./supabase";
+import supabase from "../config/supabaseConfig.js"; // Corrigido: Importação default do caminho correto
 
 export const professoresService = {
   async getAll() {

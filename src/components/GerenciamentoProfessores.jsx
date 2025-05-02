@@ -3,8 +3,12 @@ import "../styles/GerenciamentoProfessores.css";
 import { voltarPagina, getStatusLabel } from "../lib/utils"; // Importar funções utilitárias
 import professoresService from "../services/professores.service"; // Importação do serviço de professores
 import aulasService from "../services/aulas.service"; // Importação do serviço de aulas como export padrão
+import { useNavigate } from "react-router-dom"; // Importando o hook useNavigate
 
 const GerenciamentoProfessores = (props) => {
+  // Hook useNavigate para navegação
+  const navigate = useNavigate();
+
   const [showModal, setShowModal] = useState(false);
   const [modoEdicao, setModoEdicao] = useState(false);
   const [professorEditando, setProfessorEditando] = useState(null);
@@ -265,13 +269,14 @@ const GerenciamentoProfessores = (props) => {
 
   // Função para voltar para a página sala
   const voltarParaSala = () => {
-    // Usa setActiveSection para voltar para Sala
-    if (props.setActiveSection) {
-      props.setActiveSection("sala");
+    if (navigate) {
+      navigate("/sala");
+    } else if (props.navigate) {
+      props.navigate("/sala");
     } else {
-      // Fallback (menos ideal, mas mantém alguma navegação)
+      // Fallback usando evento de navegação customizado
       console.warn(
-        "setActiveSection não foi passada como prop para GerenciamentoProfessores"
+        "Função navigate não foi passada como prop para GerenciamentoProfessores"
       );
       const event = new CustomEvent("navegarPara", {
         detail: { secao: "sala" },

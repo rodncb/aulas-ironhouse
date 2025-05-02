@@ -1,4 +1,4 @@
-import { supabase, reloadSupabaseSchemaCache } from "./supabase";
+import supabase from "../config/supabaseConfig.js"; // Corrigido: Importação default do caminho correto
 
 /**
  * Obtém um aluno específico pelo ID
@@ -151,9 +151,6 @@ export const obterHistoricoAulasPorAluno = async (alunoId) => {
  */
 export const atualizarAluno = async (id, dadosAluno) => {
   try {
-    // Forçar a recarga do cache do esquema antes de qualquer operação
-    await reloadSupabaseSchemaCache();
-
     // Verifica se a idade é uma string e converte para número
     if (dadosAluno.idade && typeof dadosAluno.idade === "string") {
       dadosAluno.idade = parseInt(dadosAluno.idade);

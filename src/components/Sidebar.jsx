@@ -1,36 +1,26 @@
 import React, { useEffect } from "react";
 import "../styles/Sidebar.css";
-import logoCompleta from "../assets/logo_completa.png";
-import logoIcone from "../assets/logo_icone.png";
+import { Link, useLocation } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faUsers,
-  faDumbbell,
   faUser,
   faChevronLeft,
   faChevronRight,
-  faUserPlus,
-  faChartPie,
   faSignOutAlt,
-  faHistory,
   faChalkboard, // Ícone para a Sala
 } from "@fortawesome/free-solid-svg-icons";
 
 const FORM_STORAGE_KEY = "cadastro_aluno_form_data";
 const FORM_STATE_KEY = "cadastro_aluno_form_state";
 
-function Sidebar({
-  activeSection,
-  setActiveSection,
-  collapsed,
-  toggleSidebar,
-  userRole,
-  currentUser,
-  onLogout,
-}) {
+function Sidebar({ navigate, collapsed, toggleSidebar, userRole, onLogout }) {
+  const location = useLocation();
+  const currentPath = location.pathname;
+
   // Função para determinar a classe da seção ativa
-  const getClassName = (section) => {
-    return `sidebar-item ${activeSection === section ? "active" : ""}`;
+  const getClassName = (path) => {
+    return `sidebar-item ${currentPath === path ? "active" : ""}`;
   };
 
   // Controle do overlay e scroll do body em mobile
@@ -59,7 +49,7 @@ function Sidebar({
       const savedAlunoCadastro = localStorage.getItem(FORM_STORAGE_KEY);
 
       // Se existir um formulário salvo e o usuário não está na página de cadastro
-      if (savedAlunoCadastro && activeSection !== "cadastros") {
+      if (savedAlunoCadastro && !currentPath.includes("/cadastros")) {
         // Perguntar ao usuário se deseja continuar o cadastro - usando window.confirm para evitar ESLint error
         if (
           window.confirm(
@@ -67,7 +57,7 @@ function Sidebar({
           )
         ) {
           // Redirecionar para a seção de cadastros
-          setActiveSection("cadastros");
+          navigate("/cadastros");
         }
       }
     } catch (error) {
@@ -77,21 +67,21 @@ function Sidebar({
     // Adicionar listener para eventos de visibilidade para manter seção atual
     const handleVisibilityChange = () => {
       if (document.visibilityState === "visible") {
-        const lastSection = localStorage.getItem("lastActiveSection");
+        const lastPath = localStorage.getItem("lastActivePath");
         const savedForm = localStorage.getItem(FORM_STORAGE_KEY);
 
         // Se temos um formulário salvo e a última seção era cadastros
         if (
           savedForm &&
-          lastSection === "cadastros" &&
-          activeSection !== "cadastros"
+          lastPath === "/cadastros" &&
+          currentPath !== "/cadastros"
         ) {
           if (
             window.confirm(
               "Você estava cadastrando um aluno. Deseja continuar?"
             )
           ) {
-            setActiveSection("cadastros");
+            navigate("/cadastros");
           }
         }
       }
@@ -102,12 +92,12 @@ function Sidebar({
     return () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [setActiveSection, activeSection]);
+  }, [navigate, currentPath]);
 
   // Função para fechar o sidebar e mudar de seção
-  const handleSectionChange = (section) => {
+  const handleNavigation = (path) => {
     // Se estamos na seção "cadastros" e queremos mudar para outra
-    if (activeSection === "cadastros" && section !== "cadastros") {
+    if (currentPath === "/cadastros" && path !== "/cadastros") {
       try {
         const savedForm = localStorage.getItem(FORM_STORAGE_KEY);
         const formState = localStorage.getItem(FORM_STATE_KEY);
@@ -132,12 +122,13 @@ function Sidebar({
 
     // Salvar a seção atual no localStorage
     try {
-      localStorage.setItem("lastActiveSection", section);
+      localStorage.setItem("lastActivePath", path);
     } catch (error) {
-      console.warn("Erro ao salvar seção atual:", error);
+      console.warn("Erro ao salvar caminho atual:", error);
     }
 
-    setActiveSection(section);
+    navigate(path);
+
     if (window.innerWidth <= 768) {
       toggleSidebar();
     }
@@ -152,11 +143,6 @@ function Sidebar({
     }
   };
 
-  // Determinar o nome de exibição do usuário
-  const displayName = currentUser
-    ? currentUser.email || currentUser.nome || "Usuário"
-    : "Usuário";
-
   return (
     <>
       {/* Overlay para dispositivos móveis */}
@@ -169,13 +155,6 @@ function Sidebar({
 
       <div className={`sidebar ${collapsed ? "collapsed" : ""}`}>
         <div className="sidebar-header">
-          <div className="logo-container">
-            <img
-              src={collapsed ? logoIcone : logoCompleta}
-              alt="Logo Iron House"
-              className={`logo ${collapsed ? "icon" : "complete"}`}
-            />
-          </div>
           <button className="collapse-button" onClick={toggleSidebar}>
             <FontAwesomeIcon
               icon={collapsed ? faChevronRight : faChevronLeft}
@@ -184,65 +163,33 @@ function Sidebar({
           </button>
         </div>
 
-        {currentUser && (
-          <div className="user-info">
-            {!collapsed && (
-              <>
-                <span className="user-name">{displayName}</span>
-                <span className="user-role">
-                  {userRole === "admin" ? "Administrador" : "Professor"}
-                </span>
-              </>
-            )}
-          </div>
-        )}
-
         <div className="sidebar-menu">
           {/* Sala como primeira opção no menu para todos os usuários */}
           <div
-            className={getClassName("sala")}
-            onClick={() => handleSectionChange("sala")}
+            className={getClassName("/sala")}
+            onClick={() => handleNavigation("/sala")}
           >
             <FontAwesomeIcon icon={faChalkboard} className="sidebar-icon" />
             {!collapsed && <span>Sala</span>}
           </div>
 
-          {/* Dashboard comentado - temporariamente removido */}
-          {/* <div
-            className={getClassName("geral")}
-            onClick={() => handleSectionChange("geral")}
-          >
-            <FontAwesomeIcon icon={faChartPie} className="sidebar-icon" />
-            {!collapsed && <span>Dashboard</span>}
-          </div> */}
-
-          {/* Opções comuns para professores e administradores */}
+          {/* Alunos */}
           <div
-            className={getClassName("cadastros")}
-            onClick={() => handleSectionChange("cadastros")}
-          >
-            <FontAwesomeIcon icon={faUserPlus} className="sidebar-icon" />
-            {!collapsed && <span>Cadastros</span>}
-          </div>
-
-          <div
-            className={getClassName("alunos")}
-            onClick={() => handleSectionChange("alunos")}
+            className={getClassName("/alunos")}
+            onClick={() => handleNavigation("/alunos")}
           >
             <FontAwesomeIcon icon={faUsers} className="sidebar-icon" />
             {!collapsed && <span>Alunos</span>}
           </div>
 
-          {/* Módulo de Professores - apenas para administradores */}
-          {userRole === "admin" && (
-            <div
-              className={getClassName("professores")}
-              onClick={() => handleSectionChange("professores")}
-            >
-              <FontAwesomeIcon icon={faUser} className="sidebar-icon" />
-              {!collapsed && <span>Professores</span>}
-            </div>
-          )}
+          {/* Módulo de Professores */}
+          <div
+            className={getClassName("/professores")}
+            onClick={() => handleNavigation("/professores")}
+          >
+            <FontAwesomeIcon icon={faUser} className="sidebar-icon" />
+            {!collapsed && <span>Professores</span>}
+          </div>
         </div>
 
         {/* Botão de logout */}

@@ -930,3 +930,95 @@ body.dropdown-active::after {
     right: 5px;
   }
 }
+
+/* Estilos para as abas de Alunos Ativos/Inativos */
+.alunos-tabs {
+  display: flex;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.tab-button {
+  padding: 12px 20px;
+  background-color: transparent;
+  border: none;
+  border-bottom: 3px solid transparent;
+  font-size: 16px;
+  font-weight: 500;
+  color: #6c757d;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.tab-button.active {
+  color: #2196f3;
+  border-bottom-color: #2196f3;
+}
+
+.tab-button:hover:not(.active) {
+  color: #495057;
+  background-color: #f8f9fa;
+}
+
+/* Contador de alunos nas abas */
+.tab-button[data-count]::after {
+  content: attr(data-count);
+  position: absolute;
+  top: 8px;
+  right: 5px;
+  background-color: #2196f3;
+  color: white;
+  font-size: 12px;
+  padding: 2px 6px;
+  border-radius: 10px;
+  font-weight: bold;
+}
+
+/* Ajustes para botões de ação conforme imagem */
+.btn-acao {
+  margin: 2px;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+}
+
+.btn-detalhes {
+  background-color: #2196f3;
+  color: white;
+}
+
+.btn-detalhes:hover {
+  background-color: #0d8aee;
+}
+
+.btn-editar {
+  background-color: #4caf50;
+  color: white;
+}
+
+.btn-editar:hover {
+  background-color: #43a047;
+}
+
+.btn-inativar {
+  background-color: #f44336;
+  color: white;
+}
+
+.btn-inativar:hover {
+  background-color: #e53935;
+}
+
+.btn-ativar {
+  background-color: #ff9800;
+  color: white;
+}
+
+.btn-ativar:hover {
+  background-color: #fb8c00;
+}

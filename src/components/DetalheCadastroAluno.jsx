@@ -7,6 +7,10 @@ const DetalheCadastroAluno = ({ aluno, alunoId, onNavigateBack }) => {
   const [dadosAluno, setDadosAluno] = useState(null);
   const [carregandoAluno, setCarregandoAluno] = useState(false);
   const [erro, setErro] = useState(null);
+  const [editandoObservacoes, setEditandoObservacoes] = useState(false);
+  const [observacoes, setObservacoes] = useState("");
+  const [salvandoObservacoes, setSalvandoObservacoes] = useState(false);
+  const [sucessoSalvar, setSucessoSalvar] = useState(false);
 
   // Quando componente recebe alunoId em vez do objeto aluno completo
   useEffect(() => {
@@ -38,6 +42,7 @@ const DetalheCadastroAluno = ({ aluno, alunoId, onNavigateBack }) => {
 
         console.log("Dados do aluno carregados:", data);
         setDadosAluno(data);
+        setObservacoes(data.observacoes || "");
       } catch (err) {
         console.error("Erro ao carregar dados do aluno:", err);
         setErro(`Erro ao carregar dados do aluno: ${err.message}`);
@@ -48,11 +53,52 @@ const DetalheCadastroAluno = ({ aluno, alunoId, onNavigateBack }) => {
 
     if (alunoId && !aluno) {
       buscarDadosAluno();
+    } else if (aluno) {
+      setObservacoes(aluno.observacoes || "");
     }
   }, [alunoId, aluno]);
 
   // Usar o objeto aluno que foi passado diretamente, ou o que foi buscado pelo ID
   const alunoAtual = aluno || dadosAluno;
+
+  // Função para salvar as observações editadas
+  const salvarObservacoes = async () => {
+    if (!alunoAtual || !alunoAtual.id) return;
+
+    try {
+      setSalvandoObservacoes(true);
+      setErro(null);
+      setSucessoSalvar(false);
+
+      const { error } = await supabase
+        .from("alunos")
+        .update({ observacoes })
+        .eq("id", alunoAtual.id);
+
+      if (error) throw error;
+
+      // Atualizar o objeto local
+      if (dadosAluno) {
+        setDadosAluno({
+          ...dadosAluno,
+          observacoes,
+        });
+      }
+
+      setSucessoSalvar(true);
+      setEditandoObservacoes(false);
+
+      // Esconder a mensagem de sucesso após alguns segundos
+      setTimeout(() => {
+        setSucessoSalvar(false);
+      }, 3000);
+    } catch (err) {
+      console.error("Erro ao salvar observações:", err);
+      setErro(`Erro ao salvar observações: ${err.message}`);
+    } finally {
+      setSalvandoObservacoes(false);
+    }
+  };
 
   // Função para formatar a data no padrão brasileiro
   const formatarData = (dataString) => {
@@ -104,6 +150,10 @@ const DetalheCadastroAluno = ({ aluno, alunoId, onNavigateBack }) => {
   return (
     <div className="detalhes-aluno">
       <h2>Detalhes do Cadastro: {alunoAtual.nome}</h2>
+
+      {sucessoSalvar && (
+        <div className="success-message">Observações salvas com sucesso!</div>
+      )}
 
       <div className="detalhes-grid">
         {/* Dados Pessoais */}
@@ -187,11 +237,53 @@ const DetalheCadastroAluno = ({ aluno, alunoId, onNavigateBack }) => {
               </div>
             </div>
 
-            <p className="titulo-observacoes">
-              <strong>Observações:</strong>
-            </p>
-            <div className="observacoes-texto">
-              {alunoAtual.observacoes || "Nenhuma observação cadastrada"}
+            <div className="observacoes-section">
+              <p className="titulo-observacoes">
+                <strong>Observações:</strong>
+                {!editandoObservacoes && (
+                  <button
+                    className="btn-editar-mini"
+                    onClick={() => setEditandoObservacoes(true)}
+                  >
+                    Editar
+                  </button>
+                )}
+              </p>
+
+              {editandoObservacoes ? (
+                <div className="observacoes-editor">
+                  <textarea
+                    value={observacoes}
+                    onChange={(e) => setObservacoes(e.target.value)}
+                    rows={5}
+                    placeholder="Digite observações sobre o aluno..."
+                    className="observacoes-textarea"
+                  />
+                  <div className="observacoes-actions">
+                    <button
+                      className="btn-cancelar-mini"
+                      onClick={() => {
+                        setEditandoObservacoes(false);
+                        setObservacoes(alunoAtual.observacoes || "");
+                      }}
+                      disabled={salvandoObservacoes}
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      className="btn-salvar-observacao"
+                      onClick={salvarObservacoes}
+                      disabled={salvandoObservacoes}
+                    >
+                      {salvandoObservacoes ? "Salvando..." : "Salvar"}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="observacoes-texto">
+                  {observacoes || "Nenhuma observação cadastrada"}
+                </div>
+              )}
             </div>
           </div>
         </div>

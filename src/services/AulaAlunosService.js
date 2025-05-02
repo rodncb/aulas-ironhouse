@@ -1,4 +1,4 @@
-import { supabase } from "./supabase";
+import supabase from "../config/supabaseConfig.js"; // Corrigido: Importação default do caminho correto
 
 /**
  * Serviço para gerenciar a relação entre aulas e alunos utilizando a tabela de junção aula_alunos

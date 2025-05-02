@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from "react";
 import "../styles/GerenciamentoAlunos.css";
-import { supabase } from "../services/supabase";
-import { reloadSupabaseSchemaCache } from "../services/supabase";
-import { navegarPara } from "../lib/utils";
+import supabase from "../config/supabaseConfig";
+import { useNavigate, useParams } from "react-router-dom";
 
 // Chave para armazenamento no localStorage
 const FORM_STORAGE_KEY = "gerenciamento_alunos_form_data";
 
-function GerenciamentoAlunos({ setActiveSection }) {
+function GerenciamentoAlunos({ navigate }) {
   const [alunos, setAlunos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -19,7 +18,7 @@ function GerenciamentoAlunos({ setActiveSection }) {
   const [hasSavedForm, setHasSavedForm] = useState(false); // Estado para controlar se há formulário salvo
   const [novoAluno, setNovoAluno] = useState({
     nome: "",
-    dataNascimento: "", // Novo campo no lugar de idade
+    dataNascimento: "",
     lesao: "Não",
     tipo_lesao: "",
     objetivo: "",
@@ -29,11 +28,23 @@ function GerenciamentoAlunos({ setActiveSection }) {
     status: "ativo",
   });
 
+  // Usar React Router diretamente quando navigate não é passado como prop
+  const routerNavigate = useNavigate();
+
+  // Função de navegação que usa a prop navigate ou o hook useNavigate
+  const handleNavigate = (path) => {
+    console.log(`[GerenciamentoAlunos] Navegando para: ${path}`);
+    if (typeof navigate === "function") {
+      navigate(path);
+    } else {
+      routerNavigate(path);
+    }
+  };
+
   // Forçar atualização do cache do esquema na montagem
   useEffect(() => {
     async function inicializar() {
       try {
-        await reloadSupabaseSchemaCache();
         await carregarAlunos();
       } catch (err) {
         setError("Erro ao inicializar a página. Tente recarregar.");
@@ -49,7 +60,6 @@ function GerenciamentoAlunos({ setActiveSection }) {
     try {
       const savedForm = localStorage.getItem(FORM_STORAGE_KEY);
       if (savedForm) {
-        const parsedForm = JSON.parse(savedForm);
         setHasSavedForm(true);
       }
     } catch (error) {
@@ -65,19 +75,11 @@ function GerenciamentoAlunos({ setActiveSection }) {
       const {
         data: { session },
       } = await supabase.auth.getSession();
-      if (session) {
-        // Vamos verificar a role na tabela profiles
-        const { data: profileData, error: profileError } = await supabase
-          .from("profiles")
-          .select("role")
-          .eq("id", session.user.id)
-          .single();
-
-        if (profileError) {
-          // Erro ao buscar perfil
-        }
-      } else {
+      if (!session) {
         // Usuário não está autenticado
+        setError("Usuário não está autenticado");
+        setLoading(false);
+        return;
       }
 
       const { data, error } = await supabase
@@ -104,21 +106,12 @@ function GerenciamentoAlunos({ setActiveSection }) {
       setAtualizandoAluno(id);
       setError(null);
 
-      // Forçar atualização do cache antes de atualizar
-      await reloadSupabaseSchemaCache();
-
-      // Atualização executada após o refresh do cache
       const { error } = await supabase
         .from("alunos")
         .update({ status: novoStatus })
         .eq("id", id);
 
       if (error) {
-        // Se o erro for de cache, tentar recarregar novamente
-        if (error.message.includes("schema cache")) {
-          await reloadSupabaseSchemaCache();
-          // Opcionalmente, tentar a operação novamente aqui ou apenas recarregar os dados
-        }
         throw error;
       }
 
@@ -143,11 +136,6 @@ function GerenciamentoAlunos({ setActiveSection }) {
         ) {
           const parsedForm = JSON.parse(savedForm);
           setNovoAluno(parsedForm);
-
-          // Uma vez que o formulário foi restaurado, podemos remover a indicação
-          // visual, mas mantemos os dados no localStorage até que sejam enviados
-          // ou explicitamente descartados
-          localStorage.setItem(FORM_STORAGE_KEY, JSON.stringify(parsedForm));
         } else {
           // Se o usuário não quiser carregar, limpar os dados
           localStorage.removeItem(FORM_STORAGE_KEY);
@@ -246,9 +234,6 @@ function GerenciamentoAlunos({ setActiveSection }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      // Forçar atualização do cache antes de cadastrar
-      await reloadSupabaseSchemaCache();
-
       // Corrigir o valor de "lesao" para garantir que não contenha acentuação
       let lesaoCorrigida = novoAluno.lesao;
       if (lesaoCorrigida === "Não") {
@@ -287,10 +272,7 @@ function GerenciamentoAlunos({ setActiveSection }) {
         observacoes: novoAluno.observacoes || null,
       };
 
-      const { data, error } = await supabase
-        .from("alunos")
-        .insert([alunoParaSalvar])
-        .select();
+      const { error } = await supabase.from("alunos").insert([alunoParaSalvar]);
 
       if (error) throw error;
 
@@ -408,10 +390,10 @@ function GerenciamentoAlunos({ setActiveSection }) {
       <table className="data-table">
         <thead>
           <tr>
-            <th>Nome</th>
-            <th>Telefone</th>
-            <th>Status</th>
-            <th>Ações</th>
+            <th>NOME</th>
+            <th>TELEFONE</th>
+            <th>STATUS</th>
+            <th>AÇÕES</th>
           </tr>
         </thead>
         <tbody>
@@ -425,18 +407,25 @@ function GerenciamentoAlunos({ setActiveSection }) {
                     aluno.status === "ativo" ? "atual" : "cancelada"
                   }`}
                 >
-                  {aluno.status === "ativo" ? "Ativo" : "Inativo"}
+                  {aluno.status.toUpperCase() === "ATIVO" ? "ATIVO" : "INATIVO"}
                 </span>
               </td>
               <td className="acoes">
                 <button
                   className="btn-acao btn-detalhes"
                   onClick={() => {
-                    const secao = `detalhe-aluno/${aluno.id}`;
-                    if (setActiveSection) {
-                      setActiveSection(secao);
-                    } else {
-                      navegarPara(secao);
+                    try {
+                      const path = `/detalhe-aluno/${aluno.id}`;
+                      handleNavigate(path);
+                      console.log(`Navegando para: ${path}`);
+                    } catch (error) {
+                      console.error(
+                        "Erro ao navegar para detalhes do aluno:",
+                        error
+                      );
+                      alert(
+                        "Não foi possível abrir os detalhes do aluno. Por favor, tente novamente."
+                      );
                     }
                   }}
                 >
@@ -445,11 +434,18 @@ function GerenciamentoAlunos({ setActiveSection }) {
                 <button
                   className="btn-acao btn-editar"
                   onClick={() => {
-                    const secao = `editar-aluno/${aluno.id}`;
-                    if (setActiveSection) {
-                      setActiveSection(secao);
-                    } else {
-                      navegarPara(secao);
+                    try {
+                      const path = `/editar-aluno/${aluno.id}`;
+                      handleNavigate(path);
+                      console.log(`Navegando para: ${path}`);
+                    } catch (error) {
+                      console.error(
+                        "Erro ao navegar para edição do aluno:",
+                        error
+                      );
+                      alert(
+                        "Não foi possível abrir a edição do aluno. Por favor, tente novamente."
+                      );
                     }
                   }}
                 >

@@ -1,13 +1,7 @@
-import {
-  useState,
-  useEffect,
-  useCallback,
-  useRef,
-  createContext,
-  useContext,
-} from "react";
+import { useState, useEffect, createContext, useContext, useRef } from "react"; // Adicionado useRef
+import supabase from "../config/supabaseConfig.js"; // Corrigido: Importação default do caminho correto
+
 import authService from "../services/auth.service";
-import { supabase } from "../services/supabase";
 
 // Create the context with a default value
 const AuthContext = createContext(undefined);
