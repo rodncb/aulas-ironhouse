@@ -1,0 +1,16 @@
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    ignore:
+      # Ignorar vulnerabilidades em nth-check que são dependências do webpack/svgo
+      - dependency-name: "nth-check"
+        versions: ["<2.0.1"]
+      # Ignorar vulnerabilidades em postcss que são dependências transitivas
+      - dependency-name: "postcss"
+        versions: ["<8.4.31"]
+    # Definir limites de vulnerabilidade - apenas alertar para vulnerabilidades críticas
+    vulnerability-alerts:
+      enabled: true
