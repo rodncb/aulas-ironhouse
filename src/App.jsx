@@ -46,9 +46,7 @@ const App = () => {
   const [user, setUser] = useState(null);
   const [userRole, setUserRole] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(
-    window.innerWidth <= 768
-  );
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(true); // Sempre inicia como true (colapsado/escondido)
   const [alunosEmAula, setAlunosEmAula] = useState([]);
   const navigate = useNavigate();
 
@@ -309,13 +307,21 @@ const App = () => {
 
   // Função para controlar o estado do sidebar
   const toggleSidebar = useCallback(() => {
-    setSidebarCollapsed((prev) => !prev);
-    if (window.innerWidth <= 768 && !sidebarCollapsed) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
-  }, [sidebarCollapsed]);
+    setSidebarCollapsed((prev) => {
+      const newState = !prev;
+      // Controlar o scroll do body quando o sidebar está aberto em mobile
+      if (window.innerWidth <= 768) {
+        if (newState) {
+          // Fechando o sidebar
+          document.body.style.overflow = "";
+        } else {
+          // Abrindo o sidebar
+          document.body.style.overflow = "hidden";
+        }
+      }
+      return newState;
+    });
+  }, []);
 
   // Função para mudar a rota com verificações
   const handleNavigate = useCallback(

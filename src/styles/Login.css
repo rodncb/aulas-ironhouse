@@ -1,6 +1,9 @@
 .login-container {
-  width: 100%;
+  width: 100vw; /* 100% da largura da viewport */
+  height: 100vh; /* 100% da altura da viewport */
   min-height: 100vh;
+  padding: 0;
+  margin: 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -9,7 +12,13 @@
     url("https://images.unsplash.com/photo-1534438327276-14e5300c3a48?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8Z3ltfGVufDB8fDB8fHww&auto=format&fit=crop&w=1920&q=80");
   background-size: cover;
   background-position: center;
-  position: relative;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
+  z-index: 9999;
 }
 
 .login-card {
@@ -295,15 +304,35 @@
 
 /* Responsividade */
 @media (max-width: 768px) {
+  .login-container {
+    padding: 0;
+    margin: 0;
+  }
+
   .login-card {
     max-width: 90%;
     padding: 30px;
+    margin: 0 auto;
   }
 }
 
 @media (max-width: 480px) {
+  .login-container {
+    background-position: center;
+    padding: 0;
+  }
+
   .login-card {
-    padding: 20px;
+    max-width: 100%;
+    width: 100%;
+    padding: 30px 20px;
+    border-radius: 0;
+    box-shadow: none;
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
   }
 
   .login-logo img {
@@ -315,16 +344,21 @@
   }
 
   .toggle-btn {
-    padding: 10px 5px;
+    padding: 12px 5px;
     font-size: 0.9rem;
+    min-height: 48px;
   }
 
   .form-group input {
-    padding: 10px;
+    padding: 14px;
+    font-size: 16px;
+    min-height: 48px;
   }
 
   .login-button {
-    padding: 12px;
+    padding: 14px;
+    min-height: 50px;
+    font-size: 16px;
   }
 }
 

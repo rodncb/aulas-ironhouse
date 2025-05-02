@@ -127,17 +127,28 @@ function Sidebar({ navigate, collapsed, toggleSidebar, userRole, onLogout }) {
       console.warn("Erro ao salvar caminho atual:", error);
     }
 
-    navigate(path);
-
-    if (window.innerWidth <= 768) {
+    // Fechar o sidebar antes de navegar (em qualquer tamanho de tela)
+    if (!collapsed) {
       toggleSidebar();
     }
+
+    // Depois de esconder o sidebar, navegue para a rota
+    setTimeout(() => {
+      navigate(path);
+    }, 50); // Pequeno timeout para garantir que a UI reaja corretamente
   };
 
   // Função para lidar com o clique no botão de logout
   const handleLogout = (e) => {
     e.preventDefault();
     console.log("Logout solicitado pelo Sidebar");
+
+    // Fechar o sidebar no mobile antes de fazer logout
+    if (window.innerWidth <= 768 && !collapsed) {
+      toggleSidebar();
+    }
+
+    // Chamar a função de logout
     if (onLogout) {
       onLogout();
     }
@@ -146,7 +157,7 @@ function Sidebar({ navigate, collapsed, toggleSidebar, userRole, onLogout }) {
   return (
     <>
       {/* Overlay para dispositivos móveis */}
-      {!collapsed && window.innerWidth <= 768 && (
+      {!collapsed && (
         <div
           className={`sidebar-overlay ${!collapsed ? "active" : ""}`}
           onClick={toggleSidebar}
@@ -155,6 +166,7 @@ function Sidebar({ navigate, collapsed, toggleSidebar, userRole, onLogout }) {
 
       <div className={`sidebar ${collapsed ? "collapsed" : ""}`}>
         <div className="sidebar-header">
+          {/* Removendo o logo do sidebar pois já existe no header */}
           <button className="collapse-button" onClick={toggleSidebar}>
             <FontAwesomeIcon
               icon={collapsed ? faChevronRight : faChevronLeft}

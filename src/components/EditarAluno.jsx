@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "../services/supabase";
 import { navegarPara } from "../lib/utils";
-import "../styles/CadastroAluno.css";
+import "../styles/EditarAluno.css"; // Importando o CSS específico para EditarAluno
 import { useCadastroAluno } from "../contexts/CadastroAlunoContext"; // Importar o contexto
 
 const EditarAluno = ({ alunoId, setActiveSection }) => {
@@ -337,7 +337,7 @@ const EditarAluno = ({ alunoId, setActiveSection }) => {
                   checked={formData.plano === "8 Check-in"}
                   onChange={() => handlePlanoChange("8 Check-in")}
                 />
-                8 Check-in
+                <span>8 Check-in</span>
               </label>
               <label className="checkbox-label">
                 <input
@@ -346,7 +346,7 @@ const EditarAluno = ({ alunoId, setActiveSection }) => {
                   checked={formData.plano === "12 Check-in"}
                   onChange={() => handlePlanoChange("12 Check-in")}
                 />
-                12 Check-in
+                <span>12 Check-in</span>
               </label>
               <label className="checkbox-label">
                 <input
@@ -355,7 +355,7 @@ const EditarAluno = ({ alunoId, setActiveSection }) => {
                   checked={formData.plano === "16 Check-in"}
                   onChange={() => handlePlanoChange("16 Check-in")}
                 />
-                16 Check-in
+                <span>16 Check-in</span>
               </label>
               <label className="checkbox-label">
                 <input
@@ -364,7 +364,7 @@ const EditarAluno = ({ alunoId, setActiveSection }) => {
                   checked={formData.plano === "Premium"}
                   onChange={() => handlePlanoChange("Premium")}
                 />
-                Premium
+                <span>Premium</span>
               </label>
             </div>
           </div>

@@ -556,3 +556,31 @@
 .btn-adicionar-exercicio:hover {
   background-color: #388e3c;
 }
+
+/* Estilos para o componente de Sala */
+.sala {
+  padding-top: 70px; /* Adicionado para dar espaço abaixo do header fixo */
+  padding-bottom: 30px;
+  width: 100%;
+  max-width: 100%;
+}
+
+.sala h1 {
+  font-size: 24px;
+  margin-bottom: 10px;
+  color: #333;
+  text-align: center;
+  margin-top: 10px;
+}
+
+@media (max-width: 768px) {
+  .sala {
+    padding-top: 80px; /* Mais espaço em dispositivos móveis */
+  }
+
+  .sala h1 {
+    font-size: 20px;
+    margin-top: 0;
+    margin-bottom: 5px;
+  }
+}

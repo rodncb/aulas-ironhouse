@@ -38,24 +38,26 @@ body {
 
 @media (max-width: 768px) {
   :root {
-    --sidebar-width: 200px;
-  }
-
-  .main-content,
-  .main-content.expanded {
-    width: 100%;
-    margin-left: 0;
+    --sidebar-width: 280px;
+    --sidebar-collapsed-width: 0;
   }
 
   .main-content {
     width: 100%;
     margin-left: 0;
-    padding-left: var(--sidebar-width);
+    transform: translateX(0);
+    transition: transform var(--transition-speed) ease;
   }
 
+  /* Quando o sidebar está aberto (não collapsed) */
+  .main-content:not(.expanded) {
+    transform: translateX(var(--sidebar-width));
+  }
+
+  /* Quando o sidebar está fechado (collapsed) */
   .main-content.expanded {
+    transform: translateX(0);
     width: 100%;
-    padding-left: 0;
     margin-left: 0;
   }
 }
@@ -156,18 +158,26 @@ textarea:focus {
 /* Responsividade para telas menores */
 @media (max-width: 768px) {
   :root {
-    --sidebar-width: 200px;
+    --sidebar-width: 280px;
+    --sidebar-collapsed-width: 0;
   }
 
   .main-content {
     width: 100%;
     margin-left: 0;
-    padding-left: var(--sidebar-width);
+    transform: translateX(0);
+    transition: transform var(--transition-speed) ease;
   }
 
+  /* Quando o sidebar está aberto (não collapsed) */
+  .main-content:not(.expanded) {
+    transform: translateX(var(--sidebar-width));
+  }
+
+  /* Quando o sidebar está fechado (collapsed) */
   .main-content.expanded {
+    transform: translateX(0);
     width: 100%;
-    padding-left: 0;
     margin-left: 0;
   }
 }
@@ -193,10 +203,20 @@ textarea:focus {
 
 /* Garantindo que os botões e campos são mais acessíveis em dispositivos móveis */
 @media (max-width: 480px) {
+  :root {
+    --sidebar-width: 85%; /* Ajustando para que o sidebar não ocupe toda a tela */
+  }
+
+  .content-wrapper {
+    padding: 10px;
+  }
+
   button,
   input,
-  select {
-    min-height: 44px; /* Seguindo recomendações de acessibilidade */
+  select,
+  .btn {
+    min-height: 44px;
+    font-size: 16px; /* Evita zoom automático no iOS */
   }
 
   .content-wrapper {

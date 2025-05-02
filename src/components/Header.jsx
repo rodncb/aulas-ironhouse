@@ -4,7 +4,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faBars, faSignOutAlt } from "@fortawesome/free-solid-svg-icons";
 import logoCompleta from "../assets/logo_completa.png";
 
-const Header = ({ toggleSidebar, user, onLogout }) => {
+const Header = ({ toggleSidebar, user, onLogout, sidebarCollapsed }) => {
   // Garantir que mostramos o email do usuário ou o nome, se disponível
   const displayName = user ? user.email || user.nome || "Usuário" : "Usuário";
 
@@ -19,7 +19,10 @@ const Header = ({ toggleSidebar, user, onLogout }) => {
   return (
     <header className="header">
       <div className="header-left">
-        <button className="menu-btn" onClick={toggleSidebar}>
+        <button
+          className={`menu-btn ${!sidebarCollapsed ? "active" : ""}`}
+          onClick={toggleSidebar}
+        >
           <FontAwesomeIcon icon={faBars} />
         </button>
         <img src={logoCompleta} alt="Logo" className="header-logo" />
