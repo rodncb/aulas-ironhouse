@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import "../styles/AlunosEmAula.css";
 import alunosService from "../services/alunos.service";
 import aulasService from "../services/aulas.service";
+import { navegarPara } from "../lib/utils"; // Importando a função de navegação
 
 // Componente que exibe e gerencia alunos em aula
 const AlunosEmAula = ({ alunosNaAula = [], aulaId, onAlunoSelect }) => {
@@ -140,6 +141,12 @@ const AlunosEmAula = ({ alunosNaAula = [], aulaId, onAlunoSelect }) => {
     }
   };
 
+  // Função para navegar para a tela de detalhes do aluno (histórico)
+  const navegarParaHistoricoAluno = (e, alunoId) => {
+    e.stopPropagation(); // Evita acionar o onClick do div pai
+    navegarPara(`/detalhe-aluno/${alunoId}`);
+  };
+
   // Filtrar alunos disponíveis (que não estão na aula atual)
   const alunosDisponiveis = todosAlunos.filter(
     (aluno) => !alunosNaAula.some((a) => a.id === aluno.id)
@@ -180,7 +187,16 @@ const AlunosEmAula = ({ alunosNaAula = [], aulaId, onAlunoSelect }) => {
               className="aluno-item"
               onClick={() => handleSelecionarAluno(aluno)}
             >
-              <span className="nome-aluno">{aluno.nome}</span>
+              <div className="aluno-info">
+                <span className="nome-aluno">{aluno.nome}</span>
+                <button
+                  onClick={(e) => navegarParaHistoricoAluno(e, aluno.id)}
+                  className="btn-historico-mini"
+                  title="Ver histórico de aulas"
+                >
+                  Histórico
+                </button>
+              </div>
               <div className="acoes-aluno">
                 <button
                   onClick={(e) => {

@@ -3,6 +3,7 @@ import { supabase } from "../services/supabase";
 import { formatarData, navegarPara } from "../lib/utils";
 import "../styles/DetalheAluno.css";
 import { useCadastroAluno } from "../contexts/CadastroAlunoContext"; // Importar o contexto
+import aulasService from "../services/aulas.service"; // Importar serviço de aulas
 
 const DetalheAluno = ({ alunoId, setActiveSection }) => {
   // Usar o contexto para gerenciar dados do aluno
@@ -21,6 +22,7 @@ const DetalheAluno = ({ alunoId, setActiveSection }) => {
   const [error, setError] = useState(null);
   const [historicoAulas, setHistoricoAulas] = useState([]);
   const [carregandoHistorico, setCarregandoHistorico] = useState(false);
+  const [aulaExpandida, setAulaExpandida] = useState(null);
 
   // Função para carregar dados do aluno
   useEffect(() => {
@@ -103,6 +105,35 @@ const DetalheAluno = ({ alunoId, setActiveSection }) => {
     }
   }, [dadosContexto, alunoIdContexto, alunoId]);
 
+  // Carregar histórico de aulas
+  useEffect(() => {
+    const carregarHistoricoAulas = async () => {
+      if (!aluno) return;
+
+      try {
+        setCarregandoHistorico(true);
+
+        // Buscar todas as aulas
+        const todasAulas = await aulasService.getAll();
+
+        // Filtrar apenas as aulas que este aluno participou
+        const aulasDoAluno = todasAulas.filter(
+          (aula) => aula.alunos && aula.alunos.some((a) => a.id === aluno.id)
+        );
+
+        setHistoricoAulas(aulasDoAluno);
+        setError(null);
+      } catch (err) {
+        console.error("Erro ao buscar histórico de aulas:", err);
+        setError("Não foi possível carregar o histórico de aulas.");
+      } finally {
+        setCarregandoHistorico(false);
+      }
+    };
+
+    carregarHistoricoAulas();
+  }, [aluno]);
+
   // Função para lidar com o clique no botão Editar
   const handleEditarClick = () => {
     // Não limpar dados do contexto ao editar
@@ -120,6 +151,24 @@ const DetalheAluno = ({ alunoId, setActiveSection }) => {
       setActiveSection("alunos");
     } else {
       navegarPara("/alunos");
+    }
+  };
+
+  // Função para expandir/recolher detalhes de uma aula
+  const verDetalhesAula = (aula) => {
+    setAulaExpandida(aula.id === aulaExpandida ? null : aula.id);
+  };
+
+  // Função para obter o rótulo de status
+  const getStatusLabel = (status) => {
+    switch (status) {
+      case "realizada":
+        return <span className="status-realizada">Realizada</span>;
+      case "cancelada":
+        return <span className="status-cancelada">Cancelada</span>;
+      case "atual":
+      default:
+        return <span className="status-atual">Atual</span>;
     }
   };
 
@@ -252,6 +301,105 @@ const DetalheAluno = ({ alunoId, setActiveSection }) => {
           <div className="detalhe-texto">
             {aluno.observacoes || "Nenhuma observação adicional."}
           </div>
+        </div>
+
+        {/* Nova seção: Histórico de Aulas */}
+        <div className="detalhe-secao historico-aulas">
+          <h4>Histórico de Aulas</h4>
+          {carregandoHistorico ? (
+            <div className="carregando-historico">
+              <div className="spinner"></div>
+              <p>Carregando histórico de aulas...</p>
+            </div>
+          ) : historicoAulas.length > 0 ? (
+            <div className="resumo-historico">
+              <div className="info-resumo">
+                <p>
+                  <strong>Total de aulas:</strong> {historicoAulas.length}
+                </p>
+                <p>
+                  <strong>Aulas realizadas:</strong>{" "}
+                  {
+                    historicoAulas.filter((aula) => aula.status === "realizada")
+                      .length
+                  }
+                </p>
+                <p>
+                  <strong>Aulas canceladas:</strong>{" "}
+                  {
+                    historicoAulas.filter((aula) => aula.status === "cancelada")
+                      .length
+                  }
+                </p>
+                <p>
+                  <strong>Aulas atuais:</strong>{" "}
+                  {
+                    historicoAulas.filter((aula) => aula.status === "atual")
+                      .length
+                  }
+                </p>
+              </div>
+
+              <div className="historico-aulas-lista">
+                {historicoAulas.map((aula) => (
+                  <div
+                    key={aula.id}
+                    className={`aula-card aula-${aula.status}`}
+                  >
+                    <div
+                      className="aula-header"
+                      onClick={() => verDetalhesAula(aula)}
+                    >
+                      <div className="aula-data">
+                        {/* CORREÇÃO: Passar a string 'YYYY-MM-DD' diretamente */}
+                        {formatarData(aula.data)}
+                      </div>
+                      <div className="aula-professor">
+                        Professor:{" "}
+                        {aula.professor ? aula.professor.nome : "Não definido"}
+                      </div>
+                      <div className="aula-status">
+                        Status: {getStatusLabel(aula.status)}
+                      </div>
+                      <div className="aula-toggle">
+                        {aulaExpandida === aula.id ? "▲" : "▼"}
+                      </div>
+                    </div>
+                    {aulaExpandida === aula.id && (
+                      <div className="aula-detalhes">
+                        <div className="aula-exercicios">
+                          <h4>Exercícios</h4>
+                          {aula.exercicios && aula.exercicios.length > 0 ? (
+                            <ul>
+                              {aula.exercicios.map((exercicio) => (
+                                <li key={exercicio.id}>{exercicio.nome}</li>
+                              ))}
+                            </ul>
+                          ) : (
+                            <p>Nenhum exercício registrado.</p>
+                          )}
+                        </div>
+                        <div className="aula-notas">
+                          <h4>Anotações</h4>
+                          <p>{aula.anotacoes || "Nenhuma anotação."}</p>
+                        </div>
+                        {aula.lesoes && (
+                          <div className="aula-lesoes">
+                            <h4>Lesões/Restrições</h4>
+                            <p>{aula.lesoes}</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="sem-registros">
+              Nenhuma aula registrada para este aluno.
+            </div>
+          )}
         </div>
       </div>
     </div>

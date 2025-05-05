@@ -1,5 +1,21 @@
 import supabase from "../config/supabaseConfig.js"; // Corrigido: Importação default do caminho correto
 
+/**
+ * Função auxiliar para obter a data atual no formato ISO corrigindo problemas de fuso horário
+ * @returns {string} Data no formato YYYY-MM-DD
+ */
+export function getDataAtual() {
+  // Obtém a data atual em UTC
+  const hoje = new Date();
+  const ano = hoje.getUTCFullYear(); // Usar UTC
+  const mes = String(hoje.getUTCMonth() + 1).padStart(2, "0"); // Usar UTC (mês é 0-11)
+  const dia = String(hoje.getUTCDate()).padStart(2, "0"); // Usar UTC
+  return `${ano}-${mes}-${dia}`; // Formato YYYY-MM-DD com data UTC
+
+  // HACK TEMPORÁRIO REMOVIDO:
+  // return "2025-05-05"; // Data fixa
+}
+
 const aulasService = {
   /**
    * Obtém todas as aulas

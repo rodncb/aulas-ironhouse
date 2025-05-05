@@ -42,68 +42,34 @@ export const formatarData = (dataString) => {
       return dataString;
     }
 
-    // Tenta converter a string para um objeto Date
-    let data;
-
-    // Tenta interpretar formatos comuns
-    if (dataString.includes("-")) {
-      // Formato ISO: YYYY-MM-DD
+    // CORREÇÃO: Tratar YYYY-MM-DD diretamente para evitar problemas de fuso
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dataString)) {
       const parts = dataString.split("-");
-      if (parts.length === 3) {
-        data = new Date(
-          parseInt(parts[0]),
-          parseInt(parts[1]) - 1,
-          parseInt(parts[2])
-        );
-      } else {
-        data = new Date(dataString);
-      }
-    } else if (dataString.includes("/")) {
-      // Formato: DD/MM/YYYY ou MM/DD/YYYY
-      const parts = dataString.split("/");
-      if (parts.length === 3) {
-        // Assume DD/MM/YYYY (formato brasileiro)
-        data = new Date(
-          parseInt(parts[2]),
-          parseInt(parts[1]) - 1,
-          parseInt(parts[0])
-        );
-      } else {
-        data = new Date(dataString);
-      }
-    } else if (!isNaN(dataString) && dataString.length > 8) {
-      // Timestamp em milissegundos
-      data = new Date(parseInt(dataString));
-    } else {
-      // Outros formatos
-      data = new Date(dataString);
+      // Simplesmente rearranja as partes da string
+      return `${parts[2]}/${parts[1]}/${parts[0]}`;
     }
 
-    // Verifica se a data é válida
+    // Se não for YYYY-MM-DD nem DD/MM/YYYY, tentar converter como antes (fallback)
+    console.warn(`Formato de data não reconhecido diretamente: ${dataString}. Tentando conversão padrão.`);
+    let data = new Date(dataString);
+
+    // Verifica se a data é válida após o fallback
     if (isNaN(data.getTime())) {
-      console.warn(`Data inválida: ${dataString}`);
-
-      // Retorna data atual como fallback
-      const hoje = new Date();
-      return `${String(hoje.getDate()).padStart(2, "0")}/${String(
-        hoje.getMonth() + 1
-      ).padStart(2, "0")}/${hoje.getFullYear()}`;
+      console.warn(`Data inválida após fallback: ${dataString}`);
+      // Retorna a string original ou um valor padrão em caso de falha total
+      return dataString; // Ou "Data inválida"
     }
 
-    // Formata a data no padrão brasileiro: DD/MM/YYYY
+    // Formata a data (do fallback) no padrão brasileiro: DD/MM/YYYY
+    // Este ainda pode ter problemas de fuso para formatos ambíguos
     return `${String(data.getDate()).padStart(2, "0")}/${String(
       data.getMonth() + 1
     ).padStart(2, "0")}/${data.getFullYear()}`;
+
   } catch (error) {
     console.error("Erro ao formatar data:", error, dataString);
-
-    // Retorna a string original se falhar ou a data atual como último recurso
-    if (dataString) return dataString;
-
-    const hoje = new Date();
-    return `${String(hoje.getDate()).padStart(2, "0")}/${String(
-      hoje.getMonth() + 1
-    ).padStart(2, "0")}/${hoje.getFullYear()}`;
+    // Retorna a string original se falhar
+    return dataString;
   }
 };
 

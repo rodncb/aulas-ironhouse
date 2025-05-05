@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import "../styles/DetalheAluno.css";
 import { supabase } from "../services/supabase";
+import aulasService from "../services/aulas.service"; // Importar serviço de aulas
+import { formatarData as formatarDataUtil } from "../lib/utils"; // Corrigido: caminho para lib/utils.js
 
 const DetalheCadastroAluno = ({ aluno, alunoId, onNavigateBack }) => {
   // Estado para armazenar os dados do aluno quando recebemos apenas o ID
@@ -11,6 +13,9 @@ const DetalheCadastroAluno = ({ aluno, alunoId, onNavigateBack }) => {
   const [observacoes, setObservacoes] = useState("");
   const [salvandoObservacoes, setSalvandoObservacoes] = useState(false);
   const [sucessoSalvar, setSucessoSalvar] = useState(false);
+  const [historicoAulas, setHistoricoAulas] = useState([]); // Estado para histórico de aulas
+  const [carregandoHistorico, setCarregandoHistorico] = useState(false); // Estado para carregamento
+  const [aulaExpandida, setAulaExpandida] = useState(null); // Estado para aula expandida
 
   // Quando componente recebe alunoId em vez do objeto aluno completo
   useEffect(() => {
@@ -61,6 +66,74 @@ const DetalheCadastroAluno = ({ aluno, alunoId, onNavigateBack }) => {
   // Usar o objeto aluno que foi passado diretamente, ou o que foi buscado pelo ID
   const alunoAtual = aluno || dadosAluno;
 
+  // Efeito para carregar o histórico de aulas
+  useEffect(() => {
+    const carregarHistoricoAulas = async () => {
+      if (!alunoAtual || !alunoAtual.id) return;
+
+      try {
+        setCarregandoHistorico(true);
+        console.log(
+          `Carregando histórico de aulas para o aluno: ${alunoAtual.id}`
+        );
+
+        // Usar o método específico para buscar aulas por ID do aluno
+        const aulasDoAluno = await aulasService.getAulasByAlunoId(
+          alunoAtual.id
+        );
+
+        console.log(
+          `Aulas encontradas para o aluno ${alunoAtual.id}:`,
+          aulasDoAluno.length
+        );
+        setHistoricoAulas(aulasDoAluno);
+      } catch (err) {
+        console.error("Erro ao buscar histórico de aulas:", err);
+        setHistoricoAulas([]); // Garantir que é um array vazio em caso de erro
+      } finally {
+        setCarregandoHistorico(false);
+      }
+    };
+
+    carregarHistoricoAulas();
+  }, [alunoAtual]);
+
+  // Função para expandir/recolher detalhes de uma aula
+  const verDetalhesAula = (aula) => {
+    setAulaExpandida(aula.id === aulaExpandida ? null : aula.id);
+  };
+
+  // Função para obter o rótulo de status
+  const getStatusLabel = (status, aulaData) => {
+    // Verifica se a aula é antiga (data anterior à atual) mas ainda tem status "atual"
+    if (status === "atual" || status === "em_andamento") {
+      // Converter a string de data da aula para objeto Date
+      const dataAula = new Date(aulaData + "T00:00:00");
+      const hoje = new Date();
+
+      // Remover as horas, minutos e segundos para comparar apenas as datas
+      hoje.setHours(0, 0, 0, 0);
+
+      // Se a data da aula for anterior à data atual, considerar como finalizada
+      if (dataAula < hoje) {
+        return <span className="status-realizada">Finalizada</span>;
+      }
+    }
+
+    // Tratamento normal para outros casos
+    switch (status) {
+      case "realizada":
+      case "finalizada":
+        return <span className="status-realizada">Realizada</span>;
+      case "cancelada":
+        return <span className="status-cancelada">Cancelada</span>;
+      case "atual":
+      case "em_andamento":
+      default:
+        return <span className="status-atual">Atual</span>;
+    }
+  };
+
   // Função para salvar as observações editadas
   const salvarObservacoes = async () => {
     if (!alunoAtual || !alunoAtual.id) return;
@@ -104,10 +177,8 @@ const DetalheCadastroAluno = ({ aluno, alunoId, onNavigateBack }) => {
   const formatarData = (dataString) => {
     if (!dataString) return "Data não disponível";
 
-    const data = new Date(dataString);
-    if (isNaN(data.getTime())) return dataString; // Se não conseguir converter, retorna como está
-
-    return data.toLocaleDateString("pt-BR");
+    // Usar nossa função de formatação centralizada nas utils
+    return formatarDataUtil(dataString);
   };
 
   const handleVoltar = () => {
@@ -307,6 +378,144 @@ const DetalheCadastroAluno = ({ aluno, alunoId, onNavigateBack }) => {
                 ? formatarData(alunoAtual.updated_at)
                 : "N/A"}
             </p>
+          </div>
+        </div>
+
+        {/* Histórico de Aulas */}
+        <div className="dados-aluno-card historico-aulas">
+          <h3>Histórico de Aulas</h3>
+          <div className="info-container">
+            {carregandoHistorico ? (
+              <div className="carregando-historico">
+                <div className="spinner"></div>
+                <p>Carregando histórico de aulas...</p>
+              </div>
+            ) : historicoAulas.length > 0 ? (
+              <>
+                <div className="info-resumo">
+                  <p>
+                    <strong>Total de aulas:</strong> {historicoAulas.length}
+                  </p>
+                  <p>
+                    <strong>Aulas realizadas:</strong>{" "}
+                    {
+                      historicoAulas.filter((aula) => {
+                        // Considerar como "realizada" aulas marcadas como "realizada" ou "finalizada"
+                        // Ou aulas com status "atual"/"em_andamento" que são de datas passadas
+                        if (
+                          aula.status === "realizada" ||
+                          aula.status === "finalizada"
+                        ) {
+                          return true;
+                        }
+
+                        // Verificar se é uma aula "atual" mas de data passada
+                        if (
+                          aula.status === "atual" ||
+                          aula.status === "em_andamento"
+                        ) {
+                          const dataAula = new Date(aula.data + "T00:00:00");
+                          const hoje = new Date();
+                          hoje.setHours(0, 0, 0, 0);
+                          return dataAula < hoje;
+                        }
+
+                        return false;
+                      }).length
+                    }
+                  </p>
+                  <p>
+                    <strong>Aulas canceladas:</strong>{" "}
+                    {
+                      historicoAulas.filter(
+                        (aula) => aula.status === "cancelada"
+                      ).length
+                    }
+                  </p>
+                  <p>
+                    <strong>Aulas atuais:</strong>{" "}
+                    {
+                      historicoAulas.filter((aula) => {
+                        // Contar como aula atual apenas se o status for "atual"/"em_andamento"
+                        // E a data for igual ou posterior à data de hoje
+                        if (
+                          aula.status === "atual" ||
+                          aula.status === "em_andamento"
+                        ) {
+                          const dataAula = new Date(aula.data + "T00:00:00");
+                          const hoje = new Date();
+                          hoje.setHours(0, 0, 0, 0);
+                          return dataAula >= hoje;
+                        }
+                        return false;
+                      }).length
+                    }
+                  </p>
+                </div>
+
+                <div className="historico-aulas-lista">
+                  {historicoAulas.map((aula) => (
+                    <div
+                      key={aula.id}
+                      className={`aula-card aula-${aula.status}`}
+                    >
+                      <div
+                        className="aula-header"
+                        onClick={() => verDetalhesAula(aula)}
+                      >
+                        <div className="aula-data">
+                          {formatarData(aula.data)}
+                        </div>
+                        <div className="aula-professor">
+                          Professor:{" "}
+                          {aula.professor
+                            ? aula.professor.nome
+                            : "Não definido"}
+                        </div>
+                        <div className="aula-status">
+                          Status: {getStatusLabel(aula.status, aula.data)}
+                        </div>
+                        <div className="aula-toggle">
+                          {aulaExpandida === aula.id ? "▲" : "▼"}
+                        </div>
+                      </div>
+                      {aulaExpandida === aula.id && (
+                        <div className="aula-detalhes">
+                          <div className="aula-exercicios">
+                            <h4>Exercícios</h4>
+                            {aula.exercicios && aula.exercicios.length > 0 ? (
+                              <ul>
+                                {aula.exercicios.map((exercicio, index) => (
+                                  <li key={exercicio.id || index}>
+                                    {exercicio.nome}
+                                  </li>
+                                ))}
+                              </ul>
+                            ) : (
+                              <p>Nenhum exercício registrado.</p>
+                            )}
+                          </div>
+                          <div className="aula-notas">
+                            <h4>Anotações</h4>
+                            <p>{aula.observacoes || "Nenhuma anotação."}</p>
+                          </div>
+                          {aula.lesoes && (
+                            <div className="aula-lesoes">
+                              <h4>Lesões/Restrições</h4>
+                              <p>{aula.lesoes}</p>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <div className="sem-registros">
+                Nenhuma aula registrada para este aluno.
+              </div>
+            )}
           </div>
         </div>
       </div>

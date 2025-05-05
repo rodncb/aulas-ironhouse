@@ -487,7 +487,7 @@ const App = () => {
               <Route
                 path="/detalhe-aluno/:id"
                 element={
-                  <ProtectedRoute requiredSection="alunos">
+                  <ProtectedRoute>
                     <DetalheAlunoWrapper onNavigateBack={handleNavigate} />
                   </ProtectedRoute>
                 }

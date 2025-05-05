@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from "react";
 import "../styles/Sala.css";
-import aulasService from "../services/aulas.service";
+import aulasService, { getDataAtual } from "../services/aulas.service"; // Importar a função getDataAtual
 import alunosService from "../services/alunos.service";
-import exerciciosService from "../services/exercicios.service"; // Adicionando import para o serviço de exercícios
+import exerciciosService from "../services/exercicios.service";
 import { useAuth } from "../hooks/useAuth";
 import professoresService from "../services/professores.service";
-import supabase from "../config/supabaseConfig.js"; // Corrigido: Importação default do caminho correto
+import supabase from "../config/supabaseConfig.js";
 import { toast } from "react-toastify";
 import AulaAlunosService from "../services/AulaAlunosService";
-import { useSala } from "../contexts/SalaContext"; // Importando o hook useSala
+import { useSala } from "../contexts/SalaContext";
 
 function Sala() {
   const { user, loading: authLoading, isAdmin } = useAuth();
@@ -19,15 +19,11 @@ function Sala() {
   const {
     alunoObservacoes,
     exerciciosPorAluno,
-    aulaAtual: aulaAtualContext,
     updateAlunoObservacao,
-    updateExerciciosPorAluno,
     adicionarExercicio: addExercicio,
     atualizarExercicio: updateExercicio,
     removerExercicio: removeExercicio,
     limparDadosSala,
-    removerDadosAluno,
-    setAulaAtual: setAulaAtualContext,
   } = useSala();
 
   // Estados do professor
@@ -40,7 +36,7 @@ function Sala() {
 
   // Estados do aluno
   const [todosAlunos, setTodosAlunos] = useState([]);
-  const [todosExercicios, setTodosExercicios] = useState([]);
+  const [, setTodosExercicios] = useState([]);
   const [alunoSelecionado, setAlunoSelecionado] = useState(null);
   const [ultimosTreinos, setUltimosTreinos] = useState({});
   // Observações do cadastro do aluno (não editáveis)
@@ -57,11 +53,9 @@ function Sala() {
   };
 
   // Estados para gerenciar feedback e processamento
-  const [processandoFinalizacao, setProcessandoFinalizacao] = useState(false);
-  const [mensagem, setMensagem] = useState(null);
+  const [, setProcessandoFinalizacao] = useState(false);
 
   // Estados da interface
-  const [modoSelecaoAluno, setModoSelecaoAluno] = useState(true);
   const [alunosDropdownAberto, setAlunosDropdownAberto] = useState(false);
   const [termoBusca, setTermoBusca] = useState("");
 
@@ -198,7 +192,6 @@ function Sala() {
           setAulaAtual(aulaSalva);
           setAulaAtiva(true);
           setAlunosEmAula([]);
-          setModoSelecaoAluno(true);
           setAlunosDropdownAberto(false); // Manter dropdown fechado inicialmente
 
           console.log(
@@ -261,7 +254,6 @@ function Sala() {
           setAulaAtual(aulaCompleta);
           setAulaAtiva(true);
           setAlunosEmAula(alunosDaAula);
-          setModoSelecaoAluno(alunosDaAula.length === 0);
 
           // Manter dropdown fechado inicialmente em todos os casos
           setAlunosDropdownAberto(false);
@@ -271,7 +263,6 @@ function Sala() {
           setAulaAtual(aulaBasica);
           setAulaAtiva(true);
           setAlunosEmAula([]);
-          setModoSelecaoAluno(true);
           setAlunosDropdownAberto(false); // Manter dropdown fechado inicialmente
         }
       } catch (err) {
@@ -505,44 +496,7 @@ function Sala() {
     };
 
     buscarUltimosTreinosParaAlunosVisiveis();
-  }, [alunosEmAula, aulaAtual?.id]);
-
-  // Iniciar nova aula
-  const handleIniciarNovaAula = async () => {
-    if (!professorAtual) {
-      setError("Professor não identificado. Não é possível criar a aula.");
-      return;
-    }
-
-    try {
-      setSalaLoading(true);
-
-      // Criar objeto de aula para salvar no banco de dados
-      const novaAula = {
-        professor_id: professorAtual.id,
-        status: "em_andamento",
-        data: new Date().toISOString().split("T")[0],
-        observacoes: "",
-        alunos: [],
-      };
-
-      // Salvar a aula no banco de dados imediatamente
-      const aulaSalva = await aulasService.create(novaAula);
-
-      // Atualizar os estados com a aula criada
-      setAulaAtual(aulaSalva);
-      setAulaAtiva(true);
-      setAlunosEmAula([]);
-      setModoSelecaoAluno(true);
-
-      console.log("Aula iniciada e salva no banco de dados:", aulaSalva);
-    } catch (err) {
-      console.error("Erro ao iniciar nova aula:", err);
-      setError("Falha ao iniciar aula. " + (err.message || "Tente novamente."));
-    } finally {
-      setSalaLoading(false);
-    }
-  };
+  }, [alunosEmAula, aulaAtual?.id, alunoObservacoes]);
 
   // Finalizar aula
   const handleFinalizarAula = async () => {
@@ -580,14 +534,23 @@ function Sala() {
         return;
       }
 
-      // Garantir que a data seja a atual para todas as aulas finalizadas
+      // Garantir que a data seja a atual (UTC) para todas as aulas finalizadas
       const hoje = new Date();
-      const ano = hoje.getFullYear();
-      const mes = String(hoje.getMonth() + 1).padStart(2, "0");
-      const dia = String(hoje.getDate()).padStart(2, "0");
-      const dataFormatada = `${ano}-${mes}-${dia}`; // Formato YYYY-MM-DD
+      const ano = hoje.getUTCFullYear(); // Usar UTC
+      const mes = String(hoje.getUTCMonth() + 1).padStart(2, "0"); // Usar UTC (mês é 0-11)
+      const dia = String(hoje.getUTCDate()).padStart(2, "0"); // Usar UTC
+      const dataFormatadaISO = `${ano}-${mes}-${dia}`; // Formato YYYY-MM-DD com data UTC
 
-      console.log(`Data atual para finalização da sala: ${dataFormatada}`);
+      // LOG DETALHADO DA DATA (mantido para verificação)
+      console.log(`[handleFinalizarAula] Data Crua Local: ${hoje.toString()}`);
+      console.log(
+        `[handleFinalizarAula] Ano UTC: ${ano}, Mês UTC: ${mes}, Dia UTC: ${dia}`
+      );
+      console.log(
+        `[handleFinalizarAula] Data Formatada (UTC) para BD: ${dataFormatadaISO}`
+      );
+
+      console.log(`Data UTC para finalização da sala: ${dataFormatadaISO}`);
 
       // Para cada aula, realizar a finalização
       for (const aula of aulasEmAndamento) {
@@ -621,7 +584,7 @@ function Sala() {
 
               const aulaFinalizadaIndividual = {
                 professor_id: professorAtual.id,
-                data: dataFormatada,
+                data: dataFormatadaISO, // CORRIGIDO: Usar data calculada
                 status: "finalizada",
                 observacoes: observacoes, // Usar observações específicas do aluno
               };
@@ -694,7 +657,7 @@ function Sala() {
           .from("aulas")
           .update({
             status: "finalizada",
-            data: dataFormatada, // Atualizar para a data de hoje
+            data: dataFormatadaISO, // CORRIGIDO: Usar data calculada
             alunos: [],
           })
           .eq("id", aula.id);
@@ -708,7 +671,6 @@ function Sala() {
       setAulaAtual(null);
       setAlunosEmAula([]);
       setAlunoSelecionado(null);
-      setModoSelecaoAluno(true);
 
       alert("Aula finalizada com sucesso!");
 
@@ -719,73 +681,6 @@ function Sala() {
     } catch (err) {
       console.error("ERRO AO FINALIZAR AULAS:", err);
       setError(`Falha ao finalizar aulas: ${err.message}`);
-    } finally {
-      setSalaLoading(false);
-    }
-  };
-
-  // Cancelar aula inteira
-  const handleCancelarAula = async () => {
-    if (!professorAtual || !professorAtual.id) {
-      setError("Professor não identificado. Não é possível cancelar aulas.");
-      return;
-    }
-
-    try {
-      setSalaLoading(true);
-      setError(null);
-
-      console.log(
-        `Iniciando processo de cancelamento da aula do professor ${professorAtual.nome} (ID: ${professorAtual.id})`
-      );
-
-      if (!aulaAtual || !aulaAtual.id) {
-        setError("Aula não identificada. Não é possível cancelar.");
-        setSalaLoading(false);
-        return;
-      }
-
-      // Remover todos os relacionamentos com alunos (registros em aula_alunos)
-      const { error: relError } = await supabase
-        .from("aula_alunos")
-        .delete()
-        .eq("aula_id", aulaAtual.id);
-
-      if (relError) {
-        console.error(`ERRO AO REMOVER RELACIONAMENTOS: ${relError.message}`);
-        throw relError;
-      }
-
-      // Atualizar o status da aula para "cancelada"
-      const { error: aulaError } = await supabase
-        .from("aulas")
-        .update({ status: "cancelada" })
-        .eq("id", aulaAtual.id);
-
-      if (aulaError) {
-        console.error(`ERRO AO CANCELAR AULA: ${aulaError.message}`);
-        throw aulaError;
-      }
-
-      // Limpar os dados do localStorage ao cancelar a aula
-      limparDadosSala();
-
-      // Limpar o estado local
-      setAulaAtiva(false);
-      setAulaAtual(null);
-      setAlunosEmAula([]);
-      setAlunoSelecionado(null);
-      setModoSelecaoAluno(true);
-
-      toast.success("Aula cancelada com sucesso!");
-
-      // Forçar recarga da página após pequeno delay
-      setTimeout(() => {
-        window.location.reload();
-      }, 1500);
-    } catch (err) {
-      console.error("ERRO AO CANCELAR AULA:", err);
-      setError(`Falha ao cancelar aula: ${err.message}`);
     } finally {
       setSalaLoading(false);
     }
@@ -865,7 +760,6 @@ function Sala() {
       // Atualizar a UI imediatamente para feedback rápido
       setAlunoSelecionado(aluno);
       setAlunosDropdownAberto(false);
-      setModoSelecaoAluno(false);
 
       // Verificar se o aluno já está na lista local
       const alunoJaNaLista = alunosEmAula.some((a) => a.id === aluno.id);
@@ -953,7 +847,7 @@ function Sala() {
 
       // Restaurar estado anterior em caso de erro grave
       if (alunoSelecionado?.id !== aluno.id) {
-        setModoSelecaoAluno(true);
+        setAlunosDropdownAberto(true);
       }
     }
   };
@@ -976,28 +870,27 @@ function Sala() {
       const observacoesAluno = alunoObservacoes[alunoId] || "";
 
       if (aulaAtual) {
-        // 1. Primeiro, criar uma cópia da aula atual como finalizada para este aluno
-        // Garantir que a data seja a atual, considerando o fuso horário local
+        // Para armazenamento no banco, usar a função auxiliar do serviço de aulas
+        // que garante a data correta (agora usando UTC)
         const hoje = new Date();
-        // Obter a data de hoje formatada diretamente como string no formato DD/MM/YYYY
-        const dataHoje =
-          hoje.getDate().toString().padStart(2, "0") +
-          "/" +
-          (hoje.getMonth() + 1).toString().padStart(2, "0") +
-          "/" +
-          hoje.getFullYear();
-        console.log(`Data de hoje para interface: ${dataHoje}`);
-
-        // Para armazenamento no banco, usar formato ISO
-        const dataFormatadaISO = hoje.toISOString().slice(0, 10); // YYYY-MM-DD
+        const ano = hoje.getUTCFullYear(); // Usar UTC
+        const mes = String(hoje.getUTCMonth() + 1).padStart(2, "0"); // Usar UTC (mês é 0-11)
+        const dia = String(hoje.getUTCDate()).padStart(2, "0"); // Usar UTC
+        const dataFormatadaISO = `${ano}-${mes}-${dia}`; // Formato YYYY-MM-DD com data UTC
 
         console.log(
-          `Data atual formatada para banco de dados: ${dataFormatadaISO}`
+          `[handleFinalizarAlunoIndividual] Data Crua Local: ${hoje.toString()}`
+        );
+        console.log(
+          `[handleFinalizarAlunoIndividual] Ano UTC: ${ano}, Mês UTC: ${mes}, Dia UTC: ${dia}`
+        );
+        console.log(
+          `[handleFinalizarAlunoIndividual] Data Formatada (UTC) para BD: ${dataFormatadaISO}`
         );
 
         const aulaIndividualFinalizada = {
           professor_id: aulaAtual.professor_id,
-          data: dataFormatadaISO,
+          data: dataFormatadaISO, // Usar data UTC calculada
           status: "finalizada",
           observacoes: observacoesAluno, // Usar observações específicas do aluno
         };
@@ -1110,9 +1003,6 @@ function Sala() {
     }
   };
 
-  // Array para mostrar na interface
-  const alunosContainers = alunosEmAula;
-
   // Função para determinar a classe de CSS com base na gravidade da lesão
   const getLesaoClass = (lesao) => {
     switch (lesao) {
@@ -1140,22 +1030,11 @@ function Sala() {
     carregarExercicios();
   }, []);
 
-  // Função para adicionar um novo exercício para um aluno específico
-  const adicionarExercicio = (alunoId, exercicioId = null) => {
-    // Usar a função do contexto para adicionar exercício e persistir no localStorage
-    addExercicio(alunoId, exercicioId);
-  };
-
-  // Função para atualizar um exercício selecionado
-  const atualizarExercicio = (alunoId, index, exercicioId) => {
-    // Usar a função do contexto para atualizar exercício e persistir no localStorage
-    updateExercicio(alunoId, index, exercicioId);
-  };
-
-  // Função para remover um exercício
-  const removerExercicio = (alunoId, index) => {
-    // Usar a função do contexto para remover exercício e persistir no localStorage
-    removeExercicio(alunoId, index);
+  // Função para navegar para o histórico de aulas do aluno
+  const navegarParaHistoricoAluno = (alunoId) => {
+    // Usar window.location.href para garantir a navegação com URL completa
+    const baseUrl = window.location.origin; // Obtém http://localhost:3000 em desenvolvimento ou o domínio em produção
+    window.location.href = `${baseUrl}/detalhe-aluno/${alunoId}`;
   };
 
   return (
@@ -1252,7 +1131,16 @@ function Sala() {
                 {alunosEmAula.map((aluno) => (
                   <div key={aluno.id} className="aluno-card-completo">
                     <div className="card-header">
-                      <h3>{aluno.nome}</h3>
+                      <div className="aluno-nome-container">
+                        <h3>{aluno.nome}</h3>
+                        <button
+                          onClick={() => navegarParaHistoricoAluno(aluno.id)}
+                          className="btn-historico-mini"
+                          title="Ver histórico de aulas"
+                        >
+                          Histórico
+                        </button>
+                      </div>
                     </div>
                     <div className="card-body">
                       {/* Painel de dados do aluno */}
