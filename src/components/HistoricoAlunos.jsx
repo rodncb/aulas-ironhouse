@@ -1,10 +1,61 @@
 import React, { useState, useEffect } from "react";
 import "../styles/GerenciamentoAlunos.css";
 import "../styles/Modal.css"; // Adicionando o CSS da modal
-import { useAuth } from "../hooks/useAuth";
-import Geral from "./Geral";
 import alunosService from "../services/alunos.service"; // Importar serviço de alunos
 import aulasService from "../services/aulas.service"; // Importar serviço de aulas
+
+// Função auxiliar para interpretar horários de início/fim com base no status da aula
+const interpretarHorarios = (aula) => {
+  const hora = aula.hora;
+
+  // Se não temos hora registrada (NULL ou undefined), retornar valores padrão
+  if (!hora) {
+    return {
+      horaInicio: "--:--",
+      horaFim: "--:--",
+    };
+  }
+
+  // Tratar especificamente aulas canceladas com hora '00:00'
+  if (hora === "00:00" && aula.status === "cancelada") {
+    return {
+      horaInicio: "Cancelada",
+      horaFim: "Cancelada",
+    };
+  }
+
+  // Com base no status da aula, interpretamos a hora
+  switch (aula.status) {
+    case "atual":
+    case "em_andamento":
+      // Para aulas em andamento, a hora é o horário de início
+      return {
+        horaInicio: hora,
+        horaFim: "--:--", // Ainda não finalizada
+      };
+    case "realizada":
+    case "finalizada":
+      // Para aulas finalizadas, assumir duração de 1 hora
+      const [horas, minutos] = hora.split(':').map(Number);
+      const inicioDate = new Date();
+      inicioDate.setHours(horas, minutos);
+      
+      // Subtrair 1 hora para obter horário de início estimado
+      inicioDate.setHours(inicioDate.getHours() - 1);
+      
+      const horaInicioFormatada = inicioDate.toTimeString().slice(0, 5);
+      
+      return {
+        horaInicio: horaInicioFormatada,
+        horaFim: hora, // A hora registrada é de fim
+      };
+    default:
+      return {
+        horaInicio: hora,
+        horaFim: "--:--",
+      };
+  }
+};
 
 const HistoricoAlunos = () => {
   const [alunos, setAlunos] = useState([]);
@@ -12,7 +63,6 @@ const HistoricoAlunos = () => {
   const [historicoAulas, setHistoricoAulas] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [itemsPerPage, setItemsPerPage] = useState(10);
-  const { user } = useAuth();
   const [modalAula, setModalAula] = useState(null);
   const [aulaExpandida, setAulaExpandida] = useState(null);
   const [loading, setLoading] = useState(true); // Estado para controlar carregamento
@@ -246,7 +296,18 @@ const HistoricoAlunos = () => {
                     className="aula-header"
                     onClick={() => verDetalhesAula(aula)}
                   >
-                    <div className="aula-data">{formatarData(aula.data)}</div>
+                    <div className="aula-data-horario">
+                      <div className="aula-data">{formatarData(aula.data)}</div>
+                      <div className="aula-horario">
+                        {(() => {
+                          const horarios = interpretarHorarios(aula);
+                          if (aula.status === "realizada" || aula.status === "finalizada") {
+                            return `${horarios.horaInicio} - ${horarios.horaFim}`;
+                          }
+                          return horarios.horaInicio || "--:--";
+                        })()}
+                      </div>
+                    </div>
                     <div className="aula-professor">
                       Professor:{" "}
                       {aula.professor ? aula.professor.nome : "Não definido"}
@@ -260,6 +321,59 @@ const HistoricoAlunos = () => {
                   </div>
                   {aulaExpandida === aula.id && (
                     <div className="aula-detalhes">
+                      <div className="aula-info-detalhada">
+                        <h4>Informações</h4>
+                        <p>
+                          <strong>Data:</strong> {formatarData(aula.data)}
+                        </p>
+                        <div className="horario-container">
+                          {(() => {
+                            const horarios = interpretarHorarios(aula);
+                            
+                            if (aula.status === "finalizada" || aula.status === "realizada") {
+                              return (
+                                <>
+                                  <div className="horario-inicio">
+                                    <strong>Horário de Início:</strong>{" "}
+                                    <span className="hora-valor">
+                                      {horarios.horaInicio}
+                                    </span>
+                                  </div>
+                                  <div className="horario-fim">
+                                    <strong>Horário de Término:</strong>{" "}
+                                    <span className="hora-valor">
+                                      {horarios.horaFim}
+                                    </span>
+                                  </div>
+                                </>
+                              );
+                            } else {
+                              return (
+                                <>
+                                  <div className="horario-inicio">
+                                    <strong>Horário de Início:</strong>{" "}
+                                    <span className="hora-valor">
+                                      {horarios.horaInicio}
+                                    </span>
+                                  </div>
+                                  <div className="horario-fim">
+                                    <strong>Horário de Término:</strong>{" "}
+                                    <span className="hora-valor">
+                                      {horarios.horaFim}
+                                    </span>
+                                  </div>
+                                </>
+                              );
+                            }
+                          })()}
+                        </div>
+                        <p>
+                          <strong>Professor:</strong>{" "}
+                          {aula.professor
+                            ? aula.professor.nome
+                            : "Não definido"}
+                        </p>
+                      </div>
                       <div className="aula-exercicios">
                         <h4>Exercícios</h4>
                         {aula.exercicios && aula.exercicios.length > 0 ? (

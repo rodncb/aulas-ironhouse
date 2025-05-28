@@ -50,7 +50,9 @@ export const formatarData = (dataString) => {
     }
 
     // Se não for YYYY-MM-DD nem DD/MM/YYYY, tentar converter como antes (fallback)
-    console.warn(`Formato de data não reconhecido diretamente: ${dataString}. Tentando conversão padrão.`);
+    console.warn(
+      `Formato de data não reconhecido diretamente: ${dataString}. Tentando conversão padrão.`
+    );
     let data = new Date(dataString);
 
     // Verifica se a data é válida após o fallback
@@ -65,7 +67,6 @@ export const formatarData = (dataString) => {
     return `${String(data.getDate()).padStart(2, "0")}/${String(
       data.getMonth() + 1
     ).padStart(2, "0")}/${data.getFullYear()}`;
-
   } catch (error) {
     console.error("Erro ao formatar data:", error, dataString);
     // Retorna a string original se falhar

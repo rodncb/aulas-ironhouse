@@ -1,0 +1,349 @@
+/* Arquivo CSS para estilização do DetalheAluno */
+
+/* Estilos gerais do container */
+.detalhe-aluno-container {
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: #ffffff;
+}
+
+/* Header do componente */
+.detalhe-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.detalhe-acoes {
+  display: flex;
+  gap: 10px;
+}
+
+/* Card do aluno */
+.detalhe-card {
+  display: flex;
+  align-items: center;
+  background-color: #f9f9f9;
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.detalhe-foto {
+  margin-right: 20px;
+}
+
+.foto-placeholder {
+  width: 80px;
+  height: 80px;
+  background-color: #4c84ff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  color: white;
+  font-weight: bold;
+}
+
+.detalhe-info h3 {
+  margin: 0 0 8px 0;
+  font-size: 1.4rem;
+}
+
+.detalhe-status {
+  margin: 0;
+}
+
+/* Estilo para status */
+.status-ativo {
+  display: inline-block;
+  background-color: #d4edda;
+  color: #155724;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 0.9em;
+  font-weight: bold;
+  border: 1px solid #c3e6cb;
+}
+
+.status-inativo {
+  display: inline-block;
+  background-color: #f8d7da;
+  color: #721c24;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 0.9em;
+  font-weight: bold;
+  border: 1px solid #f5c6cb;
+}
+
+.status-realizada {
+  background-color: #d4edda;
+  color: #155724;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 0.9em;
+  font-weight: bold;
+  border: 1px solid #c3e6cb;
+}
+
+.status-cancelada {
+  background-color: #f8d7da;
+  color: #721c24;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 0.9em;
+  font-weight: bold;
+  border: 1px solid #f5c6cb;
+}
+
+.status-atual {
+  background-color: #cce5ff;
+  color: #004085;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 0.9em;
+  font-weight: bold;
+  border: 1px solid #b8daff;
+}
+
+/* Seções de detalhe */
+.detalhe-secoes {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.detalhe-secao {
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  padding: 15px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.detalhe-secao h4 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  color: #333;
+  font-size: 1.2rem;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 8px;
+}
+
+/* Items de detalhe */
+.detalhe-item {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  padding: 5px 0;
+}
+
+.detalhe-item strong {
+  color: #555;
+}
+
+.detalhe-texto {
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 10px;
+  line-height: 1.6;
+  min-height: 40px;
+}
+
+/* Estados de carregamento e erro */
+.detalhe-loading,
+.detalhe-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  text-align: center;
+}
+
+.spinner {
+  border: 4px solid rgba(0, 0, 0, 0.1);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border-left-color: #4c84ff;
+  animation: spin 1s linear infinite;
+  margin-bottom: 10px;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Estilos para o histórico de aulas */
+.historico-aulas {
+  margin-top: 20px;
+}
+
+.carregando-historico {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+}
+
+.info-resumo {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 15px;
+  margin-bottom: 20px;
+  background-color: #f0f7ff;
+  padding: 15px;
+  border-radius: 8px;
+  border: 1px solid #dae5f5;
+}
+
+.info-resumo p {
+  margin: 5px 0;
+}
+
+.historico-aulas-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+/* Estilização dos cards de aula */
+.aula-card {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 10px;
+  background-color: #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.aula-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  padding: 12px 15px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  position: relative;
+}
+
+.aula-header:hover {
+  background-color: #f9f9f9;
+}
+
+.aula-data-horario {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 8px;
+}
+
+.aula-data {
+  font-weight: bold;
+  font-size: 1.05rem;
+  color: #2d3748;
+  margin-right: 10px;
+}
+
+.aula-horario {
+  font-weight: 500;
+  color: #333;
+  background-color: #f0f7ff;
+  padding: 3px 8px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid #dae5f5;
+}
+
+.aula-professor {
+  margin-right: 15px;
+  color: #4a5568;
+}
+
+.aula-status {
+  margin-left: auto;
+  margin-right: 25px;  /* Espaço para o ícone de toggle */
+}
+
+.aula-toggle {
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 12px;
+  color: #718096;
+}
+
+/* Detalhes da aula expandida */
+.aula-detalhes {
+  padding: 15px;
+  background-color: #f7fafc;
+  border-top: 1px solid #edf2f7;
+}
+
+.aula-info-detalhada h4,
+.aula-exercicios h4,
+.aula-notas h4,
+.aula-lesoes h4 {
+  margin-top: 10px;
+  margin-bottom: 8px;
+  font-size: 1rem;
+  color: #2d3748;
+}
+
+.aula-info-detalhada p,
+.aula-notas p {
+  margin: 5px 0;
+}
+
+/* Estilos para horários */
+.horario-container {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin: 10px 0;
+}
+
+.horario-inicio,
+.horario-fim,
+.horario-aula {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.hora-valor {
+  font-weight: bold;
+  color: #2b6cb0;
+  background-color: #ebf8ff;
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid #bee3f8;
+}
+
+/* Estilos específicos por tipo de aula */
+.aula-finalizada .aula-header,
+.aula-realizada .aula-header {
+  border-left: 4px solid #48bb78;
+}
+
+.aula-cancelada .aula-header {
+  border-left: 4px solid #f56565;
+}
+
+.aula-em_andamento .aula-header,
+.aula-atual .aula-header {
+  border-left: 4px solid #4299e1;
+}

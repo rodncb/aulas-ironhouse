@@ -34,6 +34,18 @@ const aulasService = {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
+      
+      // Log para debug dos dados retornados
+      if (data && data.length > 0) {
+        console.log("[aulasService.getAll] Primeira aula retornada:", {
+          id: data[0].id,
+          hora: data[0].hora,
+          hora_type: typeof data[0].hora,
+          hora_value: JSON.stringify(data[0].hora),
+          todas_colunas: Object.keys(data[0])
+        });
+      }
+      
       return data || [];
     } catch (error) {
       console.error("Erro ao buscar todas as aulas:", error);
@@ -130,6 +142,7 @@ const aulasService = {
           aula:aulas (
             id, 
             data,
+            hora,
             status,
             observacoes,
             created_at,
@@ -169,6 +182,18 @@ const aulasService = {
       console.log(
         `[SUCCESS] Encontradas ${aulas.length} aulas para o aluno ${alunoId}`
       );
+      
+      // Log para debug dos dados das aulas retornadas
+      if (aulas.length > 0) {
+        console.log("[aulasService.getAulasByAlunoId] Primeira aula retornada:", {
+          id: aulas[0].id,
+          hora: aulas[0].hora,
+          hora_type: typeof aulas[0].hora,
+          hora_value: JSON.stringify(aulas[0].hora),
+          todas_colunas: Object.keys(aulas[0])
+        });
+      }
+      
       return aulas;
     } catch (error) {
       console.error(`[ERROR] Erro ao buscar aulas do aluno ${alunoId}:`, error);
@@ -259,10 +284,16 @@ const aulasService = {
         observacoes: aulaData.observacoes || "",
       };
 
+      // Capturar o horário atual automaticamente (formato HH:MM)
+      const agora = new Date();
+      const horas = String(agora.getHours()).padStart(2, "0");
+      const minutos = String(agora.getMinutes()).padStart(2, "0");
+      aulaBasica.hora = `${horas}:${minutos}`;
+
       // Incluir outros campos se existirem
       if (aulaData.titulo) aulaBasica.titulo = aulaData.titulo;
       if (aulaData.descricao) aulaBasica.descricao = aulaData.descricao;
-      if (aulaData.hora) aulaBasica.hora = aulaData.hora;
+      // Não sobrescrever a hora se já foi definida automaticamente
       if (aulaData.exercicios) aulaBasica.exercicios = aulaData.exercicios;
 
       console.log("Criando aula com dados:", aulaBasica);
@@ -473,11 +504,12 @@ const aulasService = {
         `Encontradas ${aulasEmAndamento.length} aulas em andamento para finalizar`
       );
 
-      // 2. Atualizar todas para status "finalizada"
+      // 2. Atualizar todas para status "finalizada" e registrar o horário de finalização (23:59)
       const { error: updateError } = await supabase
         .from("aulas")
         .update({
           status: "finalizada",
+          hora: "23:59", // Registrar horário fixo de finalização automática
           observacoes: (aula) =>
             `${
               aula.observacoes || ""

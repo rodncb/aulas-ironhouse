@@ -177,10 +177,15 @@ function Sala() {
           );
 
           // Criar objeto de aula para salvar no banco de dados
+          const agora = new Date();
+          const horas = String(agora.getHours()).padStart(2, "0");
+          const minutos = String(agora.getMinutes()).padStart(2, "0");
+
           const novaAula = {
             professor_id: professorAtual.id,
             status: "em_andamento",
-            data: new Date().toISOString().split("T")[0],
+            data: agora.toISOString().split("T")[0],
+            hora: `${horas}:${minutos}`,
             observacoes: "",
             alunos: [],
           };
@@ -541,6 +546,11 @@ function Sala() {
       const dia = String(hoje.getUTCDate()).padStart(2, "0"); // Usar UTC
       const dataFormatadaISO = `${ano}-${mes}-${dia}`; // Formato YYYY-MM-DD com data UTC
 
+      // Capturar o horário atual para registrar quando a aula foi finalizada
+      const horas = String(hoje.getHours()).padStart(2, "0");
+      const minutos = String(hoje.getMinutes()).padStart(2, "0");
+      const horaAtual = `${horas}:${minutos}`;
+
       // LOG DETALHADO DA DATA (mantido para verificação)
       console.log(`[handleFinalizarAula] Data Crua Local: ${hoje.toString()}`);
       console.log(
@@ -549,6 +559,7 @@ function Sala() {
       console.log(
         `[handleFinalizarAula] Data Formatada (UTC) para BD: ${dataFormatadaISO}`
       );
+      console.log(`[handleFinalizarAula] Hora de finalização: ${horaAtual}`);
 
       console.log(`Data UTC para finalização da sala: ${dataFormatadaISO}`);
 
@@ -587,6 +598,7 @@ function Sala() {
                 data: dataFormatadaISO, // CORRIGIDO: Usar data calculada
                 status: "finalizada",
                 observacoes: observacoes, // Usar observações específicas do aluno
+                hora: horaAtual, // Adicionar o horário de finalização
               };
 
               console.log(
@@ -658,6 +670,7 @@ function Sala() {
           .update({
             status: "finalizada",
             data: dataFormatadaISO, // CORRIGIDO: Usar data calculada
+            hora: horaAtual, // Adicionar hora de finalização
             alunos: [],
           })
           .eq("id", aula.id);
@@ -878,6 +891,11 @@ function Sala() {
         const dia = String(hoje.getUTCDate()).padStart(2, "0"); // Usar UTC
         const dataFormatadaISO = `${ano}-${mes}-${dia}`; // Formato YYYY-MM-DD com data UTC
 
+        // Capturar horário atual para registrar o momento da finalização
+        const horas = String(hoje.getHours()).padStart(2, "0");
+        const minutos = String(hoje.getMinutes()).padStart(2, "0");
+        const horaAtual = `${horas}:${minutos}`;
+
         console.log(
           `[handleFinalizarAlunoIndividual] Data Crua Local: ${hoje.toString()}`
         );
@@ -887,12 +905,16 @@ function Sala() {
         console.log(
           `[handleFinalizarAlunoIndividual] Data Formatada (UTC) para BD: ${dataFormatadaISO}`
         );
+        console.log(
+          `[handleFinalizarAlunoIndividual] Hora de finalização: ${horaAtual}`
+        );
 
         const aulaIndividualFinalizada = {
           professor_id: aulaAtual.professor_id,
           data: dataFormatadaISO, // Usar data UTC calculada
           status: "finalizada",
           observacoes: observacoesAluno, // Usar observações específicas do aluno
+          hora: horaAtual, // Registrar o horário em que o aluno foi finalizado
         };
 
         console.log(

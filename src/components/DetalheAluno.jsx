@@ -5,6 +5,88 @@ import "../styles/DetalheAluno.css";
 import { useCadastroAluno } from "../contexts/CadastroAlunoContext"; // Importar o contexto
 import aulasService from "../services/aulas.service"; // Importar serviço de aulas
 
+// Função auxiliar para interpretar horários de início/fim com base no status da aula
+const interpretarHorarios = (aula) => {
+  const hora = aula.hora;
+
+  // SEMPRE fazer log para debug
+  console.log(`[interpretarHorarios] Aula ID: ${aula.id}, Status: ${aula.status}, Hora: "${hora}", Tipo: ${typeof hora}`);
+
+  // Se não temos hora registrada (NULL ou undefined), retornar valores padrão
+  if (!hora || hora === null || hora === undefined) {
+    console.log(`[interpretarHorarios] Hora não definida para aula ${aula.id}`);
+    switch (aula.status) {
+      case "realizada":
+      case "finalizada":
+        return {
+          horaInicio: "Não registrado",
+          horaFim: "Não registrado",
+        };
+      case "cancelada":
+        return {
+          horaInicio: "Cancelada",
+          horaFim: "Cancelada",
+        };
+      default:
+        return {
+          horaInicio: "--:--",
+          horaFim: "--:--",
+        };
+    }
+  }
+
+  // Tratar especificamente aulas canceladas com hora '00:00'
+  if (hora === "00:00" && aula.status === "cancelada") {
+    console.log(`[interpretarHorarios] Aula cancelada com hora 00:00: ${aula.id}`);
+    return {
+      horaInicio: "Cancelada",
+      horaFim: "Cancelada",
+    };
+  }
+
+  // Com base no status da aula, interpretamos a hora
+  console.log(`[interpretarHorarios] Processando aula ${aula.id} com status ${aula.status} e hora "${hora}"`);
+  switch (aula.status) {
+    case "atual":
+    case "em_andamento":
+      // Para aulas em andamento, a hora é o horário de início
+      return {
+        horaInicio: hora,
+        horaFim: "--:--", // Ainda não finalizada
+      };
+    case "realizada":
+    case "finalizada":
+      // Para aulas finalizadas, assumir duração de 1 hora
+      try {
+        const [horas, minutos] = hora.split(':').map(Number);
+        const inicioDate = new Date();
+        inicioDate.setHours(horas, minutos);
+        
+        // Subtrair 1 hora para obter horário de início estimado
+        inicioDate.setHours(inicioDate.getHours() - 1);
+        
+        const horaInicioFormatada = inicioDate.toTimeString().slice(0, 5);
+        
+        console.log(`[interpretarHorarios] Aula finalizada ${aula.id}: ${horaInicioFormatada} - ${hora}`);
+        return {
+          horaInicio: horaInicioFormatada,
+          horaFim: hora, // A hora registrada é de fim
+        };
+      } catch (error) {
+        console.log(`[interpretarHorarios] Erro ao processar hora "${hora}" para aula ${aula.id}:`, error);
+        return {
+          horaInicio: "Não registrado",
+          horaFim: "Não registrado",
+        };
+      }
+    default:
+      return {
+        horaInicio: hora,
+        horaFim: "--:--",
+      };
+  }
+};
+
 const DetalheAluno = ({ alunoId, setActiveSection }) => {
   // Usar o contexto para gerenciar dados do aluno
   const {
@@ -116,10 +198,39 @@ const DetalheAluno = ({ alunoId, setActiveSection }) => {
         // Buscar todas as aulas
         const todasAulas = await aulasService.getAll();
 
+        // Adicionar log para depuração
+        console.log(
+          "[DetalheAluno] Todas as aulas recebidas:",
+          todasAulas.slice(0, 2).map((aula) => ({
+            id: aula.id,
+            data: aula.data,
+            hora: aula.hora, // Verificar se este campo está vindo preenchido
+            status: aula.status,
+          }))
+        );
+
         // Filtrar apenas as aulas que este aluno participou
         const aulasDoAluno = todasAulas.filter(
           (aula) => aula.alunos && aula.alunos.some((a) => a.id === aluno.id)
         );
+
+        // Log das aulas filtradas para o aluno
+        if (aulasDoAluno.length > 0) {
+          console.log(
+            "[DetalheAluno] Aulas do aluno:",
+            aulasDoAluno.slice(0, 3).map((aula) => ({
+              id: aula.id,
+              data: aula.data,
+              hora: aula.hora, // Verificar se este campo está vindo preenchido
+              status: aula.status,
+              hora_type: typeof aula.hora, // Verificar o tipo do campo
+              hora_value: JSON.stringify(aula.hora), // Verificar o valor exato
+            }))
+          );
+          
+          // Log adicional para verificar os dados da primeira aula
+          console.log("[DetalheAluno] Primeira aula COMPLETA:", aulasDoAluno[0]);
+        }
 
         setHistoricoAulas(aulasDoAluno);
         setError(null);
@@ -350,9 +461,21 @@ const DetalheAluno = ({ alunoId, setActiveSection }) => {
                       className="aula-header"
                       onClick={() => verDetalhesAula(aula)}
                     >
-                      <div className="aula-data">
-                        {/* CORREÇÃO: Passar a string 'YYYY-MM-DD' diretamente */}
-                        {formatarData(aula.data)}
+                      <div className="aula-data-horario">
+                        <div className="aula-data">
+                          {formatarData(aula.data)}
+                        </div>
+                        <div className="aula-horario">
+                          {(() => {
+                            console.log(`[RENDER] Processando aula ${aula.id} - Status: ${aula.status}, Hora: "${aula.hora}"`);
+                            const horarios = interpretarHorarios(aula);
+                            console.log(`[RENDER] Horarios retornados:`, horarios);
+                            if (aula.status === "realizada" || aula.status === "finalizada") {
+                              return `${horarios.horaInicio} - ${horarios.horaFim}`;
+                            }
+                            return horarios.horaInicio || "--:--";
+                          })()}
+                        </div>
                       </div>
                       <div className="aula-professor">
                         Professor:{" "}
@@ -367,6 +490,61 @@ const DetalheAluno = ({ alunoId, setActiveSection }) => {
                     </div>
                     {aulaExpandida === aula.id && (
                       <div className="aula-detalhes">
+                        <div className="aula-info-detalhada">
+                          <h4>Informações</h4>
+                          <p>
+                            <strong>Data:</strong> {formatarData(aula.data)}
+                          </p>
+                          <div className="horario-container">
+                            {(() => {
+                              console.log(`[RENDER-DETALHES] Processando aula expandida ${aula.id} - Status: ${aula.status}, Hora: "${aula.hora}"`);
+                              const horarios = interpretarHorarios(aula);
+                              console.log(`[RENDER-DETALHES] Horarios detalhados retornados:`, horarios);
+                              
+                              if (aula.status === "finalizada" || aula.status === "realizada") {
+                                return (
+                                  <>
+                                    <div className="horario-inicio">
+                                      <strong>Horário de Início:</strong>{" "}
+                                      <span className="hora-valor">
+                                        {horarios.horaInicio}
+                                      </span>
+                                    </div>
+                                    <div className="horario-fim">
+                                      <strong>Horário de Término:</strong>{" "}
+                                      <span className="hora-valor">
+                                        {horarios.horaFim}
+                                      </span>
+                                    </div>
+                                  </>
+                                );
+                              } else {
+                                return (
+                                  <>
+                                    <div className="horario-inicio">
+                                      <strong>Horário de Início:</strong>{" "}
+                                      <span className="hora-valor">
+                                        {horarios.horaInicio}
+                                      </span>
+                                    </div>
+                                    <div className="horario-fim">
+                                      <strong>Horário de Término:</strong>{" "}
+                                      <span className="hora-valor">
+                                        {horarios.horaFim}
+                                      </span>
+                                    </div>
+                                  </>
+                                );
+                              }
+                            })()}
+                          </div>
+                          <p>
+                            <strong>Professor:</strong>{" "}
+                            {aula.professor
+                              ? aula.professor.nome
+                              : "Não definido"}
+                          </p>
+                        </div>
                         <div className="aula-exercicios">
                           <h4>Exercícios</h4>
                           {aula.exercicios && aula.exercicios.length > 0 ? (

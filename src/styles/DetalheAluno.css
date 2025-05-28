@@ -649,115 +649,157 @@
   border: 1px solid #ddd;
   border-radius: 8px;
   overflow: hidden;
+  margin-bottom: 10px;
   background-color: #fff;
-}
-
-.aula-realizada {
-  border-left: 5px solid #28a745;
-}
-
-.aula-cancelada {
-  border-left: 5px solid #dc3545;
-}
-
-.aula-atual {
-  border-left: 5px solid #17a2b8;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .aula-header {
   display: flex;
-  justify-content: space-between;
+  flex-wrap: wrap;
   align-items: center;
   padding: 12px 15px;
-  background-color: #f8f9fa;
   cursor: pointer;
-  border-bottom: 1px solid #eee;
-  transition: background-color 0.2s ease;
-  flex-wrap: wrap;
+  transition: background-color 0.2s;
+  position: relative;
+  gap: 10px;
 }
 
 .aula-header:hover {
-  background-color: #f0f0f0;
+  background-color: #f9f9f9;
 }
 
-.aula-data,
-.aula-professor,
+.aula-data {
+  font-weight: bold;
+  font-size: 1.05rem;
+  color: #2d3748;
+  display: flex;
+  align-items: center;
+  margin-right: 15px;
+}
+
+.aula-data-horario {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-right: 15px;
+}
+
+.aula-data-horario .aula-data {
+  font-weight: bold;
+  font-size: 1.05rem;
+  color: #2d3748;
+}
+
+.aula-data-horario .aula-horario {
+  font-weight: 500;
+  font-size: 0.85rem;
+  color: #0366d6;
+  background-color: #f0f7ff;
+  padding: 2px 6px;
+  border-radius: 3px;
+  border: 1px solid #c2e0ff;
+  width: fit-content;
+}
+
+.aula-horario {
+  font-weight: 500;
+  display: inline-flex;
+  padding: 2px 8px;
+  background-color: #e6f3ff;
+  border: 1px solid #c2e0ff;
+  border-radius: 4px;
+  color: #0366d6;
+  color: #333;
+  background-color: #f0f7ff;
+  padding: 3px 8px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid #dae5f5;
+}
+
+.aula-professor {
+  margin-right: 15px;
+  color: #4a5568;
+}
+
 .aula-status {
-  margin: 5px 10px 5px 0;
+  margin-left: auto;
+  margin-right: 30px; /* Dar espaço para o triângulo */
 }
 
 .aula-toggle {
-  margin-left: auto;
-  font-size: 18px;
-  color: #6c757d;
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 12px;
+  color: #718096;
 }
 
-.aula-detalhes {
-  padding: 15px;
-  background-color: #fff;
+/* Estilos para horários detalhados */
+.horario-container {
+  margin: 10px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
-.aula-exercicios h4,
-.aula-notas h4,
-.aula-lesoes h4 {
-  margin-top: 0;
-  font-size: 16px;
-  color: #495057;
-  border-bottom: none;
-  padding-bottom: 5px;
+.horario-inicio,
+.horario-fim {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-.aula-exercicios ul {
-  list-style: disc;
-  padding-left: 20px;
-  margin: 5px 0 15px;
-}
-
-.aula-exercicios li {
-  margin-bottom: 5px;
-}
-
-.aula-notas,
-.aula-lesoes {
-  margin-top: 15px;
-}
-
-.aula-notas p,
-.aula-lesoes p {
-  margin: 5px 0;
-  line-height: 1.5;
-}
-
-.status-realizada {
-  background-color: #d4edda;
-  color: #155724;
-  padding: 3px 8px;
-  border-radius: 12px;
+.hora-valor {
+  background-color: #f0f7ff;
+  color: #0366d6;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-family: monospace;
   font-size: 0.9em;
-  border: 1px solid #c3e6cb;
+  border: 1px solid #c2e0ff;
 }
 
-.status-cancelada {
-  background-color: #f8d7da;
-  color: #721c24;
-  padding: 3px 8px;
-  border-radius: 12px;
-  font-size: 0.9em;
-  border: 1px solid #f5c6cb;
+.aula-data-horario {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-right: 15px;
 }
 
-.status-atual {
-  background-color: #d1ecf1;
-  color: #0c5460;
-  padding: 3px 8px;
-  border-radius: 12px;
-  font-size: 0.9em;
-  border: 1px solid #bee5eb;
+.aula-data-horario .aula-data {
+  font-weight: bold;
+  font-size: 1.05rem;
+  color: #2d3748;
 }
 
-.sem-registros {
-  text-align: center;
-  padding: 20px;
-  color: #6c757d;
-  font-style: italic;
+.aula-data-horario .aula-horario {
+  font-weight: 500;
+  font-size: 0.85rem;
+  color: #0366d6;
+  background-color: #f0f7ff;
+  padding: 2px 6px;
+  border-radius: 3px;
+  border: 1px solid #c2e0ff;
+  width: fit-content;
+}
+
+/* Responsividade para horários */
+@media (max-width: 768px) {
+  .horario-container {
+    gap: 5px;
+  }
+  
+  .aula-data-horario {
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .aula-data-horario .aula-horario {
+    font-size: 0.8rem;
+  }
 }
