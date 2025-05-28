@@ -10,7 +10,6 @@ const Header = ({ toggleSidebar, user, onLogout, sidebarCollapsed }) => {
 
   const handleLogout = (e) => {
     e.preventDefault();
-    console.log("Fazendo logout...");
     if (onLogout) {
       onLogout();
     }

@@ -10,7 +10,6 @@ export const reloadSupabaseSchemaCache = async () => {
   try {
     // Qualquer função que precise ser recuperada do arquivo original
     // pode ser implementada aqui
-    console.log("Recarregando cache de esquema do Supabase...");
     return true;
   } catch (error) {
     console.error("Erro ao recarregar cache:", error);

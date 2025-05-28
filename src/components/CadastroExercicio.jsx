@@ -114,7 +114,6 @@ const CadastroExercicio = () => {
       // CORREÇÃO: Usar o nome correto da função do serviço (create)
       const exercicioSalvo = await exerciciosService.create(novoExercicio);
       setExercicios([...exercicios, exercicioSalvo]); // Add the saved exercise to the list
-      console.log("Exercício salvo:", exercicioSalvo);
 
       // Reset form after successful save/update
       setNovoExercicio({
@@ -192,7 +191,6 @@ const CadastroExercicio = () => {
         )
       );
       cancelarEdicao(); // Resetar form e estado de edição
-      console.log("Exercício atualizado:", exercicioAtualizado);
     } catch (err) {
       console.error("Erro ao atualizar exercício:", err);
       setError(

@@ -45,7 +45,6 @@ async function createAluno(alunoData) {
     // Remover a chave original tipoLesao se existir para evitar conflito
     delete dadosParaSupabase.tipoLesao;
 
-    console.log("Dados finais sendo enviados para o banco:", dadosParaSupabase);
 
     const { data, error } = await supabase
       .from("alunos")
@@ -70,17 +69,8 @@ async function updateAluno(id, alunoData) {
     }
 
     // Log detalhado para debug
-    console.log(
-      `[updateAluno] Iniciando atualização do aluno ${id} com dados:`,
-      alunoData
-    );
-
     // Tratar caso especial de atualização de status
     if (alunoData.status !== undefined) {
-      console.log(
-        `[updateAluno] Atualizando status do aluno para: ${alunoData.status}`
-      );
-
       // Garantir que o status seja uma string válida
       if (typeof alunoData.status !== "string") {
         alunoData.status = alunoData.status ? "ativo" : "inativo";
@@ -122,17 +112,12 @@ async function updateAluno(id, alunoData) {
       }
 
       if (alunoAtualizado) {
-        console.log(
-          "[updateAluno] Aluno encontrado após atualização:",
-          alunoAtualizado
-        );
         return alunoAtualizado;
       }
 
       return null;
     }
 
-    console.log("[updateAluno] Aluno atualizado com sucesso:", data[0]);
     return data[0];
   } catch (error) {
     console.error("[updateAluno] Erro ao atualizar aluno:", error);

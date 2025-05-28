@@ -100,7 +100,6 @@ const usuarios = [
  * @returns {Promise<Object>} - Resultado da operação
  */
 async function verificarEAtualizarPerfil(usuario) {
-  console.log(`Verificando perfil para: ${usuario.email}`);
 
   try {
     // Verificar se o perfil existe
@@ -123,7 +122,6 @@ async function verificarEAtualizarPerfil(usuario) {
 
     // Se o perfil não existe, criar um novo
     if (!perfil) {
-      console.log(
         `Perfil não encontrado para ${usuario.email}. Criando novo...`
       );
 
@@ -153,7 +151,6 @@ async function verificarEAtualizarPerfil(usuario) {
         };
       }
 
-      console.log(`Perfil criado com sucesso para ${usuario.email}`);
       return { sucesso: true, mensagem: "Perfil criado", perfil: novoPerfil };
     }
 
@@ -163,7 +160,6 @@ async function verificarEAtualizarPerfil(usuario) {
       perfil.email !== usuario.email ||
       perfil.nome !== usuario.nome
     ) {
-      console.log(`Atualizando perfil para ${usuario.email}...`);
 
       const { data: perfilAtualizado, error: erroAtualizacao } = await supabase
         .from("profiles")
@@ -188,7 +184,6 @@ async function verificarEAtualizarPerfil(usuario) {
         };
       }
 
-      console.log(`Perfil atualizado com sucesso para ${usuario.email}`);
       return {
         sucesso: true,
         mensagem: "Perfil atualizado",
@@ -196,7 +191,6 @@ async function verificarEAtualizarPerfil(usuario) {
       };
     }
 
-    console.log(`Perfil já está correto para ${usuario.email}`);
     return { sucesso: true, mensagem: "Perfil já está correto", perfil };
   } catch (erro) {
     console.error(`Erro inesperado para ${usuario.email}:`, erro);
@@ -208,25 +202,19 @@ async function verificarEAtualizarPerfil(usuario) {
  * Verifica todos os usuários da lista
  */
 async function verificarTodosUsuarios() {
-  console.log(`Iniciando verificação de ${usuarios.length} usuários...`);
 
   for (const usuario of usuarios) {
     const resultado = await verificarEAtualizarPerfil(usuario);
-    console.log(`Resultado para ${usuario.email}: ${resultado.mensagem}`);
   }
 
-  console.log("Verificação concluída!");
 }
 
 // Execute a função apenas se este arquivo for executado diretamente
 if (typeof window !== "undefined" && window.document) {
-  console.log("Este script pode ser executado no console do navegador.");
   window.verificarPerfis = verificarTodosUsuarios;
-  console.log("Use window.verificarPerfis() para verificar todos os usuários.");
 } else if (require.main === module) {
   verificarTodosUsuarios()
     .then(() => {
-      console.log("Script finalizado.");
       process.exit(0);
     })
     .catch((erro) => {
@@ -234,7 +222,6 @@ if (typeof window !== "undefined" && window.document) {
       process.exit(1);
     });
 } else {
-  console.log("Script carregado como módulo");
 }
 
 export { verificarTodosUsuarios, verificarEAtualizarPerfil };

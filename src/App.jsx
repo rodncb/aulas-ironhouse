@@ -52,13 +52,10 @@ const App = () => {
 
   // Efeito principal para autenticação e verificação de sessão
   useEffect(() => {
-    console.log("[App.jsx] useEffect principal MONTADO/EXECUTADO");
     let isMounted = true;
 
     // Função para inicializar a aplicação (simplificada)
     const initializeApp = async () => {
-      console.log("[App.jsx] Iniciando initializeApp SIMPLIFICADA...");
-
       try {
         // 1. Obter sessão atual
         const { data: sessionData, error: sessionError } =
@@ -79,7 +76,6 @@ const App = () => {
 
         // 2. Se não tem usuário logado, mostrar login
         if (!currentUser) {
-          console.log("[App.jsx] Nenhum usuário logado.");
           if (isMounted) {
             setUser(null);
             setUserRole(null);
@@ -92,7 +88,6 @@ const App = () => {
         // 3. Usuário logado, definir usuário e buscar role
         if (isMounted) {
           setUser(currentUser);
-          console.log("[App.jsx] Usuário logado encontrado:", currentUser.id);
         }
 
         // 4. Buscar role do usuário
@@ -106,7 +101,6 @@ const App = () => {
 
           if (profile) {
             userRoleValue = profile.role;
-            console.log("[App.jsx] Role definida:", userRoleValue);
           }
         } catch (error) {
           console.error("[App.jsx] Erro ao buscar role:", error);
@@ -116,7 +110,6 @@ const App = () => {
         if (isMounted) {
           setUserRole(userRoleValue);
           setLoading(false);
-          console.log("[App.jsx] Inicialização concluída. Loading = false");
         }
       } catch (error) {
         console.error("[App.jsx] Erro GERAL em initializeApp:", error);
@@ -126,7 +119,6 @@ const App = () => {
           setUserRole(null);
           navigate("/login");
           setLoading(false);
-          console.log("[App.jsx] Erro na inicialização. Loading = false");
         }
       }
     };
@@ -137,8 +129,6 @@ const App = () => {
     // Configurar listener de autenticação simplificado
     const { data: authListener } = supabase.auth.onAuthStateChange(
       (_event, session) => {
-        console.log("[App.jsx] onAuthStateChange:", _event);
-
         if (!isMounted) return;
 
         const currentUser = session?.user;
@@ -177,9 +167,6 @@ const App = () => {
     // Definir um fallback para garantir que loading sempre termine
     const timeoutId = setTimeout(() => {
       if (isMounted && loading) {
-        console.log(
-          "[App.jsx] FALLBACK: Forçando loading = false após timeout"
-        );
         setLoading(false);
       }
     }, 5000); // 5 segundos
@@ -188,10 +175,8 @@ const App = () => {
     return () => {
       isMounted = false;
       clearTimeout(timeoutId);
-      console.log("[App.jsx] Executando cleanup do useEffect principal.");
       if (authListener && authListener.subscription) {
         authListener.subscription.unsubscribe();
-        console.log("[App.jsx] Listener de autenticação removido.");
       }
     };
   }, []); // Sem dependências para evitar re-execuções
@@ -201,28 +186,15 @@ const App = () => {
     let isMounted = true;
     let stopScheduler = null;
 
-    console.log("[App.jsx] Efeito do Scheduler montado/executado.");
-
     // Iniciar apenas se não estivermos no estado de loading inicial
     // e se o componente ainda estiver montado
     if (!loading && isMounted) {
-      console.log(
-        "[App.jsx] Iniciando agendamento de finalização automática..."
-      );
       stopScheduler = startAutoEndScheduler();
-    } else {
-      console.log(
-        `[App.jsx] Scheduler não iniciado (loading: ${loading}, isMounted: ${isMounted}).`
-      );
     }
 
     return () => {
       isMounted = false;
-      console.log("[App.jsx] Executando cleanup do useEffect do Scheduler.");
       if (stopScheduler) {
-        console.log(
-          "[App.jsx] Parando agendamento de finalização automática..."
-        );
         stopScheduler();
       }
     };
@@ -232,7 +204,6 @@ const App = () => {
   useEffect(() => {
     const handleNavigation = (event) => {
       const { secao } = event.detail;
-      console.log(`[App.jsx] Evento navegarPara recebido: ${secao}`);
 
       if (secao.startsWith("detalhe-aluno/")) {
         const id = secao.split("/")[1];
@@ -249,7 +220,6 @@ const App = () => {
 
     return () => {
       window.removeEventListener("navegarPara", handleNavigation);
-      console.log("[App.jsx] Listener de navegação removido.");
     };
   }, [navigate]);
 
@@ -326,7 +296,6 @@ const App = () => {
   // Função para mudar a rota com verificações
   const handleNavigate = useCallback(
     (path) => {
-      console.log(`[App.jsx] handleNavigate chamado com: ${path}`);
 
       // Extrair a seção base da rota
       const section = path.split("/")[1] || path;

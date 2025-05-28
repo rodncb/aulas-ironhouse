@@ -141,7 +141,6 @@ function Sidebar({ navigate, collapsed, toggleSidebar, userRole, onLogout }) {
   // Função para lidar com o clique no botão de logout
   const handleLogout = (e) => {
     e.preventDefault();
-    console.log("Logout solicitado pelo Sidebar");
 
     // Fechar o sidebar no mobile antes de fazer logout
     if (window.innerWidth <= 768 && !collapsed) {

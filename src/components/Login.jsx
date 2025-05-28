@@ -28,7 +28,6 @@ const Login = ({ onLogin }) => {
         return;
       }
 
-      console.log(`Tentando login para ${email} como ${userType}`);
 
       // Chama a função handleLogin passada pelo App.jsx (que usa useAuth.signIn)
       const result = await onLogin(email, password, userType); // Passa userType também
@@ -43,7 +42,6 @@ const Login = ({ onLogin }) => {
       }
 
       // A verificação de tipo e o redirecionamento agora são tratados pelo App.jsx / useAuth
-      console.log("Login bem-sucedido, App.jsx cuidará do redirecionamento.");
       // O redirecionamento será feito pelo App.jsx após o estado do usuário ser atualizado pelo useAuth
       // navigate(userType === "admin" ? "/admin" : "/professor"); // REMOVIDO
     } catch (err) {

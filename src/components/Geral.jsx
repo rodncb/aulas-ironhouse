@@ -731,7 +731,6 @@ const Geral = ({ alunosEmAula, atualizarAlunosEmAula }) => {
       // --- LÓGICA AJUSTADA ---
       // Se temos uma aulaAtual (criada por iniciarNovaAula ou carregada), atualizamos ela.
       if (aulaAtual) {
-        console.log("Atualizando aula existente (aulaAtual):", aulaAtual.id);
         aulaData = {
           ...aulaAtual, // Usar dados da aula atual como base
           alunos: alunosNaAula,
@@ -771,7 +770,6 @@ const Geral = ({ alunosEmAula, atualizarAlunosEmAula }) => {
       }
       // --- FIM DO AJUSTE ---
 
-      console.log("Aula salva/atualizada:", aulaData);
 
       // Atualizar o estado local
       setAulaAtual(aulaData); // Define a aula salva (criada ou atualizada) como a atual
@@ -859,9 +857,7 @@ const Geral = ({ alunosEmAula, atualizarAlunosEmAula }) => {
         total_alunos: 0,
       };
 
-      console.log("Criando aula placeholder...");
       const aulaCriada = await aulasService.create(novaAulaData);
-      console.log("Aula placeholder criada:", aulaCriada);
 
       // Definir a aula recém-criada como a aula atual
       setAulaAtual(aulaCriada);

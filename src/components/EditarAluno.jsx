@@ -43,9 +43,7 @@ const EditarAluno = ({ alunoId, setActiveSection }) => {
           alunoIdContexto === alunoId &&
           Object.keys(dadosContexto).length > 0
         ) {
-          console.log(
-            "[EditarAluno] Usando dados do aluno já carregados no contexto"
-          );
+    
           setLocalFormData({
             nome: dadosContexto.nome || "",
             data_nascimento: dadosContexto.data_nascimento || "",
@@ -62,9 +60,6 @@ const EditarAluno = ({ alunoId, setActiveSection }) => {
         }
 
         // Se não temos os dados ou o ID é diferente, carregar do backend através do contexto
-        console.log(
-          `[EditarAluno] Carregando dados do aluno via contexto: ${alunoId}`
-        );
         await carregarAlunoDoContexto(alunoId);
 
         // Verificar se os dados foram carregados no contexto após a operação
@@ -73,15 +68,9 @@ const EditarAluno = ({ alunoId, setActiveSection }) => {
           Object.keys(dadosContexto).length > 0 &&
           alunoIdContexto === alunoId
         ) {
-          console.log(
-            "[EditarAluno] Dados carregados via contexto com sucesso"
-          );
           // Os dados serão processados no próximo useEffect quando dadosContexto for atualizado
         } else {
           // Se não conseguir carregar via contexto, tentar carregar diretamente
-          console.log(
-            "[EditarAluno] Tentando carregar dados diretamente do Supabase"
-          );
           const { data, error } = await supabase
             .from("alunos")
             .select("*")
@@ -95,7 +84,6 @@ const EditarAluno = ({ alunoId, setActiveSection }) => {
               text: "Não foi possível carregar os dados do aluno.",
             });
           } else if (data) {
-            console.log("[EditarAluno] Aluno carregado diretamente:", data);
             // Preencher formData com os dados do aluno
             setLocalFormData({
               nome: data.nome || "",
@@ -144,7 +132,6 @@ const EditarAluno = ({ alunoId, setActiveSection }) => {
       Object.keys(dadosContexto).length > 0 &&
       alunoIdContexto === alunoId
     ) {
-      console.log("[EditarAluno] Atualizando formulário com dados do contexto");
       setLocalFormData({
         nome: dadosContexto.nome || "",
         data_nascimento: dadosContexto.data_nascimento || "",
@@ -251,7 +238,6 @@ const EditarAluno = ({ alunoId, setActiveSection }) => {
 
   // Botão voltar no topo da página - melhorado para que sempre funcione
   const handleVoltar = () => {
-    console.log("Botão Voltar clicado");
     voltarParaLista();
   };
 

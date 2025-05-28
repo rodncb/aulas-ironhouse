@@ -28,68 +28,36 @@ export const SalaProvider = ({ children }) => {
   useEffect(() => {
     // Executar apenas uma vez, mesmo com StrictMode ou múltiplas montagens
     if (initialLoadDone.current) {
-      console.log("[SalaContext] Carregamento inicial já realizado, pulando.");
       return;
     }
     initialLoadDone.current = true; // Marcar que o carregamento foi feito
 
-    console.log("[SalaContext] Iniciando carregamento do localStorage...");
     let loadedObservacoes = {};
     try {
       // Carregar observações
       const savedObservacoes = localStorage.getItem(STORAGE_KEYS.observacoes);
       if (savedObservacoes) {
-        console.log(
-          "[SalaContext] Observações encontradas no localStorage:",
-          savedObservacoes
-        );
         loadedObservacoes = JSON.parse(savedObservacoes);
         setAlunoObservacoes(loadedObservacoes);
-        console.log(
-          "[SalaContext] Estado alunoObservacoes definido com:",
-          loadedObservacoes
-        );
       } else {
-        console.log(
-          "[SalaContext] Nenhuma observação encontrada no localStorage"
-        );
         setAlunoObservacoes({}); // Garante que começa vazio se não houver nada salvo
       }
 
       // Carregar exercícios
       const savedExercicios = localStorage.getItem(STORAGE_KEYS.exercicios);
       if (savedExercicios) {
-        console.log(
-          "[SalaContext] Carregando exercícios do localStorage:",
-          savedExercicios
-        );
         setExerciciosPorAluno(JSON.parse(savedExercicios));
-      } else {
-        console.log(
-          "[SalaContext] Nenhum exercício encontrado no localStorage"
-        );
       }
 
       // Carregar aula atual
       const savedAulaAtual = localStorage.getItem(STORAGE_KEYS.aulaAtual);
       if (savedAulaAtual) {
-        console.log(
-          "[SalaContext] Carregando aula atual do localStorage:",
-          savedAulaAtual
-        );
         setAulaAtual(JSON.parse(savedAulaAtual));
-      } else {
-        console.log(
-          "[SalaContext] Nenhuma aula atual encontrada no localStorage"
-        );
       }
     } catch (error) {
       console.error("Erro ao carregar dados do localStorage:", error);
       setAlunoObservacoes({}); // Reseta em caso de erro de parse
     }
-    console.log(
-      "[SalaContext] Carregamento inicial do localStorage concluído."
-    );
   }, []); // Dependência vazia para rodar apenas na montagem inicial
 
   // Salvar observações no localStorage sempre que mudarem
@@ -129,11 +97,6 @@ export const SalaProvider = ({ children }) => {
 
   // Atualizar observação de um aluno específico
   const updateAlunoObservacao = (alunoId, observacao) => {
-    console.log(
-      `[SalaContext] Atualizando observação para aluno ${alunoId}:`,
-      observacao
-    );
-
     setAlunoObservacoes((prev) => {
       const novasObservacoes = {
         ...prev,
@@ -145,9 +108,6 @@ export const SalaProvider = ({ children }) => {
         localStorage.setItem(
           STORAGE_KEYS.observacoes,
           JSON.stringify(novasObservacoes)
-        );
-        console.log(
-          "[SalaContext] Observações salvas no localStorage com sucesso"
         );
       } catch (error) {
         console.error(

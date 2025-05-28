@@ -100,8 +100,6 @@ const DetalheCadastroAluno = ({ aluno, alunoId, onNavigateBack }) => {
         setCarregandoAluno(true);
         setErro(null);
 
-        console.log(`Buscando dados do aluno com ID: ${alunoId}`);
-
         const { data, error } = await supabase
           .from("alunos")
           .select("*")
@@ -119,7 +117,6 @@ const DetalheCadastroAluno = ({ aluno, alunoId, onNavigateBack }) => {
           return;
         }
 
-        console.log("Dados do aluno carregados:", data);
         setDadosAluno(data);
         setObservacoes(data.observacoes || "");
       } catch (err) {
@@ -147,18 +144,10 @@ const DetalheCadastroAluno = ({ aluno, alunoId, onNavigateBack }) => {
 
       try {
         setCarregandoHistorico(true);
-        console.log(
-          `Carregando histórico de aulas para o aluno: ${alunoAtual.id}`
-        );
 
         // Usar o método específico para buscar aulas por ID do aluno
         const aulasDoAluno = await aulasService.getAulasByAlunoId(
           alunoAtual.id
-        );
-
-        console.log(
-          `Aulas encontradas para o aluno ${alunoAtual.id}:`,
-          aulasDoAluno.length
         );
         
         setHistoricoAulas(aulasDoAluno);

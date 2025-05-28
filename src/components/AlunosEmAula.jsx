@@ -22,7 +22,6 @@ const AlunosEmAula = ({ alunosNaAula = [], aulaId, onAlunoSelect }) => {
         const alunos = await alunosService.getAll();
         setTodosAlunos(alunos);
 
-        console.log(
           `[AlunosEmAula.jsx] Dados carregados: ${alunos.length} alunos`
         );
         setLoading(false);

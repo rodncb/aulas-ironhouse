@@ -24,9 +24,6 @@ export const CadastroAlunoProvider = ({ children }) => {
 
   // Carregar dados do localStorage ao iniciar
   useEffect(() => {
-    console.log(
-      "[CadastroAlunoContext] Tentando carregar dados do localStorage..."
-    );
     try {
       const savedData = localStorage.getItem(STORAGE_KEY_DATA);
       const savedState = localStorage.getItem(STORAGE_KEY_STATE);
@@ -35,36 +32,18 @@ export const CadastroAlunoProvider = ({ children }) => {
       if (savedData) {
         const parsedData = JSON.parse(savedData);
         setFormData(parsedData);
-        console.log(
-          "[CadastroAlunoContext] Dados do formulário carregados:",
-          parsedData
-        );
       } else {
         setFormData({}); // Garante estado inicial limpo se nada for encontrado
-        console.log(
-          "[CadastroAlunoContext] Nenhum dado de formulário encontrado."
-        );
       }
 
       if (savedState) {
         setFormState(savedState);
-        console.log(
-          "[CadastroAlunoContext] Estado do formulário carregado:",
-          savedState
-        );
       } else {
         setFormState("idle"); // Estado padrão
-        console.log(
-          "[CadastroAlunoContext] Nenhum estado de formulário encontrado, definindo como idle."
-        );
       }
 
       if (savedAlunoId) {
         setAlunoId(savedAlunoId);
-        console.log(
-          "[CadastroAlunoContext] ID do aluno carregado:",
-          savedAlunoId
-        );
       } else {
         setAlunoId(null); // Sem aluno para edição/visualização
       }
@@ -87,10 +66,6 @@ export const CadastroAlunoProvider = ({ children }) => {
   useEffect(() => {
     if (formState === "editing" || formState === "viewing") {
       try {
-        console.log(
-          "[CadastroAlunoContext] Salvando dados do formulário no localStorage:",
-          formData
-        );
         localStorage.setItem(STORAGE_KEY_DATA, JSON.stringify(formData));
       } catch (error) {
         console.error(
@@ -105,10 +80,6 @@ export const CadastroAlunoProvider = ({ children }) => {
   // Salvar estado no localStorage sempre que formState mudar
   useEffect(() => {
     try {
-      console.log(
-        "[CadastroAlunoContext] Salvando estado do formulário no localStorage:",
-        formState
-      );
       localStorage.setItem(STORAGE_KEY_STATE, formState);
     } catch (error) {
       console.error(
@@ -122,10 +93,6 @@ export const CadastroAlunoProvider = ({ children }) => {
   useEffect(() => {
     try {
       if (alunoId) {
-        console.log(
-          "[CadastroAlunoContext] Salvando ID do aluno no localStorage:",
-          alunoId
-        );
         localStorage.setItem(STORAGE_KEY_ALUNO_ID, alunoId);
       } else {
         localStorage.removeItem(STORAGE_KEY_ALUNO_ID);
@@ -155,15 +122,10 @@ export const CadastroAlunoProvider = ({ children }) => {
     if (!id) return;
 
     setCarregandoAluno(true);
-    console.log(`[CadastroAlunoContext] Carregando aluno com ID: ${id}`);
 
     try {
       const aluno = await alunosService.getById(id);
       if (aluno) {
-        console.log(
-          "[CadastroAlunoContext] Aluno carregado com sucesso:",
-          aluno
-        );
         // Formatar os dados conforme esperado pelos campos do formulário
         const dadosAluno = {
           id: aluno.id,
@@ -188,7 +150,12 @@ export const CadastroAlunoProvider = ({ children }) => {
           `[CadastroAlunoContext] Aluno com ID ${id} não encontrado.`
         );
         // Se o aluno não existe, limpar os dados e ir para estado ocioso
-        limparDadosCadastro();
+        setFormData({});
+        setFormState("idle");
+        setAlunoId(null);
+        localStorage.removeItem(STORAGE_KEY_DATA);
+        localStorage.removeItem(STORAGE_KEY_STATE);
+        localStorage.removeItem(STORAGE_KEY_ALUNO_ID);
       }
     } catch (error) {
       console.error(
@@ -203,18 +170,12 @@ export const CadastroAlunoProvider = ({ children }) => {
   // Função para iniciar a edição de um aluno já carregado
   const iniciarEdicaoAluno = useCallback(() => {
     if (formState === "viewing" && alunoId) {
-      console.log(
-        `[CadastroAlunoContext] Iniciando edição do aluno ${alunoId}`
-      );
       setFormState("editing");
     }
   }, [formState, alunoId]);
 
   // Função para limpar os dados do formulário e o localStorage
   const limparDadosCadastro = useCallback(() => {
-    console.log(
-      "[CadastroAlunoContext] Limpando dados do formulário e localStorage."
-    );
     setFormData({});
     setFormState("idle"); // Volta ao estado ocioso
     setAlunoId(null); // Limpa o ID do aluno
@@ -231,10 +192,6 @@ export const CadastroAlunoProvider = ({ children }) => {
       );
       return { success: false, error: "Dados inválidos para atualização" };
     }
-
-    console.log(
-      `[CadastroAlunoContext] Salvando alterações do aluno ${alunoId}`
-    );
 
     try {
       // Preparar o objeto para enviar ao backend

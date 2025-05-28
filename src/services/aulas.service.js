@@ -119,7 +119,7 @@ const aulasService = {
    */
   getAulasByAlunoId: async (alunoId) => {
     try {
-      console.log(`[INFO] Buscando aulas para o aluno com ID: ${alunoId}`);
+      
 
       // Abordagem mais direta usando join na consulta
       const { data, error } = await supabase
@@ -151,7 +151,7 @@ const aulasService = {
       }
 
       if (!data || data.length === 0) {
-        console.log(`[INFO] Nenhuma aula encontrada para o aluno ${alunoId}`);
+        
         return [];
       }
 
@@ -168,9 +168,7 @@ const aulasService = {
           return aula;
         });
 
-      console.log(
-        `[SUCCESS] Encontradas ${aulas.length} aulas para o aluno ${alunoId}`
-      );
+      
       
       return aulas;
     } catch (error) {
@@ -185,7 +183,7 @@ const aulasService = {
    */
   getById: async (id) => {
     try {
-      console.log(`Buscando aula com ID ${id}`);
+      
 
       // 1. Buscar dados básicos da aula primeiro
       const { data: aulaBasica, error: aulaError } = await supabase
@@ -203,9 +201,7 @@ const aulasService = {
         throw new Error(`Aula com ID ${id} não encontrada`);
       }
 
-      console.log(
-        `Aula básica encontrada: ${aulaBasica.id}, status: ${aulaBasica.status}`
-      );
+      
 
       // 2. Buscar o professor separadamente
       let professor = null;
@@ -219,7 +215,7 @@ const aulasService = {
         if (!profError && profData) {
           professor = profData;
         } else {
-          console.log(`Aviso: Professor não encontrado para aula ${id}`);
+          
         }
       } catch (profErr) {
         console.warn(`Erro ao buscar professor da aula ${id}:`, profErr);
@@ -233,10 +229,6 @@ const aulasService = {
         ...aulaBasica,
         professor: professor || { id: aulaBasica.professor_id },
       };
-
-      console.log(
-        `Aula ${id} montada com sucesso. Tem ${alunos.length} aluno(s).`
-      );
 
       return aulaCompleta;
     } catch (error) {
@@ -274,8 +266,8 @@ const aulasService = {
       // Não sobrescrever a hora se já foi definida automaticamente
       if (aulaData.exercicios) aulaBasica.exercicios = aulaData.exercicios;
 
-      console.log("Criando aula com dados:", aulaBasica);
-      console.log("Alunos a serem associados:", alunos);
+      
+      
 
       // Inserir a aula básica
       const { data, error } = await supabase
@@ -294,7 +286,7 @@ const aulasService = {
       }
 
       const aulaId = data[0].id;
-      console.log(`Aula criada com ID: ${aulaId}`);
+      
 
       // Se temos alunos, adicioná-los à tabela de relacionamento
       if (alunos.length > 0) {
@@ -305,10 +297,7 @@ const aulasService = {
             aluno_id: aluno.id,
           }));
 
-          console.log(
-            "Inserindo relacionamentos de alunos:",
-            alunosRelacionamentos
-          );
+          
 
           // Inserir os relacionamentos
           const { error: relError } = await supabase
@@ -328,7 +317,7 @@ const aulasService = {
       // Atualizar a coluna "alunos" no formato JSONB diretamente
       if (alunos.length > 0) {
         try {
-          console.log("Atualizando campo JSONB de alunos");
+          
           const alunosJSON = alunos.map((aluno) => ({
             id: aluno.id,
             nome: aluno.nome,
@@ -460,7 +449,7 @@ const aulasService = {
    */
   finalizarAulasEmAndamento: async () => {
     try {
-      console.log("Iniciando finalização automática de aulas em andamento...");
+      
 
       // 1. Buscar todas as aulas com status "em_andamento"
       const { data: aulasEmAndamento, error: fetchError } = await supabase
@@ -474,13 +463,11 @@ const aulasService = {
       }
 
       if (!aulasEmAndamento || aulasEmAndamento.length === 0) {
-        console.log("Nenhuma aula em andamento encontrada para finalizar");
+        
         return { count: 0, success: true };
       }
 
-      console.log(
-        `Encontradas ${aulasEmAndamento.length} aulas em andamento para finalizar`
-      );
+      
 
       // 2. Atualizar todas para status "finalizada" e registrar o horário de finalização (23:59)
       const { error: updateError } = await supabase
@@ -500,9 +487,7 @@ const aulasService = {
         throw updateError;
       }
 
-      console.log(
-        `${aulasEmAndamento.length} aulas finalizadas automaticamente`
-      );
+      
       return {
         count: aulasEmAndamento.length,
         success: true,
@@ -523,7 +508,7 @@ const aulasService = {
    */
   adicionarAluno: async (aulaId, alunoId) => {
     try {
-      console.log(`Adicionando aluno ${alunoId} à aula ${aulaId}`);
+      
 
       // Usar a função RPC para adicionar o aluno
       const { data: result, error: rpcError } = await supabase.rpc(
@@ -539,7 +524,7 @@ const aulasService = {
         throw rpcError;
       }
 
-      console.log("Resultado da adição de aluno via RPC:", result);
+      
 
       // Buscar a aula atualizada
       return await aulasService.getById(aulaId);
@@ -559,7 +544,7 @@ const aulasService = {
    */
   removerAlunoCompleto: async (aulaId, alunoId) => {
     try {
-      console.log(`[ROBUSTO] Removendo aluno ${alunoId} da aula ${aulaId}`);
+      
 
       // 1. Remover da tabela de relacionamento
       const { error: relacaoError } = await supabase
@@ -571,7 +556,7 @@ const aulasService = {
       if (relacaoError) {
         console.error("Erro ao remover da tabela aula_alunos:", relacaoError);
       } else {
-        console.log("Relação removida com sucesso da tabela aula_alunos");
+        
       }
 
       // 2. Obter a aula atual para atualizar o campo JSON de alunos
@@ -598,7 +583,7 @@ const aulasService = {
         if (updateError) {
           console.error("Erro ao atualizar campo JSON de alunos:", updateError);
         } else {
-          console.log("Campo JSON de alunos atualizado com sucesso");
+          
         }
       }
 

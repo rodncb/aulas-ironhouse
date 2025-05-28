@@ -33,7 +33,6 @@ const CadastroAluno = () => {
   useEffect(() => {
     // Verifica se o estado do formulário no contexto é 'editing'
     if (formState === "editing") {
-      console.log(
         "[CadastroAluno] Estado 'editing' detectado no contexto, abrindo modal."
       );
       setShowModal(true);
@@ -45,7 +44,6 @@ const CadastroAluno = () => {
       }, 5000);
       return () => clearTimeout(timer); // Limpar timer ao desmontar ou re-executar
     } else {
-      console.log(
         "[CadastroAluno] Estado 'idle' detectado no contexto, modal fechado."
       );
       setShowModal(false); // Garantir que o modal esteja fechado se não estiver editando
@@ -153,7 +151,6 @@ const CadastroAluno = () => {
         telefone: formData.telefone || null, // Adicionado campo telefone
       };
 
-      console.log("Dados FINAIS sendo enviados para o service:", novoAlunoData);
       const alunoSalvo = await alunosService.createAluno(novoAlunoData);
       setAlunos((prev) => [...prev, alunoSalvo]);
 
@@ -189,12 +186,10 @@ const CadastroAluno = () => {
     setShowRecoveryNotification(false); // Esconder notificação ao fechar manualmente
     // Limpar o contexto apenas se o estado for 'editing', indicando que havia dados não salvos
     if (formState === "editing") {
-      console.log(
         "[CadastroAluno] Fechando modal e limpando dados do contexto."
       );
       limparDadosCadastro(); // Limpa o estado e o localStorage
     } else {
-      console.log(
         "[CadastroAluno] Fechando modal sem limpar dados (estado idle)."
       );
     }

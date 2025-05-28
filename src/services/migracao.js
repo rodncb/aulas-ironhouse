@@ -3,7 +3,6 @@ import { supabase } from "./supabase";
 const migracaoService = {
   async migrarTodosDados() {
     // Log inicial mantido para indicar o início do processo
-    console.log("Iniciando migração de dados para o Supabase...");
 
     try {
       // Executar todas as migrações em sequência
@@ -12,7 +11,6 @@ const migracaoService = {
       await this.migrarExercicios();
       await this.migrarAulas();
 
-      console.log("Migração para o Supabase concluída com sucesso!");
       return { success: true };
     } catch (error) {
       console.error("Erro ao migrar dados para o Supabase:", error);

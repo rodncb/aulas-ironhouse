@@ -33,7 +33,6 @@ function GerenciamentoAlunos({ navigate }) {
 
   // Função de navegação que usa a prop navigate ou o hook useNavigate
   const handleNavigate = (path) => {
-    console.log(`[GerenciamentoAlunos] Navegando para: ${path}`);
     if (typeof navigate === "function") {
       navigate(path);
     } else {
@@ -417,7 +416,6 @@ function GerenciamentoAlunos({ navigate }) {
                     try {
                       const path = `/detalhe-aluno/${aluno.id}`;
                       handleNavigate(path);
-                      console.log(`Navegando para: ${path}`);
                     } catch (error) {
                       console.error(
                         "Erro ao navegar para detalhes do aluno:",
@@ -437,7 +435,6 @@ function GerenciamentoAlunos({ navigate }) {
                     try {
                       const path = `/editar-aluno/${aluno.id}`;
                       handleNavigate(path);
-                      console.log(`Navegando para: ${path}`);
                     } catch (error) {
                       console.error(
                         "Erro ao navegar para edição do aluno:",

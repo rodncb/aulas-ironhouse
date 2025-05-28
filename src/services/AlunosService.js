@@ -156,7 +156,6 @@ export const atualizarAluno = async (id, dadosAluno) => {
       dadosAluno.idade = parseInt(dadosAluno.idade);
     }
 
-    console.log("Enviando dados para atualização:", dadosAluno);
 
     // Faz a atualização
     const { data, error } = await supabase
@@ -171,7 +170,6 @@ export const atualizarAluno = async (id, dadosAluno) => {
       throw error;
     }
 
-    console.log("Dados atualizados com sucesso:", data);
 
     return {
       ...data,
@@ -189,7 +187,6 @@ export const atualizarAluno = async (id, dadosAluno) => {
  */
 export const garantirColunasExistem = async () => {
   try {
-    console.log("Tentando garantir que as colunas plano e nivel existam...");
 
     // Primeiro, vamos tentar buscar um aluno qualquer
     const { data: alunos, error: errorBusca } = await supabase
@@ -203,7 +200,6 @@ export const garantirColunasExistem = async () => {
     }
 
     if (!alunos || alunos.length === 0) {
-      console.log("Nenhum aluno encontrado para testar");
       return false;
     }
 
@@ -223,7 +219,6 @@ export const garantirColunasExistem = async () => {
       return false;
     }
 
-    console.log("Colunas plano e nivel verificadas com sucesso");
     return true;
   } catch (err) {
     console.error("Erro ao garantir colunas:", err);

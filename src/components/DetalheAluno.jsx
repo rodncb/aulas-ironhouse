@@ -110,26 +110,17 @@ const DetalheAluno = ({ alunoId, setActiveSection }) => {
           alunoIdContexto === alunoId &&
           Object.keys(dadosContexto).length > 0
         ) {
-          console.log(
-            "[DetalheAluno] Usando dados do aluno já carregados no contexto"
-          );
           setAluno(dadosContexto);
           setLoading(false);
           return;
         }
 
         // Se não temos os dados ou o ID é diferente, carregar do backend através do contexto
-        console.log(
-          `[DetalheAluno] Carregando dados do aluno via contexto: ${alunoId}`
-        );
         await carregarAlunoDoContexto(alunoId);
 
         // Os dados serão atualizados na próxima renderização via efeito de dadosContexto
         if (!dadosContexto || Object.keys(dadosContexto).length === 0) {
           // Se não conseguir carregar via contexto, tentar carregar diretamente
-          console.log(
-            "[DetalheAluno] Tentando carregar dados diretamente do Supabase"
-          );
           const { data, error } = await supabase
             .from("alunos")
             .select("*")
@@ -144,7 +135,6 @@ const DetalheAluno = ({ alunoId, setActiveSection }) => {
           } else if (!data) {
             setError("Aluno não encontrado.");
           } else {
-            console.log("[DetalheAluno] Aluno carregado diretamente:", data);
             setAluno(data);
           }
         }
@@ -173,7 +163,6 @@ const DetalheAluno = ({ alunoId, setActiveSection }) => {
       Object.keys(dadosContexto).length > 0 &&
       alunoIdContexto === alunoId
     ) {
-      console.log("[DetalheAluno] Atualizando aluno com dados do contexto");
       setAluno(dadosContexto);
       setLoading(false);
     }

@@ -6,7 +6,6 @@ import { supabase } from "./supabase";
  */
 export async function criarNovoAdmin() {
   try {
-    console.log("Tentando criar um novo usuário admin...");
 
     // Gerar uma senha temporária forte
     const novaSenha = "IronHouse@2025"; // Você deve alterar esta senha após o login
@@ -28,10 +27,6 @@ export async function criarNovoAdmin() {
       return { success: false, error: error.message };
     }
 
-    console.log("Novo usuário admin criado com sucesso!");
-    console.log("Email:", "ironhouse.admin@example.com");
-    console.log("Senha:", novaSenha);
-    console.log(
       "IMPORTANTE: Faça login com estas credenciais e altere a senha imediatamente."
     );
 
@@ -78,7 +73,6 @@ export async function atualizarMetadados(email) {
       return { success: false, error: error.message };
     }
 
-    console.log("Metadados atualizados com sucesso!");
     return { success: true, data };
   } catch (error) {
     console.error("Erro inesperado ao atualizar metadados:", error);
@@ -91,7 +85,6 @@ export async function atualizarMetadados(email) {
  */
 export async function criarNovoProfessor() {
   try {
-    console.log("Tentando criar um novo usuário professor...");
 
     // Gerar uma senha temporária forte
     const novaSenha = "Professor@2025"; // Você deve alterar esta senha após o login
@@ -113,10 +106,6 @@ export async function criarNovoProfessor() {
       return { success: false, error: error.message };
     }
 
-    console.log("Novo usuário professor criado com sucesso!");
-    console.log("Email:", "professor@ironhouse.com.br");
-    console.log("Senha:", novaSenha);
-    console.log(
       "IMPORTANTE: Faça login com estas credenciais e altere a senha imediatamente."
     );
 
@@ -162,7 +151,6 @@ export async function atualizarMetadadosProfessor() {
       return { success: false, error: error.message };
     }
 
-    console.log("Metadados atualizados com sucesso para professor!");
     return { success: true, data };
   } catch (error) {
     console.error(
