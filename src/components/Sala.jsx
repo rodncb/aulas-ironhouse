@@ -559,7 +559,6 @@ function Sala() {
       console.log(
         `[handleFinalizarAula] Data Formatada (UTC) para BD: ${dataFormatadaISO}`
       );
-      console.log(`[handleFinalizarAula] Hora de finalização: ${horaAtual}`);
 
       console.log(`Data UTC para finalização da sala: ${dataFormatadaISO}`);
 
@@ -904,9 +903,6 @@ function Sala() {
         );
         console.log(
           `[handleFinalizarAlunoIndividual] Data Formatada (UTC) para BD: ${dataFormatadaISO}`
-        );
-        console.log(
-          `[handleFinalizarAlunoIndividual] Hora de finalização: ${horaAtual}`
         );
 
         const aulaIndividualFinalizada = {

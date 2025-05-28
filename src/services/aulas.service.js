@@ -35,17 +35,6 @@ const aulasService = {
 
       if (error) throw error;
       
-      // Log para debug dos dados retornados
-      if (data && data.length > 0) {
-        console.log("[aulasService.getAll] Primeira aula retornada:", {
-          id: data[0].id,
-          hora: data[0].hora,
-          hora_type: typeof data[0].hora,
-          hora_value: JSON.stringify(data[0].hora),
-          todas_colunas: Object.keys(data[0])
-        });
-      }
-      
       return data || [];
     } catch (error) {
       console.error("Erro ao buscar todas as aulas:", error);
@@ -182,17 +171,6 @@ const aulasService = {
       console.log(
         `[SUCCESS] Encontradas ${aulas.length} aulas para o aluno ${alunoId}`
       );
-      
-      // Log para debug dos dados das aulas retornadas
-      if (aulas.length > 0) {
-        console.log("[aulasService.getAulasByAlunoId] Primeira aula retornada:", {
-          id: aulas[0].id,
-          hora: aulas[0].hora,
-          hora_type: typeof aulas[0].hora,
-          hora_value: JSON.stringify(aulas[0].hora),
-          todas_colunas: Object.keys(aulas[0])
-        });
-      }
       
       return aulas;
     } catch (error) {

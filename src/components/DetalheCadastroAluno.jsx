@@ -8,12 +8,8 @@ import { formatarData as formatarDataUtil } from "../lib/utils"; // Corrigido: c
 const interpretarHorarios = (aula) => {
   const hora = aula.hora;
 
-  // SEMPRE fazer log para debug
-  console.log(`[DetalheCadastroAluno-interpretarHorarios] Aula ID: ${aula.id}, Status: ${aula.status}, Hora: "${hora}", Tipo: ${typeof hora}`);
-
   // Se não temos hora registrada (NULL ou undefined), retornar valores padrão
   if (!hora) {
-    console.log(`[DetalheCadastroAluno-interpretarHorarios] Hora não definida para aula ${aula.id}`);
     switch (aula.status) {
       case "realizada":
       case "finalizada":
@@ -36,7 +32,6 @@ const interpretarHorarios = (aula) => {
 
   // Tratar especificamente aulas canceladas com hora '00:00'
   if (hora === "00:00" && aula.status === "cancelada") {
-    console.log(`[DetalheCadastroAluno-interpretarHorarios] Aula cancelada com hora 00:00: ${aula.id}`);
     return {
       horaInicio: "Cancelada",
       horaFim: "Cancelada",
@@ -44,7 +39,6 @@ const interpretarHorarios = (aula) => {
   }
 
   // Com base no status da aula, interpretamos a hora
-  console.log(`[DetalheCadastroAluno-interpretarHorarios] Processando aula ${aula.id} com status ${aula.status} e hora "${hora}"`);
   switch (aula.status) {
     case "atual":
     case "em_andamento":
@@ -166,23 +160,6 @@ const DetalheCadastroAluno = ({ aluno, alunoId, onNavigateBack }) => {
           `Aulas encontradas para o aluno ${alunoAtual.id}:`,
           aulasDoAluno.length
         );
-        
-        // Log das primeiras aulas para debug dos horários
-        if (aulasDoAluno.length > 0) {
-          console.log("[DetalheCadastroAluno] Primeiras 3 aulas com dados completos:", 
-            aulasDoAluno.slice(0, 3).map((aula) => ({
-              id: aula.id,
-              data: aula.data,
-              hora: aula.hora,
-              hora_type: typeof aula.hora,
-              hora_value: JSON.stringify(aula.hora),
-              status: aula.status,
-              todas_colunas: Object.keys(aula)
-            }))
-          );
-          
-          console.log("[DetalheCadastroAluno] PRIMEIRA AULA COMPLETA:", aulasDoAluno[0]);
-        }
         
         setHistoricoAulas(aulasDoAluno);
       } catch (err) {
@@ -567,9 +544,7 @@ const DetalheCadastroAluno = ({ aluno, alunoId, onNavigateBack }) => {
                           </div>
                           <div className="aula-horario">
                             {(() => {
-                              console.log(`[DetalheCadastroAluno-RENDER] Processando aula ${aula.id} - Status: ${aula.status}, Hora: "${aula.hora}"`);
                               const horarios = interpretarHorarios(aula);
-                              console.log(`[DetalheCadastroAluno-RENDER] Horarios retornados:`, horarios);
                               if (aula.status === "realizada" || aula.status === "finalizada") {
                                 return `${horarios.horaInicio} - ${horarios.horaFim}`;
                               }
@@ -599,9 +574,7 @@ const DetalheCadastroAluno = ({ aluno, alunoId, onNavigateBack }) => {
                             </p>
                             <div className="horario-container">
                               {(() => {
-                                console.log(`[DetalheCadastroAluno-RENDER-DETALHES] Processando aula expandida ${aula.id} - Status: ${aula.status}, Hora: "${aula.hora}"`);
                                 const horarios = interpretarHorarios(aula);
-                                console.log(`[DetalheCadastroAluno-RENDER-DETALHES] Horarios detalhados retornados:`, horarios);
                                 
                                 if (aula.status === "finalizada" || aula.status === "realizada") {
                                   return (
