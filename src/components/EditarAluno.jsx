@@ -43,7 +43,6 @@ const EditarAluno = ({ alunoId, setActiveSection }) => {
           alunoIdContexto === alunoId &&
           Object.keys(dadosContexto).length > 0
         ) {
-    
           setLocalFormData({
             nome: dadosContexto.nome || "",
             data_nascimento: dadosContexto.data_nascimento || "",

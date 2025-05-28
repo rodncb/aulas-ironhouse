@@ -52,15 +52,15 @@ const interpretarHorarios = (aula) => {
     case "finalizada":
       // Para aulas finalizadas, assumir duração de 1 hora
       try {
-        const [horas, minutos] = hora.split(':').map(Number);
+        const [horas, minutos] = hora.split(":").map(Number);
         const inicioDate = new Date();
         inicioDate.setHours(horas, minutos);
-        
+
         // Subtrair 1 hora para obter horário de início estimado
         inicioDate.setHours(inicioDate.getHours() - 1);
-        
+
         const horaInicioFormatada = inicioDate.toTimeString().slice(0, 5);
-        
+
         return {
           horaInicio: horaInicioFormatada,
           horaFim: hora, // A hora registrada é de fim
@@ -420,7 +420,10 @@ const DetalheAluno = ({ alunoId, setActiveSection }) => {
                         <div className="aula-horario">
                           {(() => {
                             const horarios = interpretarHorarios(aula);
-                            if (aula.status === "realizada" || aula.status === "finalizada") {
+                            if (
+                              aula.status === "realizada" ||
+                              aula.status === "finalizada"
+                            ) {
                               return `${horarios.horaInicio} - ${horarios.horaFim}`;
                             }
                             return horarios.horaInicio || "--:--";
@@ -448,8 +451,11 @@ const DetalheAluno = ({ alunoId, setActiveSection }) => {
                           <div className="horario-container">
                             {(() => {
                               const horarios = interpretarHorarios(aula);
-                              
-                              if (aula.status === "finalizada" || aula.status === "realizada") {
+
+                              if (
+                                aula.status === "finalizada" ||
+                                aula.status === "realizada"
+                              ) {
                                 return (
                                   <>
                                     <div className="horario-inicio">

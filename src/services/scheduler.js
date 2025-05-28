@@ -49,7 +49,7 @@ class AulaScheduler {
     try {
       const resultado = await aulasService.finalizarAulasEmAndamento();
       if (resultado.success) {
-        } else {
+      } else {
         console.error("Erro na finalização automática:", resultado.error);
       }
     } catch (error) {

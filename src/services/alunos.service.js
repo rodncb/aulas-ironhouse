@@ -45,7 +45,6 @@ async function createAluno(alunoData) {
     // Remover a chave original tipoLesao se existir para evitar conflito
     delete dadosParaSupabase.tipoLesao;
 
-
     const { data, error } = await supabase
       .from("alunos")
       .insert([dadosParaSupabase]) // Usar os dados mapeados

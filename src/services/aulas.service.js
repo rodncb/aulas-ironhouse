@@ -34,7 +34,7 @@ const aulasService = {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      
+
       return data || [];
     } catch (error) {
       console.error("Erro ao buscar todas as aulas:", error);
@@ -119,8 +119,6 @@ const aulasService = {
    */
   getAulasByAlunoId: async (alunoId) => {
     try {
-      
-
       // Abordagem mais direta usando join na consulta
       const { data, error } = await supabase
         .from("aula_alunos")
@@ -151,7 +149,6 @@ const aulasService = {
       }
 
       if (!data || data.length === 0) {
-        
         return [];
       }
 
@@ -168,8 +165,6 @@ const aulasService = {
           return aula;
         });
 
-      
-      
       return aulas;
     } catch (error) {
       console.error(`[ERROR] Erro ao buscar aulas do aluno ${alunoId}:`, error);
@@ -183,8 +178,6 @@ const aulasService = {
    */
   getById: async (id) => {
     try {
-      
-
       // 1. Buscar dados básicos da aula primeiro
       const { data: aulaBasica, error: aulaError } = await supabase
         .from("aulas")
@@ -201,8 +194,6 @@ const aulasService = {
         throw new Error(`Aula com ID ${id} não encontrada`);
       }
 
-      
-
       // 2. Buscar o professor separadamente
       let professor = null;
       try {
@@ -215,7 +206,6 @@ const aulasService = {
         if (!profError && profData) {
           professor = profData;
         } else {
-          
         }
       } catch (profErr) {
         console.warn(`Erro ao buscar professor da aula ${id}:`, profErr);
@@ -266,9 +256,6 @@ const aulasService = {
       // Não sobrescrever a hora se já foi definida automaticamente
       if (aulaData.exercicios) aulaBasica.exercicios = aulaData.exercicios;
 
-      
-      
-
       // Inserir a aula básica
       const { data, error } = await supabase
         .from("aulas")
@@ -286,7 +273,6 @@ const aulasService = {
       }
 
       const aulaId = data[0].id;
-      
 
       // Se temos alunos, adicioná-los à tabela de relacionamento
       if (alunos.length > 0) {
@@ -296,8 +282,6 @@ const aulasService = {
             aula_id: aulaId,
             aluno_id: aluno.id,
           }));
-
-          
 
           // Inserir os relacionamentos
           const { error: relError } = await supabase
@@ -317,7 +301,6 @@ const aulasService = {
       // Atualizar a coluna "alunos" no formato JSONB diretamente
       if (alunos.length > 0) {
         try {
-          
           const alunosJSON = alunos.map((aluno) => ({
             id: aluno.id,
             nome: aluno.nome,
@@ -449,8 +432,6 @@ const aulasService = {
    */
   finalizarAulasEmAndamento: async () => {
     try {
-      
-
       // 1. Buscar todas as aulas com status "em_andamento"
       const { data: aulasEmAndamento, error: fetchError } = await supabase
         .from("aulas")
@@ -463,11 +444,8 @@ const aulasService = {
       }
 
       if (!aulasEmAndamento || aulasEmAndamento.length === 0) {
-        
         return { count: 0, success: true };
       }
-
-      
 
       // 2. Atualizar todas para status "finalizada" e registrar o horário de finalização (23:59)
       const { error: updateError } = await supabase
@@ -487,7 +465,6 @@ const aulasService = {
         throw updateError;
       }
 
-      
       return {
         count: aulasEmAndamento.length,
         success: true,
@@ -508,8 +485,6 @@ const aulasService = {
    */
   adicionarAluno: async (aulaId, alunoId) => {
     try {
-      
-
       // Usar a função RPC para adicionar o aluno
       const { data: result, error: rpcError } = await supabase.rpc(
         "add_aluno_to_aula",
@@ -523,8 +498,6 @@ const aulasService = {
         console.error("Erro ao adicionar aluno via RPC:", rpcError);
         throw rpcError;
       }
-
-      
 
       // Buscar a aula atualizada
       return await aulasService.getById(aulaId);
@@ -544,8 +517,6 @@ const aulasService = {
    */
   removerAlunoCompleto: async (aulaId, alunoId) => {
     try {
-      
-
       // 1. Remover da tabela de relacionamento
       const { error: relacaoError } = await supabase
         .from("aula_alunos")
@@ -556,7 +527,6 @@ const aulasService = {
       if (relacaoError) {
         console.error("Erro ao remover da tabela aula_alunos:", relacaoError);
       } else {
-        
       }
 
       // 2. Obter a aula atual para atualizar o campo JSON de alunos
@@ -583,7 +553,6 @@ const aulasService = {
         if (updateError) {
           console.error("Erro ao atualizar campo JSON de alunos:", updateError);
         } else {
-          
         }
       }
 

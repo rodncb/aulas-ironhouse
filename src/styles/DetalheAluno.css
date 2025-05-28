@@ -792,13 +792,13 @@
   .horario-container {
     gap: 5px;
   }
-  
+
   .aula-data-horario {
     flex-direction: row;
     align-items: center;
     gap: 10px;
   }
-  
+
   .aula-data-horario .aula-horario {
     font-size: 0.8rem;
   }

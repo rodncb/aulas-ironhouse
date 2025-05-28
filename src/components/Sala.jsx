@@ -153,8 +153,6 @@ function Sala() {
       setError(null);
 
       try {
-        
-
         const { data: aulasBasicas, error: aulasBasicasError } = await supabase
           .from("aulas")
           .select("id, status, data, professor_id, observacoes")
@@ -169,8 +167,6 @@ function Sala() {
 
         // Se não encontrou aulas, criar uma automaticamente
         if (!aulasBasicas || aulasBasicas.length === 0) {
-          
-
           // Criar objeto de aula para salvar no banco de dados
           const agora = new Date();
           const horas = String(agora.getHours()).padStart(2, "0");
@@ -194,14 +190,12 @@ function Sala() {
           setAlunosEmAula([]);
           setAlunosDropdownAberto(false); // Manter dropdown fechado inicialmente
 
-          
           setSalaLoading(false);
           return;
         }
 
         // Usar a aula mais recente (já ordenada por created_at desc)
         const aulaBasica = aulasBasicas[0];
-        
 
         // Carregar os alunos associados a esta aula
         try {
@@ -244,8 +238,6 @@ function Sala() {
             ...aulaBasica,
             alunos: alunosDaAula,
           };
-
-          
 
           // Atualizar os estados com a aula carregada
           setAulaAtual(aulaCompleta);
@@ -298,8 +290,6 @@ function Sala() {
   // Buscar último treino para alunos visíveis
   useEffect(() => {
     const buscarUltimosTreinosParaAlunosVisiveis = async () => {
-      
-
       // Garantir que alunosEmAula é um array
       if (!Array.isArray(alunosEmAula)) {
         console.warn(
@@ -312,13 +302,10 @@ function Sala() {
       }
 
       if (alunosEmAula.length === 0) {
-        
         setUltimosTreinos({});
         setAlunoObservacoesCadastro({});
         return;
       }
-
-      
 
       // Criar um novo objeto para armazenar os dados
       const novosUltimosTreinos = {};
@@ -333,12 +320,11 @@ function Sala() {
 
         // Verificar se já existe uma observação no contexto para este aluno
         if (alunoObservacoes[aluno.id]) {
-          
         }
 
         try {
           // 1. Buscar os dados cadastrais do aluno diretamente
-          
+
           const { data: dadosAluno, error: alunoError } = await supabase
             .from("alunos")
             .select("*")
@@ -350,14 +336,11 @@ function Sala() {
             continue;
           }
 
-          
-
           // Armazenar as observações do cadastro do aluno
           // (estas serão mostradas na seção "Observações do Aluno")
           novasObservacoesCadastro[aluno.id] = dadosAluno.observacoes || "";
 
           // 2. Buscar último treino finalizado do aluno usando abordagem simplificada
-          
 
           try {
             // Primeiro buscar todas as aulas em que este aluno participou
@@ -376,7 +359,6 @@ function Sala() {
             }
 
             if (!aulasAlunoData || aulasAlunoData.length === 0) {
-              
               continue;
             }
 
@@ -419,8 +401,6 @@ function Sala() {
             }
 
             if (aulasFinalizadas && aulasFinalizadas.length > 0) {
-              
-
               // Pegar o primeiro (mais recente) treino
               const ultimoTreino = aulasFinalizadas[0];
 
@@ -432,10 +412,7 @@ function Sala() {
 
               // Salvar no map de últimos treinos
               novosUltimosTreinos[aluno.id] = ultimoTreino;
-
-              
             } else {
-              
             }
           } catch (trenoErr) {
             console.error(`[ERROR] Erro ao buscar último treino:`, trenoErr);
@@ -455,7 +432,6 @@ function Sala() {
       // NÃO inicialize as observações vazias aqui!
       // O Context API já deve ter carregado as observações salvas do localStorage
       // Apenas inicialize observações para novos alunos que não têm observações ainda
-      
     };
 
     buscarUltimosTreinosParaAlunosVisiveis();
@@ -487,7 +463,6 @@ function Sala() {
       }
 
       if (!aulasEmAndamento || aulasEmAndamento.length === 0) {
-        
         setError("Não há aulas em andamento para finalizar.");
         setSalaLoading(false);
         return;
@@ -507,8 +482,6 @@ function Sala() {
 
       // Para cada aula, realizar a finalização
       for (const aula of aulasEmAndamento) {
-        
-
         // Antes de limpar os relacionamentos, salvar as observações de cada aluno
         // em aulas finalizadas individuais para preservar o histórico
         try {
@@ -521,8 +494,6 @@ function Sala() {
           // Buscar também as observações que estão no state local, não apenas no banco
           // Isso garante que observações não salvas ainda sejam preservadas
           if (!alunosError && alunosDaAula && alunosDaAula.length > 0) {
-            
-
             // Para cada aluno, criar uma aula finalizada individual
             for (const alunoRegistro of alunosDaAula) {
               const { aluno_id } = alunoRegistro;
@@ -531,7 +502,6 @@ function Sala() {
               // Se não estiver no state, usar o que foi recuperado do banco
               let observacoes =
                 alunoObservacoes[aluno_id] || alunoRegistro.observacoes || "";
-              
 
               const aulaFinalizadaIndividual = {
                 professor_id: professorAtual.id,
@@ -540,8 +510,6 @@ function Sala() {
                 observacoes: observacoes, // Usar observações específicas do aluno
                 hora: horaAtual, // Adicionar o horário de finalização
               };
-
-              
 
               // Inserir a aula finalizada
               const { data: aulaFinalizada, error: aulaError } = await supabase
@@ -557,8 +525,6 @@ function Sala() {
                 );
                 throw aulaError;
               }
-
-              
 
               // 2. Relacionar o aluno com esta aula finalizada
               if (aulaFinalizada) {
@@ -577,8 +543,6 @@ function Sala() {
                   );
                   throw relError;
                 }
-
-                
               }
             }
           }
@@ -649,12 +613,9 @@ function Sala() {
           `Deseja realmente cancelar a participação de ${alunoParaCancelar.nome} na aula? Esta ação não registrará um treino finalizado.`
         )
       ) {
-        
-
         // Remover aluno da aula atual sem criar registro de aula finalizada
         if (aulaAtual) {
           await AulaAlunosService.removerAluno(aulaAtual.id, alunoId);
-          
         }
 
         // Atualizar a lista de alunos em aula
@@ -693,7 +654,6 @@ function Sala() {
 
   // Selecionar aluno para exibir detalhes
   const handleSelecionarAluno = async (aluno) => {
-    
     if (!aulaAtual || !aulaAtual.id) {
       setError("Erro: Aula atual não está definida para adicionar aluno.");
       return;
@@ -712,7 +672,7 @@ function Sala() {
       if (!alunoJaNaLista) {
         try {
           // Buscar dados completos do aluno do banco de dados
-          
+
           const { data: dadosCompletos, error: dadosError } = await supabase
             .from("alunos")
             .select("*")
@@ -720,7 +680,6 @@ function Sala() {
             .single();
 
           if (!dadosError && dadosCompletos) {
-            
             alunoCompleto = dadosCompletos;
           } else {
             console.error(
@@ -735,13 +694,11 @@ function Sala() {
 
       // Adicionar aluno completo ao estado local se não estiver já na lista
       if (!alunoJaNaLista) {
-        
         setAlunosEmAula((prev) => [...prev, alunoCompleto]);
       }
 
       // Atualizamos o backend se o aluno não estiver já na lista
       if (!alunoJaNaLista) {
-        
         try {
           // Chamada ao serviço para adicionar o aluno
           const aulaAtualizada = await aulasService.adicionarAluno(
@@ -749,11 +706,8 @@ function Sala() {
             alunoCompleto.id
           );
 
-          
-
           // Se a chamada for bem-sucedida, atualizamos o estado da aula
           if (aulaAtualizada) {
-            
             setAulaAtual(aulaAtualizada);
 
             // Se a aula tem um campo alunos com dados, usá-lo para atualizar o estado
@@ -807,8 +761,6 @@ function Sala() {
         return;
       }
 
-      
-
       // Salvar observações do aluno
       const observacoesAluno = alunoObservacoes[alunoId] || "";
 
@@ -834,8 +786,6 @@ function Sala() {
           hora: horaAtual, // Registrar o horário em que o aluno foi finalizado
         };
 
-        
-
         // Inserir a aula finalizada
         const { data: aulaFinalizada, error: aulaError } = await supabase
           .from("aulas")
@@ -850,8 +800,6 @@ function Sala() {
           );
           throw aulaError;
         }
-
-        
 
         // 2. Relacionar o aluno com esta aula finalizada
         if (aulaFinalizada) {
@@ -871,13 +819,9 @@ function Sala() {
             throw relError;
           }
 
-          
-
           // 3. Salvar os exercícios selecionados para este aluno
           const exerciciosDoAluno = exerciciosPorAluno[alunoId] || [];
           if (exerciciosDoAluno.length > 0) {
-            
-
             // Criar registros na tabela aula_exercicios para cada exercício
             for (const exercicio of exerciciosDoAluno) {
               if (exercicio.exercicio_id) {
@@ -896,7 +840,6 @@ function Sala() {
                       exError
                     );
                   } else {
-                    
                   }
                 } catch (exErr) {
                   console.error("Erro ao inserir exercício:", exErr);
@@ -910,7 +853,6 @@ function Sala() {
       // 4. Remover aluno da aula atual
       if (aulaAtual) {
         await AulaAlunosService.removerAluno(aulaAtual.id, alunoId);
-        
       }
 
       // Atualizar a lista de alunos em aula
@@ -951,7 +893,6 @@ function Sala() {
       try {
         const exercicios = await exerciciosService.getAll();
         setTodosExercicios(exercicios);
-        
       } catch (err) {
         console.error("Erro ao carregar exercícios:", err);
       }

@@ -296,7 +296,6 @@ const App = () => {
   // Função para mudar a rota com verificações
   const handleNavigate = useCallback(
     (path) => {
-
       // Extrair a seção base da rota
       const section = path.split("/")[1] || path;
 

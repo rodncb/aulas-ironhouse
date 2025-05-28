@@ -128,7 +128,7 @@ const exerciciosService = {
     // Esta função parece ser um placeholder, não há código assíncrono real aqui.
     // Removendo try/catch desnecessário ou adicionando lógica real se necessário.
     // Por enquanto, apenas retornando sucesso como antes, mas sem o try/catch.
-      // Para implementar quando a tabela de relacionamento entre aulas e exercícios for criada
+    // Para implementar quando a tabela de relacionamento entre aulas e exercícios for criada
     // Por enquanto, salvamos essa relação apenas no frontend
     return { success: true };
     /*
