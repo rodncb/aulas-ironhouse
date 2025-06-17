@@ -24,9 +24,9 @@ const RelatorioAulaProfessor = () => {
   // Função para determinar a cor baseada no horário
   const determinarCorHorario = (hora) => {
     if (!hora || hora === "00:00") return "sem-horario";
-    
+
     const minutos = parseInt(hora.split(":")[1]);
-    
+
     // Verde: xx:49 a xx:05 (considerando que 49-59 e 00-05 são pontuais)
     if (minutos >= 49 || minutos <= 5) {
       return "pontual"; // Verde
@@ -249,7 +249,9 @@ const RelatorioAulaProfessor = () => {
             <tr>
               <td>${formatarData(aula.data)}</td>
               <td>${aula.professor?.nome || "Professor não encontrado"}</td>
-              <td><span class="horario-${corHorario}">${aula.hora || "Não definido"}</span></td>
+              <td><span class="horario-${corHorario}">${
+            aula.hora || "Não definido"
+          }</span></td>
             </tr>`;
         });
 
@@ -288,9 +290,7 @@ const RelatorioAulaProfessor = () => {
           <FontAwesomeIcon icon={faClock} className="title-icon" />
           <div>
             <h2>Relatório Horário/Professor</h2>
-            <p>
-              Relatório de pontualidade de horários das aulas
-            </p>
+            <p>Relatório de pontualidade de horários das aulas</p>
           </div>
         </div>
 
@@ -425,7 +425,11 @@ const RelatorioAulaProfessor = () => {
                         {aula.professor?.nome || "Professor não encontrado"}
                       </td>
                       <td className="horario-cell">
-                        <span className={`horario-badge ${determinarCorHorario(aula.hora)}`}>
+                        <span
+                          className={`horario-badge ${determinarCorHorario(
+                            aula.hora
+                          )}`}
+                        >
                           <FontAwesomeIcon icon={faClock} />
                           {aula.hora || "Não definido"}
                         </span>

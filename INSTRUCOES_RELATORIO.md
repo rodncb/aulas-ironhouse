@@ -12,7 +12,7 @@
 1. **Adiciona a coluna `periodo`** à tabela `aulas`
 2. **Popula períodos existentes** baseado no horário de criação:
    - Manhã: 6h às 11h
-   - Tarde: 12h às 17h  
+   - Tarde: 12h às 17h
    - Noite: 18h às 23h
 3. **Cria aulas de exemplo** para diferentes dias da semana e status diversos
 4. **Mostra estatísticas** do que foi criado
@@ -22,7 +22,7 @@
 Após executar o script:
 
 1. Acesse a aplicação como **administrador**
-2. Vá para o menu **Relatórios** 
+2. Vá para o menu **Relatórios**
 3. Selecione "Relatório de Aulas por Professor e Período"
 4. Agora você deve conseguir:
    - Selecionar professores no filtro (ou "Todos os Professores")
@@ -40,6 +40,7 @@ Após executar o script:
 ## Troubleshooting:
 
 Se não aparecerem dados:
+
 1. Verifique se há professores cadastrados no sistema
 2. Confirme que o script foi executado sem erros
 3. Verifique os logs do console no navegador para erros de carregamento
@@ -47,8 +48,9 @@ Se não aparecerem dados:
 ## Estrutura dos Períodos:
 
 Os períodos são categorizados como:
+
 - **Manhã**: Das 6h às 11h59
-- **Tarde**: Das 12h às 17h59  
+- **Tarde**: Das 12h às 17h59
 - **Noite**: Das 18h às 23h59
 
 Você pode ajustar esses períodos diretamente no banco de dados conforme necessário.

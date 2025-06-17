@@ -428,124 +428,122 @@ const DetalheCadastroAluno = ({ aluno, alunoId, onNavigateBack }) => {
               </div>
             ) : historicoAulas.length > 0 ? (
               <div className="historico-aulas-lista">
-                  {historicoAulas.map((aula) => (
-                    <div
-                      key={aula.id}
-                      className={`aula-card aula-${aula.status}`}
-                    >
-                      <div className="aula-header">
-                        <div className="aula-data-horario">
-                          <div className="aula-data">
-                            {formatarData(aula.data)}
-                          </div>
-                          <div className="aula-horario">
-                            {(() => {
-                              const horarios = interpretarHorarios(aula);
-                              if (
-                                aula.status === "realizada" ||
-                                aula.status === "finalizada"
-                              ) {
-                                return `${horarios.horaInicio} - ${horarios.horaFim}`;
-                              }
-                              return horarios.horaInicio || "--:--";
-                            })()}
-                          </div>
+                {historicoAulas.map((aula) => (
+                  <div
+                    key={aula.id}
+                    className={`aula-card aula-${aula.status}`}
+                  >
+                    <div className="aula-header">
+                      <div className="aula-data-horario">
+                        <div className="aula-data">
+                          {formatarData(aula.data)}
                         </div>
-                        <div className="aula-professor">
-                          Professor:{" "}
+                        <div className="aula-horario">
+                          {(() => {
+                            const horarios = interpretarHorarios(aula);
+                            if (
+                              aula.status === "realizada" ||
+                              aula.status === "finalizada"
+                            ) {
+                              return `${horarios.horaInicio} - ${horarios.horaFim}`;
+                            }
+                            return horarios.horaInicio || "--:--";
+                          })()}
+                        </div>
+                      </div>
+                      <div className="aula-professor">
+                        Professor:{" "}
+                        {aula.professor ? aula.professor.nome : "Não definido"}
+                      </div>
+                      <div className="aula-status">
+                        Status: {getStatusLabel(aula.status, aula.data)}
+                      </div>
+                    </div>
+                    <div className="aula-detalhes">
+                      <div className="aula-info-detalhada">
+                        <h4>Informações</h4>
+                        <p>
+                          <strong>Data:</strong> {formatarData(aula.data)}
+                        </p>
+                        <div className="horario-container">
+                          {(() => {
+                            const horarios = interpretarHorarios(aula);
+
+                            if (
+                              aula.status === "finalizada" ||
+                              aula.status === "realizada"
+                            ) {
+                              return (
+                                <>
+                                  <div className="horario-inicio">
+                                    <strong>Horário de Início:</strong>{" "}
+                                    <span className="hora-valor">
+                                      {horarios.horaInicio}
+                                    </span>
+                                  </div>
+                                  <div className="horario-fim">
+                                    <strong>Horário de Término:</strong>{" "}
+                                    <span className="hora-valor">
+                                      {horarios.horaFim}
+                                    </span>
+                                  </div>
+                                </>
+                              );
+                            } else {
+                              return (
+                                <>
+                                  <div className="horario-inicio">
+                                    <strong>Horário de Início:</strong>{" "}
+                                    <span className="hora-valor">
+                                      {horarios.horaInicio}
+                                    </span>
+                                  </div>
+                                  <div className="horario-fim">
+                                    <strong>Horário de Término:</strong>{" "}
+                                    <span className="hora-valor">
+                                      {horarios.horaFim}
+                                    </span>
+                                  </div>
+                                </>
+                              );
+                            }
+                          })()}
+                        </div>
+                        <p>
+                          <strong>Professor:</strong>{" "}
                           {aula.professor
                             ? aula.professor.nome
                             : "Não definido"}
-                        </div>
-                        <div className="aula-status">
-                          Status: {getStatusLabel(aula.status, aula.data)}
-                        </div>
+                        </p>
                       </div>
-                      <div className="aula-detalhes">
-                          <div className="aula-info-detalhada">
-                            <h4>Informações</h4>
-                            <p>
-                              <strong>Data:</strong> {formatarData(aula.data)}
-                            </p>
-                            <div className="horario-container">
-                              {(() => {
-                                const horarios = interpretarHorarios(aula);
-
-                                if (
-                                  aula.status === "finalizada" ||
-                                  aula.status === "realizada"
-                                ) {
-                                  return (
-                                    <>
-                                      <div className="horario-inicio">
-                                        <strong>Horário de Início:</strong>{" "}
-                                        <span className="hora-valor">
-                                          {horarios.horaInicio}
-                                        </span>
-                                      </div>
-                                      <div className="horario-fim">
-                                        <strong>Horário de Término:</strong>{" "}
-                                        <span className="hora-valor">
-                                          {horarios.horaFim}
-                                        </span>
-                                      </div>
-                                    </>
-                                  );
-                                } else {
-                                  return (
-                                    <>
-                                      <div className="horario-inicio">
-                                        <strong>Horário de Início:</strong>{" "}
-                                        <span className="hora-valor">
-                                          {horarios.horaInicio}
-                                        </span>
-                                      </div>
-                                      <div className="horario-fim">
-                                        <strong>Horário de Término:</strong>{" "}
-                                        <span className="hora-valor">
-                                          {horarios.horaFim}
-                                        </span>
-                                      </div>
-                                    </>
-                                  );
-                                }
-                              })()}
-                            </div>
-                            <p>
-                              <strong>Professor:</strong>{" "}
-                              {aula.professor
-                                ? aula.professor.nome
-                                : "Não definido"}
-                            </p>
-                          </div>
-                          <div className="aula-exercicios">
-                            <h4>Exercícios</h4>
-                            {aula.exercicios && aula.exercicios.length > 0 ? (
-                              <ul>
-                                {aula.exercicios.map((exercicio, index) => (
-                                  <li key={exercicio.id || index}>
-                                    {exercicio.nome}
-                                  </li>
-                                ))}
-                              </ul>
-                            ) : (
-                              <p>Nenhum exercício registrado.</p>
-                            )}
-                          </div>
-                          <div className="aula-notas">
-                            <h4>Anotações</h4>
-                            <p>{aula.observacoes || "Nenhuma anotação."}</p>
-                          </div>
-                          {aula.lesoes && (
-                            <div className="aula-lesoes">
-                              <h4>Lesões/Restrições</h4>
-                              <p>{aula.lesoes}</p>
-                            </div>
-                          )}
+                      <div className="aula-exercicios">
+                        <h4>Exercícios</h4>
+                        {aula.exercicios && aula.exercicios.length > 0 ? (
+                          <ul>
+                            {aula.exercicios.map((exercicio, index) => (
+                              <li key={exercicio.id || index}>
+                                {exercicio.nome}
+                              </li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <p>Nenhum exercício registrado.</p>
+                        )}
+                      </div>
+                      <div className="aula-notas">
+                        <h4>Anotações</h4>
+                        <p>{aula.observacoes || "Nenhuma anotação."}</p>
+                      </div>
+                      {aula.lesoes && (
+                        <div className="aula-lesoes">
+                          <h4>Lesões/Restrições</h4>
+                          <p>{aula.lesoes}</p>
                         </div>
+                      )}
                     </div>
-                  ))}
-                </div>
+                  </div>
+                ))}
+              </div>
             ) : (
               <div className="sem-registros">
                 Nenhuma aula registrada para este aluno.

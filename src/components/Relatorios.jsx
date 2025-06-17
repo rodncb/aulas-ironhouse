@@ -13,16 +13,20 @@ const Relatorios = () => {
         <p className="relatorios-subtitle">
           Relatórios e análises do sistema - Acesso restrito a administradores
         </p>
-        
+
         <div className="relatorios-navegacao">
-          <button 
-            className={`btn-relatorio ${tipoRelatorio === "volume" ? "ativo" : ""}`}
+          <button
+            className={`btn-relatorio ${
+              tipoRelatorio === "volume" ? "ativo" : ""
+            }`}
             onClick={() => setTipoRelatorio("volume")}
           >
             Volume de Aulas
           </button>
-          <button 
-            className={`btn-relatorio ${tipoRelatorio === "pontualidade" ? "ativo" : ""}`}
+          <button
+            className={`btn-relatorio ${
+              tipoRelatorio === "pontualidade" ? "ativo" : ""
+            }`}
             onClick={() => setTipoRelatorio("pontualidade")}
           >
             Horário/Professor

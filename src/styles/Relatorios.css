@@ -321,8 +321,12 @@
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 /* Resumo */
@@ -701,21 +705,21 @@
     grid-template-columns: 1fr;
     gap: 20px;
   }
-  
+
   .relatorios-sidebar {
     order: 2;
   }
-  
+
   .relatorios-main {
     order: 1;
   }
-  
+
   .relatorios-lista {
     flex-direction: row;
     overflow-x: auto;
     padding-bottom: 10px;
   }
-  
+
   .relatorio-item {
     min-width: 250px;
     flex-shrink: 0;
@@ -726,33 +730,33 @@
   .relatorios-container {
     padding: 15px;
   }
-  
+
   .relatorio-header {
     flex-direction: column;
     gap: 20px;
     align-items: center;
     text-align: center;
   }
-  
+
   .relatorio-filtros {
     flex-direction: column;
     gap: 15px;
   }
-  
+
   .relatorio-summary {
     grid-template-columns: 1fr;
   }
-  
+
   .relatorio-table {
     overflow-x: auto;
     border-radius: 8px;
   }
-  
+
   .relatorio-table table {
     min-width: 650px;
     table-layout: fixed;
   }
-  
+
   .relatorio-table th:first-child {
     width: 200px;
     min-width: 200px;
@@ -782,16 +786,16 @@
     padding: 6px 10px;
     font-size: 0.9rem;
   }
-  
+
   .relatorios-header h1 {
     font-size: 2rem;
   }
-  
+
   .relatorios-navegacao {
     flex-direction: column;
     gap: 10px;
   }
-  
+
   .btn-relatorio {
     width: 100%;
     text-align: center;
@@ -802,11 +806,11 @@
   .relatorios-main {
     padding: 20px;
   }
-  
+
   .relatorio-actions {
     flex-direction: column;
   }
-  
+
   .btn-refresh,
   .btn-export {
     justify-content: center;

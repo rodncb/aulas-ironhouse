@@ -81,7 +81,9 @@ const RelatorioAberturaAula = () => {
       // Determinar o período para exibição
       let periodoTexto = "";
       if (filtros.dataInicial && filtros.dataFinal) {
-        periodoTexto = `${formatarData(filtros.dataInicial)} a ${formatarData(filtros.dataFinal)}`;
+        periodoTexto = `${formatarData(filtros.dataInicial)} a ${formatarData(
+          filtros.dataFinal
+        )}`;
       } else if (filtros.dataInicial) {
         periodoTexto = formatarData(filtros.dataInicial);
       } else if (filtros.dataFinal) {
@@ -96,31 +98,32 @@ const RelatorioAberturaAula = () => {
         // Agrupar por professor e mostrar cada um separadamente
         const aulsPorProfessor = aulasFiltradas.reduce((acc, aula) => {
           const professorId = aula.professor_id;
-          const professorNome = aula.professor?.nome || "Professor não encontrado";
-          
+          const professorNome =
+            aula.professor?.nome || "Professor não encontrado";
+
           if (!acc[professorId]) {
             acc[professorId] = {
               professor_nome: professorNome,
-              total_aulas: 0
+              total_aulas: 0,
             };
           }
-          
+
           acc[professorId].total_aulas++;
           return acc;
         }, {});
 
         // Converter para array e ordenar por nome
-        const professoresArray = Object.values(aulsPorProfessor).sort((a, b) => 
+        const professoresArray = Object.values(aulsPorProfessor).sort((a, b) =>
           a.professor_nome.localeCompare(b.professor_nome)
         );
 
         // Adicionar cada professor como uma linha
-        professoresArray.forEach(prof => {
+        professoresArray.forEach((prof) => {
           dadosConsolidados.push({
             periodo_texto: periodoTexto,
             professor_texto: prof.professor_nome,
             total_aulas: prof.total_aulas,
-            is_total: false
+            is_total: false,
           });
         });
 
@@ -129,22 +132,25 @@ const RelatorioAberturaAula = () => {
           periodo_texto: periodoTexto,
           professor_texto: "TOTAL GERAL",
           total_aulas: aulasFiltradas.length,
-          is_total: true
+          is_total: true,
         });
-
       } else {
         // Professor específico - uma linha só
         const professorSelecionado = professores.find(
-          p => p.id.toString() === filtros.professor
+          (p) => p.id.toString() === filtros.professor
         );
-        const professorTexto = professorSelecionado ? professorSelecionado.nome : "Professor Selecionado";
+        const professorTexto = professorSelecionado
+          ? professorSelecionado.nome
+          : "Professor Selecionado";
 
-        dadosConsolidados = [{
-          periodo_texto: periodoTexto,
-          professor_texto: professorTexto,
-          total_aulas: aulasFiltradas.length,
-          is_total: false
-        }];
+        dadosConsolidados = [
+          {
+            periodo_texto: periodoTexto,
+            professor_texto: professorTexto,
+            total_aulas: aulasFiltradas.length,
+            is_total: false,
+          },
+        ];
       }
 
       console.log("Dados consolidados:", dadosConsolidados);
@@ -290,7 +296,9 @@ const RelatorioAberturaAula = () => {
           
           <div class="summary">
             <strong>Resumo:</strong><br>
-            Total de Aulas no Período: ${dadosRelatorio.length > 0 ? dadosRelatorio[0].total_aulas : 0}
+            Total de Aulas no Período: ${
+              dadosRelatorio.length > 0 ? dadosRelatorio[0].total_aulas : 0
+            }
           </div>`;
 
       if (dadosRelatorio.length === 0) {
@@ -309,7 +317,9 @@ const RelatorioAberturaAula = () => {
             <tbody>`;
 
         dadosRelatorio.forEach((item) => {
-          const styleClass = item.is_total ? 'style="font-weight: bold; background-color: #e9ecef;"' : '';
+          const styleClass = item.is_total
+            ? 'style="font-weight: bold; background-color: #e9ecef;"'
+            : "";
           htmlContent += `
             <tr ${styleClass}>
               <td>${item.periodo_texto}</td>
@@ -462,15 +472,24 @@ const RelatorioAberturaAula = () => {
                 </thead>
                 <tbody>
                   {dadosRelatorio.map((item, index) => (
-                    <tr key={index} className={item.is_total ? "linha-total" : ""}>
-                      <td className="periodo-cell">
-                        {item.periodo_texto}
-                      </td>
-                      <td className={`professor-cell ${item.is_total ? "professor-total" : ""}`}>
+                    <tr
+                      key={index}
+                      className={item.is_total ? "linha-total" : ""}
+                    >
+                      <td className="periodo-cell">{item.periodo_texto}</td>
+                      <td
+                        className={`professor-cell ${
+                          item.is_total ? "professor-total" : ""
+                        }`}
+                      >
                         {item.professor_texto}
                       </td>
                       <td className="total-cell">
-                        <span className={`badge ${item.is_total ? "badge-total" : ""}`}>
+                        <span
+                          className={`badge ${
+                            item.is_total ? "badge-total" : ""
+                          }`}
+                        >
                           {item.total_aulas}
                         </span>
                       </td>
