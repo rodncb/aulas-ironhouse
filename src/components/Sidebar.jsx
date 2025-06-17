@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import "../styles/Sidebar.css";
-import { Link, useLocation } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faUsers,
@@ -9,6 +9,7 @@ import {
   faChevronRight,
   faSignOutAlt,
   faChalkboard, // Ícone para a Sala
+  faFileAlt, // Ícone para Relatórios
 } from "@fortawesome/free-solid-svg-icons";
 
 const FORM_STORAGE_KEY = "cadastro_aluno_form_data";
@@ -201,6 +202,17 @@ function Sidebar({ navigate, collapsed, toggleSidebar, userRole, onLogout }) {
             <FontAwesomeIcon icon={faUser} className="sidebar-icon" />
             {!collapsed && <span>Professores</span>}
           </div>
+
+          {/* Relatórios - Apenas para Admin */}
+          {userRole === "admin" && (
+            <div
+              className={getClassName("/relatorios")}
+              onClick={() => handleNavigation("/relatorios")}
+            >
+              <FontAwesomeIcon icon={faFileAlt} className="sidebar-icon" />
+              {!collapsed && <span>Relatórios</span>}
+            </div>
+          )}
         </div>
 
         {/* Botão de logout */}

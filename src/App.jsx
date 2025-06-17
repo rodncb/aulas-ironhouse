@@ -21,6 +21,7 @@ import GerenciamentoAlunos from "./components/GerenciamentoAlunos";
 import GerenciamentoProfessores from "./components/GerenciamentoProfessores";
 import DetalheCadastroAluno from "./components/DetalheCadastroAluno";
 import EditarAluno from "./components/EditarAluno";
+import Relatorios from "./components/Relatorios";
 import { SalaProvider } from "./contexts/SalaContext";
 import { CadastroAlunoProvider } from "./contexts/CadastroAlunoContext";
 import startAutoEndScheduler from "./services/scheduler";
@@ -233,8 +234,8 @@ const App = () => {
       if (!userRole) return false; // Para outras seções, precisa de role
       if (userRole === "admin") return true; // Admin acessa tudo
       if (userRole === "professor") {
-        // Professor não acessa configuracoes
-        return section !== "configuracoes";
+        // Professor não acessa configuracoes nem relatórios
+        return section !== "configuracoes" && section !== "relatorios";
       }
       return false; // Por padrão, nega acesso
     },
@@ -439,6 +440,15 @@ const App = () => {
                 element={
                   <ProtectedRoute requiredSection="configuracoes">
                     <Configuracoes />
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
+                path="/relatorios"
+                element={
+                  <ProtectedRoute requiredSection="relatorios">
+                    <Relatorios />
                   </ProtectedRoute>
                 }
               />

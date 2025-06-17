@@ -89,7 +89,6 @@ const DetalheCadastroAluno = ({ aluno, alunoId, onNavigateBack }) => {
   const [sucessoSalvar, setSucessoSalvar] = useState(false);
   const [historicoAulas, setHistoricoAulas] = useState([]); // Estado para histórico de aulas
   const [carregandoHistorico, setCarregandoHistorico] = useState(false); // Estado para carregamento
-  const [aulaExpandida, setAulaExpandida] = useState(null); // Estado para aula expandida
 
   // Quando componente recebe alunoId em vez do objeto aluno completo
   useEffect(() => {
@@ -161,11 +160,6 @@ const DetalheCadastroAluno = ({ aluno, alunoId, onNavigateBack }) => {
 
     carregarHistoricoAulas();
   }, [alunoAtual]);
-
-  // Função para expandir/recolher detalhes de uma aula
-  const verDetalhesAula = (aula) => {
-    setAulaExpandida(aula.id === aulaExpandida ? null : aula.id);
-  };
 
   // Função para obter o rótulo de status
   const getStatusLabel = (status, aulaData) => {
@@ -423,28 +417,6 @@ const DetalheCadastroAluno = ({ aluno, alunoId, onNavigateBack }) => {
           </div>
         </div>
 
-        {/* Informações do Sistema */}
-        <div className="dados-aluno-card">
-          <h3>Informações do Sistema</h3>
-          <div className="info-container">
-            <p>
-              <strong>ID:</strong> {alunoAtual.id}
-            </p>
-            <p>
-              <strong>Criado em:</strong>{" "}
-              {alunoAtual.created_at
-                ? formatarData(alunoAtual.created_at)
-                : "N/A"}
-            </p>
-            <p>
-              <strong>Última atualização:</strong>{" "}
-              {alunoAtual.updated_at
-                ? formatarData(alunoAtual.updated_at)
-                : "N/A"}
-            </p>
-          </div>
-        </div>
-
         {/* Histórico de Aulas */}
         <div className="dados-aluno-card historico-aulas">
           <h3>Histórico de Aulas</h3>
@@ -455,78 +427,13 @@ const DetalheCadastroAluno = ({ aluno, alunoId, onNavigateBack }) => {
                 <p>Carregando histórico de aulas...</p>
               </div>
             ) : historicoAulas.length > 0 ? (
-              <>
-                <div className="info-resumo">
-                  <p>
-                    <strong>Total de aulas:</strong> {historicoAulas.length}
-                  </p>
-                  <p>
-                    <strong>Aulas realizadas:</strong>{" "}
-                    {
-                      historicoAulas.filter((aula) => {
-                        // Considerar como "realizada" aulas marcadas como "realizada" ou "finalizada"
-                        // Ou aulas com status "atual"/"em_andamento" que são de datas passadas
-                        if (
-                          aula.status === "realizada" ||
-                          aula.status === "finalizada"
-                        ) {
-                          return true;
-                        }
-
-                        // Verificar se é uma aula "atual" mas de data passada
-                        if (
-                          aula.status === "atual" ||
-                          aula.status === "em_andamento"
-                        ) {
-                          const dataAula = new Date(aula.data + "T00:00:00");
-                          const hoje = new Date();
-                          hoje.setHours(0, 0, 0, 0);
-                          return dataAula < hoje;
-                        }
-
-                        return false;
-                      }).length
-                    }
-                  </p>
-                  <p>
-                    <strong>Aulas canceladas:</strong>{" "}
-                    {
-                      historicoAulas.filter(
-                        (aula) => aula.status === "cancelada"
-                      ).length
-                    }
-                  </p>
-                  <p>
-                    <strong>Aulas atuais:</strong>{" "}
-                    {
-                      historicoAulas.filter((aula) => {
-                        // Contar como aula atual apenas se o status for "atual"/"em_andamento"
-                        // E a data for igual ou posterior à data de hoje
-                        if (
-                          aula.status === "atual" ||
-                          aula.status === "em_andamento"
-                        ) {
-                          const dataAula = new Date(aula.data + "T00:00:00");
-                          const hoje = new Date();
-                          hoje.setHours(0, 0, 0, 0);
-                          return dataAula >= hoje;
-                        }
-                        return false;
-                      }).length
-                    }
-                  </p>
-                </div>
-
-                <div className="historico-aulas-lista">
+              <div className="historico-aulas-lista">
                   {historicoAulas.map((aula) => (
                     <div
                       key={aula.id}
                       className={`aula-card aula-${aula.status}`}
                     >
-                      <div
-                        className="aula-header"
-                        onClick={() => verDetalhesAula(aula)}
-                      >
+                      <div className="aula-header">
                         <div className="aula-data-horario">
                           <div className="aula-data">
                             {formatarData(aula.data)}
@@ -553,12 +460,8 @@ const DetalheCadastroAluno = ({ aluno, alunoId, onNavigateBack }) => {
                         <div className="aula-status">
                           Status: {getStatusLabel(aula.status, aula.data)}
                         </div>
-                        <div className="aula-toggle">
-                          {aulaExpandida === aula.id ? "▲" : "▼"}
-                        </div>
                       </div>
-                      {aulaExpandida === aula.id && (
-                        <div className="aula-detalhes">
+                      <div className="aula-detalhes">
                           <div className="aula-info-detalhada">
                             <h4>Informações</h4>
                             <p>
@@ -640,11 +543,9 @@ const DetalheCadastroAluno = ({ aluno, alunoId, onNavigateBack }) => {
                             </div>
                           )}
                         </div>
-                      )}
                     </div>
                   ))}
                 </div>
-              </>
             ) : (
               <div className="sem-registros">
                 Nenhuma aula registrada para este aluno.

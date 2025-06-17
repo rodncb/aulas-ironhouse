@@ -1,0 +1,814 @@
+/* Relatórios - Container Principal */
+.relatorios-container {
+  padding: 20px;
+  max-width: 1400px;
+  margin: 0 auto;
+  min-height: calc(100vh - 80px);
+}
+
+.relatorios-header {
+  margin-bottom: 30px;
+  text-align: center;
+}
+
+.relatorios-header h1 {
+  color: #2c3e50;
+  font-size: 2.5rem;
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+
+.relatorios-subtitle {
+  color: #7f8c8d;
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+/* Navegação entre relatórios */
+.relatorios-navegacao {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+
+.btn-relatorio {
+  padding: 12px 24px;
+  border: 2px solid #007bff;
+  background: transparent;
+  color: #007bff;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 1rem;
+}
+
+.btn-relatorio:hover {
+  background-color: #007bff;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
+}
+
+.btn-relatorio.ativo {
+  background-color: #007bff;
+  color: white;
+  box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
+}
+
+/* Layout dos Relatórios - Atualizado para layout sem sidebar */
+.relatorios-content {
+  width: 100%;
+}
+
+/* Sidebar de Relatórios */
+.relatorios-sidebar {
+  background: #fff;
+  border-radius: 12px;
+  padding: 25px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  height: fit-content;
+  border: 1px solid #e9ecef;
+}
+
+.relatorios-sidebar h3 {
+  color: #2c3e50;
+  margin: 0 0 20px 0;
+  font-size: 1.3rem;
+  font-weight: 600;
+}
+
+.relatorios-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.relatorio-item {
+  padding: 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 2px solid #e9ecef;
+  background: #f8f9fa;
+}
+
+.relatorio-item:hover {
+  border-color: #3498db;
+  box-shadow: 0 2px 8px rgba(52, 152, 219, 0.2);
+}
+
+.relatorio-item.active {
+  border-color: #3498db;
+  background: #ebf3fd;
+  box-shadow: 0 2px 8px rgba(52, 152, 219, 0.3);
+}
+
+.relatorio-item h4 {
+  margin: 0 0 8px 0;
+  color: #2c3e50;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.relatorio-item p {
+  margin: 0;
+  color: #7f8c8d;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+/* Área Principal do Relatório */
+.relatorios-main {
+  background: #fff;
+  border-radius: 12px;
+  padding: 30px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e9ecef;
+}
+
+/* Relatório Individual - Container */
+.relatorio-container {
+  width: 100%;
+}
+
+/* Header do Relatório */
+.relatorio-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 30px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid #e9ecef;
+}
+
+.relatorio-title {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.title-icon {
+  font-size: 2rem;
+  color: #3498db;
+}
+
+.relatorio-title h2 {
+  margin: 0 0 5px 0;
+  color: #2c3e50;
+  font-size: 1.8rem;
+  font-weight: 600;
+}
+
+.relatorio-title p {
+  margin: 0;
+  color: #7f8c8d;
+  font-size: 1rem;
+}
+
+.relatorio-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.btn-refresh,
+.btn-export {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-refresh {
+  background: #95a5a6;
+  color: white;
+}
+
+.btn-refresh:hover {
+  background: #7f8c8d;
+  transform: translateY(-1px);
+}
+
+.btn-export {
+  background: #27ae60;
+  color: white;
+}
+
+.btn-export:hover {
+  background: #229954;
+  transform: translateY(-1px);
+}
+
+.btn-refresh:disabled,
+.btn-export:disabled {
+  background: #bdc3c7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Botão de Pesquisa */
+.btn-search {
+  background: linear-gradient(45deg, #007bff, #0056b3);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+}
+
+.btn-search:hover {
+  background: linear-gradient(45deg, #0056b3, #004085);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+}
+
+.btn-search:disabled {
+  background: #6c757d;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Filtros */
+.relatorio-filtros {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 30px;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.filtro-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 200px;
+}
+
+.filtro-group label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  color: #2c3e50;
+  font-size: 14px;
+}
+
+.filtro-group select {
+  padding: 10px 12px;
+  border: 2px solid #e9ecef;
+  border-radius: 8px;
+  font-size: 14px;
+  transition: all 0.3s ease;
+}
+
+.filtro-group select:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+/* Campo de Data */
+.input-data {
+  padding: 10px 12px;
+  border: 2px solid #e9ecef;
+  border-radius: 8px;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  width: 100%;
+  max-width: 200px;
+}
+
+.input-data:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+/* Loading */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px;
+  color: #7f8c8d;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #e9ecef;
+  border-top: 4px solid #3498db;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 20px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Resumo */
+.relatorio-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.summary-card {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 25px;
+  background: linear-gradient(135deg, #3498db, #2980b9);
+  color: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+}
+
+.summary-icon {
+  font-size: 2.5rem;
+  opacity: 0.9;
+}
+
+.summary-card h3 {
+  margin: 0 0 5px 0;
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.summary-card p {
+  margin: 0;
+  font-size: 0.95rem;
+  opacity: 0.9;
+}
+
+/* Sem Dados */
+.no-data {
+  text-align: center;
+  padding: 60px;
+  color: #7f8c8d;
+}
+
+.no-data-icon {
+  font-size: 4rem;
+  margin-bottom: 20px;
+  opacity: 0.5;
+}
+
+.no-data h3 {
+  margin: 0 0 10px 0;
+  font-size: 1.5rem;
+  color: #95a5a6;
+}
+
+.no-data p {
+  margin: 0;
+  font-size: 1rem;
+}
+
+/* Tabela do Relatório */
+.relatorio-table {
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e9ecef;
+  width: 100%;
+}
+
+.relatorio-table table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.relatorio-table th {
+  background: #34495e;
+  color: white;
+  padding: 18px 15px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  border-right: 1px solid #2c3e50;
+}
+
+.relatorio-table th:first-child {
+  width: 40%;
+  text-align: left;
+}
+
+.relatorio-table th:nth-child(2) {
+  width: 40%;
+  text-align: left;
+}
+
+.relatorio-table th:last-child {
+  width: 20%;
+  text-align: center;
+  border-right: none;
+}
+
+.relatorio-table td {
+  padding: 15px;
+  border-bottom: 1px solid #e9ecef;
+  border-right: 1px solid #f8f9fa;
+  vertical-align: middle;
+}
+
+.relatorio-table td:last-child {
+  border-right: none;
+}
+
+.relatorio-table tr:last-child td {
+  border-bottom: none;
+}
+
+.relatorio-table tr:nth-child(even) {
+  background: #f8f9fa;
+}
+
+/* Estilos para linha de total no relatório de volume */
+.linha-total {
+  background-color: #e9ecef !important;
+  font-weight: bold;
+  border-top: 2px solid #6c757d;
+}
+
+.linha-total td {
+  font-weight: bold;
+  color: #495057;
+}
+
+.professor-total {
+  color: #343a40 !important;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.badge-total {
+  background: #6c757d !important;
+  color: white;
+  font-weight: 700;
+  font-size: 1rem;
+  padding: 8px 16px;
+}
+
+/* Células Específicas */
+.professor-cell,
+.periodo-cell {
+  font-weight: 500;
+  color: #2c3e50;
+  text-align: left;
+  padding: 15px;
+  vertical-align: middle;
+}
+
+.periodo-cell {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  max-width: 100%;
+}
+
+.professor-cell {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  max-width: 100%;
+}
+
+.total-cell {
+  text-align: center !important;
+  vertical-align: middle;
+  padding: 15px 10px;
+}
+
+.badge {
+  display: inline-block;
+  padding: 8px 14px;
+  background: #6c757d;
+  color: white;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 1rem;
+  min-width: 40px;
+  text-align: center;
+}
+
+.detalhes-cell {
+  max-width: 300px;
+}
+
+.aulas-detalhes {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.aula-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: #f8f9fa;
+  border-radius: 6px;
+  border-left: 3px solid #3498db;
+}
+
+.aula-data {
+  font-weight: 500;
+  color: #2c3e50;
+  margin-right: 8px;
+}
+
+.aula-horario {
+  display: inline-block;
+  margin: 0 8px;
+  padding: 4px 8px;
+  background: #e3f2fd;
+  color: #1976d2;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.aula-status {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.status-pendente {
+  background: #f39c12;
+  color: white;
+}
+
+.status-agendada {
+  background: #3498db;
+  color: white;
+}
+
+/* Estilos para informações de alunos e observações */
+.alunos-info {
+  margin-top: 8px;
+  padding: 8px;
+  background: #f8f9fa;
+  border-radius: 4px;
+  font-size: 13px;
+}
+
+.aluno-detalhe {
+  margin: 4px 0;
+  color: #495057;
+}
+
+.observacoes-aluno {
+  margin-left: 15px;
+  font-style: italic;
+  color: #6c757d;
+  font-size: 12px;
+}
+
+.anotacoes-aula {
+  margin-top: 8px;
+  padding: 6px;
+  background: #e9ecef;
+  border-radius: 4px;
+  font-size: 13px;
+  color: #495057;
+}
+
+/* Sistema de cores para horários - Relatório Aula/Professor */
+.legenda-cores {
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  padding: 15px;
+  margin: 20px 0;
+}
+
+.legenda-cores h4 {
+  margin: 0 0 15px 0;
+  color: #495057;
+  font-size: 1.1rem;
+}
+
+.legenda-items {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.legenda-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.legenda-item .cor-exemplo {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  display: inline-block;
+}
+
+.legenda-item.pontual .cor-exemplo {
+  background-color: #d4edda;
+  border: 1px solid #c3e6cb;
+}
+
+.legenda-item.atraso-leve .cor-exemplo {
+  background-color: #fff3cd;
+  border: 1px solid #ffeaa7;
+}
+
+.legenda-item.atraso-significativo .cor-exemplo {
+  background-color: #f8d7da;
+  border: 1px solid #f5c6cb;
+}
+
+/* Badges de horário com cores */
+.horario-badge {
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid transparent;
+}
+
+.horario-badge.pontual {
+  background-color: #d4edda;
+  color: #155724;
+  border-color: #c3e6cb;
+}
+
+.horario-badge.atraso-leve {
+  background-color: #fff3cd;
+  color: #856404;
+  border-color: #ffeaa7;
+}
+
+.horario-badge.atraso-significativo {
+  background-color: #f8d7da;
+  color: #721c24;
+  border-color: #f5c6cb;
+}
+
+.horario-badge.sem-horario {
+  background-color: #e9ecef;
+  color: #6c757d;
+  border-color: #dee2e6;
+}
+
+.horario-cell {
+  text-align: center;
+}
+
+/* Responsividade */
+@media (max-width: 1200px) {
+  .relatorios-content {
+    grid-template-columns: 250px 1fr;
+    gap: 20px;
+  }
+}
+
+@media (max-width: 992px) {
+  .relatorios-content {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  
+  .relatorios-sidebar {
+    order: 2;
+  }
+  
+  .relatorios-main {
+    order: 1;
+  }
+  
+  .relatorios-lista {
+    flex-direction: row;
+    overflow-x: auto;
+    padding-bottom: 10px;
+  }
+  
+  .relatorio-item {
+    min-width: 250px;
+    flex-shrink: 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .relatorios-container {
+    padding: 15px;
+  }
+  
+  .relatorio-header {
+    flex-direction: column;
+    gap: 20px;
+    align-items: center;
+    text-align: center;
+  }
+  
+  .relatorio-filtros {
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .relatorio-summary {
+    grid-template-columns: 1fr;
+  }
+  
+  .relatorio-table {
+    overflow-x: auto;
+    border-radius: 8px;
+  }
+  
+  .relatorio-table table {
+    min-width: 650px;
+    table-layout: fixed;
+  }
+  
+  .relatorio-table th:first-child {
+    width: 200px;
+    min-width: 200px;
+  }
+
+  .relatorio-table th:nth-child(2) {
+    width: 250px;
+    min-width: 250px;
+  }
+
+  .relatorio-table th:last-child {
+    width: 120px;
+    min-width: 120px;
+  }
+
+  .professor-cell,
+  .periodo-cell {
+    font-size: 0.9rem;
+    padding: 12px 10px;
+  }
+
+  .total-cell {
+    padding: 12px 8px;
+  }
+
+  .badge {
+    padding: 6px 10px;
+    font-size: 0.9rem;
+  }
+  
+  .relatorios-header h1 {
+    font-size: 2rem;
+  }
+  
+  .relatorios-navegacao {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .btn-relatorio {
+    width: 100%;
+    text-align: center;
+  }
+}
+
+@media (max-width: 576px) {
+  .relatorios-main {
+    padding: 20px;
+  }
+  
+  .relatorio-actions {
+    flex-direction: column;
+  }
+  
+  .btn-refresh,
+  .btn-export {
+    justify-content: center;
+  }
+}
