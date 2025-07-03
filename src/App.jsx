@@ -261,6 +261,11 @@ const App = () => {
   // Função para lidar com o logout
   const handleLogout = async () => {
     try {
+      // Limpar dados dos relatórios antes do logout
+      if (window.limparTodosDadosRelatorios) {
+        window.limparTodosDadosRelatorios();
+      }
+
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       // Limpeza de estados gerenciada pelo onAuthStateChange/useEffect

@@ -165,15 +165,18 @@ const DetalheCadastroAluno = ({ aluno, alunoId, onNavigateBack }) => {
   const getStatusLabel = (status, aulaData) => {
     // Verifica se a aula é antiga (data anterior à atual) mas ainda tem status "atual"
     if (status === "atual" || status === "em_andamento") {
-      // Converter a string de data da aula para objeto Date
-      const dataAula = new Date(aulaData + "T00:00:00");
+      // Comparar apenas as datas no formato YYYY-MM-DD para evitar problemas de timezone
+      const dataAulaString = aulaData.split("T")[0]; // Garantir formato YYYY-MM-DD
       const hoje = new Date();
-
-      // Remover as horas, minutos e segundos para comparar apenas as datas
-      hoje.setHours(0, 0, 0, 0);
+      const hojeString =
+        hoje.getFullYear() +
+        "-" +
+        String(hoje.getMonth() + 1).padStart(2, "0") +
+        "-" +
+        String(hoje.getDate()).padStart(2, "0");
 
       // Se a data da aula for anterior à data atual, considerar como finalizada
-      if (dataAula < hoje) {
+      if (dataAulaString < hojeString) {
         return <span className="status-realizada">Finalizada</span>;
       }
     }

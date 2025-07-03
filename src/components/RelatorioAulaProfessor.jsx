@@ -8,18 +8,173 @@ import {
   faCalendarAlt,
   faUser,
   faClock,
+  faChevronLeft,
+  faChevronRight,
+  faList,
 } from "@fortawesome/free-solid-svg-icons";
 
 const RelatorioAulaProfessor = () => {
+  const STORAGE_KEY = "relatorio-horario-professor";
+
+  // Estilos CSS para as cores da legenda de pontualidade
+  React.useEffect(() => {
+    const styles = `
+      .horario-badge {
+        padding: 6px 10px;
+        border-radius: 6px;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 13px;
+        white-space: nowrap;
+      }
+      
+      .horario-badge.pontual {
+        background-color: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+      }
+      
+      .horario-badge.atraso-leve {
+        background-color: #fff3cd;
+        color: #856404;
+        border: 1px solid #ffeaa7;
+      }
+      
+      .horario-badge.atraso-significativo {
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+      }
+      
+      .horario-badge.sem-horario {
+        background-color: #e9ecef;
+        color: #6c757d;
+        border: 1px solid #dee2e6;
+      }
+
+      .horario-cell {
+        text-align: center;
+        padding: 12px 8px;
+      }
+      
+      .data-cell, .professor-cell {
+        vertical-align: middle;
+      }
+      
+      .data-cell svg, .professor-cell svg {
+        margin-right: 8px;
+        color: #6c757d;
+      }
+    `;
+
+    const styleSheet = document.createElement("style");
+    styleSheet.textContent = styles;
+    document.head.appendChild(styleSheet);
+
+    return () => {
+      document.head.removeChild(styleSheet);
+    };
+  }, []);
+
+  // Função para carregar dados do localStorage
+  const carregarDadosSalvos = () => {
+    try {
+      const dadosSalvos = localStorage.getItem(STORAGE_KEY);
+      if (dadosSalvos) {
+        return JSON.parse(dadosSalvos);
+      }
+    } catch (error) {
+      console.error("Erro ao carregar dados salvos:", error);
+    }
+    return null;
+  };
+
+  // Função para salvar dados no localStorage
+  const salvarDados = (dados) => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(dados));
+    } catch (error) {
+      console.error("Erro ao salvar dados:", error);
+    }
+  };
+
+  // Função para limpar dados salvos
+  const limparDadosSalvos = () => {
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+    } catch (error) {
+      console.error("Erro ao limpar dados salvos:", error);
+    }
+  };
+
+  // Expor função de limpeza globalmente para uso quando sair dos relatórios
+  useEffect(() => {
+    window.limparDadosRelatorioHorario = limparDadosSalvos;
+    return () => {
+      delete window.limparDadosRelatorioHorario;
+    };
+  }, []);
+
+  // Carregar dados salvos na inicialização
+  const dadosSalvos = carregarDadosSalvos();
+
   const [loading, setLoading] = useState(false);
-  const [aulas, setAulas] = useState([]);
+  const [aulas, setAulas] = useState(dadosSalvos?.aulas || []);
   const [professores, setProfessores] = useState([]);
-  const [dadosRelatorio, setDadosRelatorio] = useState([]);
-  const [filtros, setFiltros] = useState({
-    dataInicial: "",
-    dataFinal: "",
-    professor: "todos",
-  });
+  const [dadosRelatorio, setDadosRelatorio] = useState(
+    dadosSalvos?.dadosRelatorio || []
+  );
+  const [filtros, setFiltros] = useState(
+    dadosSalvos?.filtros || {
+      dataInicial: "",
+      dataFinal: "",
+      professor: "todos",
+    }
+  );
+
+  // Estados para paginação
+  const [paginaAtual, setPaginaAtual] = useState(dadosSalvos?.paginaAtual || 1);
+  const [itensPorPagina, setItensPorPagina] = useState(
+    dadosSalvos?.itensPorPagina || 20
+  );
+
+  // Funções utilitárias para paginação
+  const calcularDadosPaginacao = useCallback(() => {
+    const totalItens = dadosRelatorio.length;
+    const totalPaginas = Math.ceil(totalItens / itensPorPagina);
+    const indiceInicial = (paginaAtual - 1) * itensPorPagina;
+    const indiceFinal = indiceInicial + itensPorPagina;
+    const dadosPagina = dadosRelatorio.slice(indiceInicial, indiceFinal);
+
+    return {
+      totalItens,
+      totalPaginas,
+      indiceInicial,
+      indiceFinal,
+      dadosPagina,
+      temPaginaAnterior: paginaAtual > 1,
+      temProximaPagina: paginaAtual < totalPaginas,
+    };
+  }, [dadosRelatorio, paginaAtual, itensPorPagina]);
+
+  // Reset da página quando mudam os dados ou filtros
+  useEffect(() => {
+    setPaginaAtual(1);
+  }, [dadosRelatorio]);
+
+  const alterarItensPorPagina = (novoValor) => {
+    setItensPorPagina(novoValor);
+    setPaginaAtual(1);
+  };
+
+  const irParaPagina = (pagina) => {
+    const { totalPaginas } = calcularDadosPaginacao();
+    if (pagina >= 1 && pagina <= totalPaginas) {
+      setPaginaAtual(pagina);
+    }
+  };
 
   // Função para determinar a cor baseada no horário
   const determinarCorHorario = (hora) => {
@@ -43,11 +198,7 @@ const RelatorioAulaProfessor = () => {
 
   // Função para processar dados do relatório
   const processarDadosRelatorio = useCallback(() => {
-    console.log("Processando dados do relatório...");
-    console.log("Aulas disponíveis:", aulas);
-
     if (!aulas || aulas.length === 0) {
-      console.log("Nenhuma aula encontrada");
       setDadosRelatorio([]);
       return;
     }
@@ -67,20 +218,17 @@ const RelatorioAulaProfessor = () => {
 
       // Filtro por data/período
       if (filtros.dataInicial || filtros.dataFinal) {
-        const aulaData = new Date(aula.data).toISOString().split("T")[0];
+        // Extrair apenas a data (YYYY-MM-DD) da aula, sem conversão de timezone
+        const aulaData = aula.data.substring(0, 10); // Pega apenas YYYY-MM-DD
 
         if (filtros.dataInicial && !filtros.dataFinal) {
-          if (aulaData !== filtros.dataInicial) {
-            return false;
-          }
+          return aulaData >= filtros.dataInicial;
         } else if (filtros.dataInicial && filtros.dataFinal) {
-          if (aulaData < filtros.dataInicial || aulaData > filtros.dataFinal) {
-            return false;
-          }
+          return (
+            aulaData >= filtros.dataInicial && aulaData <= filtros.dataFinal
+          );
         } else if (!filtros.dataInicial && filtros.dataFinal) {
-          if (aulaData > filtros.dataFinal) {
-            return false;
-          }
+          return aulaData <= filtros.dataFinal;
         }
       }
 
@@ -99,13 +247,35 @@ const RelatorioAulaProfessor = () => {
       return nomeA.localeCompare(nomeB);
     });
 
-    console.log("Aulas após filtros:", aulasFiltradas);
     setDadosRelatorio(aulasFiltradas);
   }, [aulas, filtros]);
 
   // Carregar apenas professores na inicialização
   useEffect(() => {
     carregarProfessores();
+  }, []);
+
+  // Salvar dados no localStorage sempre que houver mudanças importantes
+  useEffect(() => {
+    const dadosParaSalvar = {
+      aulas,
+      dadosRelatorio,
+      filtros,
+      paginaAtual,
+      itensPorPagina,
+      timestamp: Date.now(),
+    };
+    salvarDados(dadosParaSalvar);
+  }, [aulas, dadosRelatorio, filtros, paginaAtual, itensPorPagina]);
+
+  // Função para limpar dados salvos (será usada quando sair dos relatórios)
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      // Manter dados salvos mesmo ao fechar/recarregar a página
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, []);
 
   // Reprocessar dados quando filtros mudarem (mas só se temos dados)
@@ -117,8 +287,6 @@ const RelatorioAulaProfessor = () => {
 
   const carregarProfessores = async () => {
     try {
-      console.log("Carregando professores...");
-
       const { supabase } = await import("../services/supabase");
 
       const { data: professoresData, error: professoresError } = await supabase
@@ -141,8 +309,6 @@ const RelatorioAulaProfessor = () => {
   const carregarDados = async () => {
     setLoading(true);
     try {
-      console.log("Iniciando carregamento de aulas...");
-
       const { supabase } = await import("../services/supabase");
 
       const { data: aulasData, error: aulasError } = await supabase
@@ -170,7 +336,7 @@ const RelatorioAulaProfessor = () => {
   };
 
   const formatarData = (dataString) => {
-    const data = new Date(dataString);
+    const data = new Date(dataString + "T12:00:00"); // Forçar meio-dia para evitar problemas de timezone
     return data.toLocaleDateString("pt-BR", {
       day: "2-digit",
       month: "2-digit",
@@ -243,6 +409,7 @@ const RelatorioAulaProfessor = () => {
             </thead>
             <tbody>`;
 
+        // Usar TODOS OS DADOS para o PDF (não apenas da página atual)
         dadosRelatorio.forEach((aula) => {
           const corHorario = determinarCorHorario(aula.hora);
           htmlContent += `
@@ -370,20 +537,50 @@ const RelatorioAulaProfessor = () => {
 
       {/* Legenda das cores */}
       <div className="legenda-cores">
-        <h4>Legenda de Pontualidade:</h4>
+        <h4>
+          <FontAwesomeIcon icon={faClock} style={{ marginRight: "10px" }} />
+          Legenda de Pontualidade
+        </h4>
         <div className="legenda-items">
-          <span className="legenda-item pontual">
+          <div className="legenda-item pontual">
             <span className="cor-exemplo"></span>
-            Pontual (xx:49 - xx:05)
-          </span>
-          <span className="legenda-item atraso-leve">
+            <div>
+              <strong>Pontual</strong>
+              <div style={{ fontSize: "12px", opacity: 0.8 }}>
+                xx:49 - xx:05 (16 min antes/depois)
+              </div>
+            </div>
+          </div>
+          <div className="legenda-item atraso-leve">
             <span className="cor-exemplo"></span>
-            Atraso Leve (xx:06 - xx:15)
-          </span>
-          <span className="legenda-item atraso-significativo">
+            <div>
+              <strong>Atraso Leve</strong>
+              <div style={{ fontSize: "12px", opacity: 0.8 }}>
+                xx:06 - xx:15 (6-15 min de atraso)
+              </div>
+            </div>
+          </div>
+          <div className="legenda-item atraso-significativo">
             <span className="cor-exemplo"></span>
-            Atraso Significativo (xx:16 - xx:48)
-          </span>
+            <div>
+              <strong>Atraso Significativo</strong>
+              <div style={{ fontSize: "12px", opacity: 0.8 }}>
+                xx:16 - xx:48 (16+ min de atraso)
+              </div>
+            </div>
+          </div>
+        </div>
+        <div
+          style={{
+            textAlign: "center",
+            marginTop: "15px",
+            fontSize: "12px",
+            color: "#6c757d",
+            fontStyle: "italic",
+          }}
+        >
+          💡 A pontualidade é calculada baseada nos minutos do horário de
+          chegada
         </div>
       </div>
 
@@ -404,41 +601,125 @@ const RelatorioAulaProfessor = () => {
               </p>
             </div>
           ) : (
-            <div className="relatorio-table">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Data</th>
-                    <th>Professor</th>
-                    <th>Horário</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {dadosRelatorio.map((aula, index) => (
-                    <tr key={index}>
-                      <td className="data-cell">
-                        <FontAwesomeIcon icon={faCalendarAlt} />
-                        {formatarData(aula.data)}
-                      </td>
-                      <td className="professor-cell">
-                        <FontAwesomeIcon icon={faUser} />
-                        {aula.professor?.nome || "Professor não encontrado"}
-                      </td>
-                      <td className="horario-cell">
-                        <span
-                          className={`horario-badge ${determinarCorHorario(
-                            aula.hora
-                          )}`}
-                        >
-                          <FontAwesomeIcon icon={faClock} />
-                          {aula.hora || "Não definido"}
-                        </span>
-                      </td>
+            <>
+              {/* Controles de paginação */}
+              <div className="pagination-controls">
+                <div className="pagination-info">
+                  <FontAwesomeIcon icon={faList} />
+                  <span>
+                    Mostrando {calcularDadosPaginacao().indiceInicial + 1} a{" "}
+                    {Math.min(
+                      calcularDadosPaginacao().indiceFinal,
+                      calcularDadosPaginacao().totalItens
+                    )}{" "}
+                    de {calcularDadosPaginacao().totalItens} registros
+                  </span>
+                </div>
+
+                <div className="pagination-size">
+                  <label>Itens por página:</label>
+                  <select
+                    value={itensPorPagina}
+                    onChange={(e) =>
+                      alterarItensPorPagina(Number(e.target.value))
+                    }
+                  >
+                    <option value={20}>20</option>
+                    <option value={50}>50</option>
+                    <option value={100}>100</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="relatorio-table">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Data</th>
+                      <th>Professor</th>
+                      <th>Horário</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {calcularDadosPaginacao().dadosPagina.map((aula, index) => (
+                      <tr key={index}>
+                        <td className="data-cell">
+                          <FontAwesomeIcon icon={faCalendarAlt} />
+                          {formatarData(aula.data)}
+                        </td>
+                        <td className="professor-cell">
+                          <FontAwesomeIcon icon={faUser} />
+                          {aula.professor?.nome || "Professor não encontrado"}
+                        </td>
+                        <td className="horario-cell">
+                          <span
+                            className={`horario-badge ${determinarCorHorario(
+                              aula.hora
+                            )}`}
+                          >
+                            <FontAwesomeIcon icon={faClock} />
+                            {aula.hora || "Não definido"}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Navegação da paginação */}
+              {calcularDadosPaginacao().totalPaginas > 1 && (
+                <div className="pagination-navigation">
+                  <button
+                    className="pagination-btn"
+                    onClick={() => irParaPagina(paginaAtual - 1)}
+                    disabled={!calcularDadosPaginacao().temPaginaAnterior}
+                  >
+                    <FontAwesomeIcon icon={faChevronLeft} />
+                    Anterior
+                  </button>
+
+                  <div className="pagination-pages">
+                    {Array.from(
+                      { length: calcularDadosPaginacao().totalPaginas },
+                      (_, i) => i + 1
+                    )
+                      .filter((pagina) => {
+                        const atual = paginaAtual;
+                        return (
+                          pagina === 1 ||
+                          pagina === calcularDadosPaginacao().totalPaginas ||
+                          (pagina >= atual - 2 && pagina <= atual + 2)
+                        );
+                      })
+                      .map((pagina, index, array) => (
+                        <React.Fragment key={pagina}>
+                          {index > 0 && array[index - 1] !== pagina - 1 && (
+                            <span className="pagination-ellipsis">...</span>
+                          )}
+                          <button
+                            className={`pagination-page ${
+                              pagina === paginaAtual ? "active" : ""
+                            }`}
+                            onClick={() => irParaPagina(pagina)}
+                          >
+                            {pagina}
+                          </button>
+                        </React.Fragment>
+                      ))}
+                  </div>
+
+                  <button
+                    className="pagination-btn"
+                    onClick={() => irParaPagina(paginaAtual + 1)}
+                    disabled={!calcularDadosPaginacao().temProximaPagina}
+                  >
+                    Próxima
+                    <FontAwesomeIcon icon={faChevronRight} />
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </div>
       )}

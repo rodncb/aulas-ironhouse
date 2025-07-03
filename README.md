@@ -1,70 +1,139 @@
-# Getting Started with Create React App
+# Sistema de Gestão de Aulas - IronHouse
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Sistema completo para gestão de aulas, professores, alunos e relatórios desenvolvido em React com Supabase.
 
-## Available Scripts
+## 🚀 Funcionalidades
 
-In the project directory, you can run:
+### Gestão de Professores
+- ✅ Cadastro, edição e listagem de professores
+- ✅ Exclusão completa de professores (remove aulas e relacionamentos)
+- ✅ Validação de dados e prevenção de duplicatas
 
-### `npm start`
+### Gestão de Alunos
+- ✅ Cadastro, edição e listagem de alunos
+- ✅ Controle de dados pessoais e informações médicas
+- ✅ Gestão de tipos de lesão e observações
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+### Gestão de Aulas
+- ✅ Agendamento e controle de aulas
+- ✅ Vinculação professor-aluno
+- ✅ Controle de presença e pontualidade
+- ✅ Gestão de horários e períodos
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+### Relatórios
+- ✅ **Relatório de Volume de Aulas**: Contagem de participações por período
+- ✅ **Relatório de KPI**: Indicadores de pontualidade e frequência
+- ✅ **Relatório Horário/Professor**: Visualização com cores de pontualidade
 
-### `npm test`
+## 🛠️ Tecnologias
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+- **Frontend**: React 18, CSS Modules
+- **Backend**: Supabase (PostgreSQL + Auth + RPC)
+- **Deploy**: Vercel/Netlify
+- **Autenticação**: Supabase Auth
 
-### `npm run build`
+## 📦 Instalação
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+1. Clone o repositório:
+```bash
+git clone [URL_DO_REPOSITORIO]
+cd aulas-ironhouse
+```
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+2. Instale as dependências:
+```bash
+npm install
+```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+3. Configure as variáveis de ambiente:
+```bash
+# Crie um arquivo .env.local
+REACT_APP_SUPABASE_URL=sua_url_supabase
+REACT_APP_SUPABASE_ANON_KEY=sua_chave_supabase
+```
 
-### `npm run eject`
+4. Execute o projeto:
+```bash
+npm start
+```
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+## 🗄️ Banco de Dados
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+### Configuração do Supabase
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+1. **Estrutura das tabelas**: Execute `scripts/migracao/supabase-structure.sql`
+2. **Dados iniciais**: Execute `scripts/migracao/dados_iniciais.sql`
+3. **Função de exclusão**: Execute `scripts/setup/funcao-excluir-simples.sql`
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+### Scripts Disponíveis
 
-## Learn More
+#### Migração
+- `scripts/migracao/supabase-structure.sql` - Estrutura completa das tabelas
+- `scripts/migracao/dados_iniciais.sql` - Dados básicos para funcionamento
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+#### Setup
+- `scripts/setup/funcao-excluir-simples.sql` - Função RPC para exclusão de professores
+- `scripts/setup/inserir-professores.cjs` - Script para inserir professores via API
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+#### Manutenção
+- `scripts/manutencao/` - Scripts para verificação e manutenção do sistema
 
-### Code Splitting
+#### Usuários
+- `scripts/usuarios/` - Scripts para gestão de usuários e vinculação
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+## 🚀 Deploy
 
-### Analyzing the Bundle Size
+### Build para Produção
+```bash
+npm run build
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+### Deploy Automático
+O projeto está configurado para deploy automático via:
+- **Vercel**: Conectado ao repositório GitHub
+- **Netlify**: Build da pasta `build/`
 
-### Making a Progressive Web App
+## 📊 Relatórios
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+### Volume de Aulas
+- Contagem de participações por período
+- Filtros por data, professor e aluno
+- Exclusão automática de aulas vazias
 
-### Advanced Configuration
+### KPI de Pontualidade
+- Indicadores visuais de pontualidade
+- Legendas com cores (Verde/Amarelo/Vermelho)
+- Métricas de frequência
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+### Horário/Professor
+- Grade visual com cores de pontualidade
+- Filtros por período e professor
+- Exportação de dados
 
-### Deployment
+## 🔧 Manutenção
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+### Logs e Monitoramento
+- Logs de erro integrados no frontend
+- Monitoramento via Supabase Dashboard
+- Alertas de performance
 
-### `npm run build` fails to minify
+### Backup
+- Backup automático via Supabase
+- Scripts de verificação de integridade
+- Recuperação de dados
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+## 📞 Suporte
+
+Para suporte técnico ou dúvidas sobre o sistema:
+- Documentação: Consulte este README
+- Issues: Use o sistema de issues do GitHub
+- Contato: [seu-email@exemplo.com]
+
+## 📝 Licença
+
+Este projeto é propriedade da IronHouse. Todos os direitos reservados.
+
+---
+
+**Última atualização**: Julho 2025  
+**Versão**: 2.0.0 - Sistema completo com relatórios aprimorados e exclusão de professores

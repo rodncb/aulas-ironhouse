@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import "../styles/GerenciamentoProfessores.css";
-import { voltarPagina, getStatusLabel } from "../lib/utils"; // Importar funções utilitárias
+import { getStatusLabel } from "../lib/utils"; // Importar funções utilitárias
 import professoresService from "../services/professores.service"; // Importação do serviço de professores
 import aulasService from "../services/aulas.service"; // Importação do serviço de aulas como export padrão
 import { useNavigate } from "react-router-dom"; // Importando o hook useNavigate
@@ -14,8 +14,6 @@ const GerenciamentoProfessores = (props) => {
   const [professorEditando, setProfessorEditando] = useState(null);
   const [activeDropdown, setActiveDropdown] = useState(null);
   const [professores, setProfessores] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
 
   const [itemsPerPage, setItemsPerPage] = useState(100);
   const [searchTerm, setSearchTerm] = useState("");
@@ -44,14 +42,11 @@ const GerenciamentoProfessores = (props) => {
   // Função para carregar os professores
   const carregarProfessores = async () => {
     try {
-      setLoading(true);
       const data = await professoresService.getAll();
       setProfessores(data);
     } catch (err) {
-      setError("Erro ao carregar professores: " + err.message);
       console.error("Erro ao carregar professores:", err);
-    } finally {
-      setLoading(false);
+      alert("Erro ao carregar professores: " + err.message);
     }
   };
 
@@ -126,8 +121,8 @@ const GerenciamentoProfessores = (props) => {
         );
         setProfessores(professoresAtualizados);
       } catch (err) {
-        setError("Erro ao atualizar professor: " + err.message);
         console.error("Erro ao atualizar professor:", err);
+        alert("Erro ao atualizar professor: " + err.message);
       }
     } else {
       // Modo de cadastro - criar novo professor
@@ -146,8 +141,8 @@ const GerenciamentoProfessores = (props) => {
         const professoresAtualizados = [...professores, professorCriado];
         setProfessores(professoresAtualizados);
       } catch (err) {
-        setError("Erro ao criar professor: " + err.message);
         console.error("Erro ao criar professor:", err);
+        alert("Erro ao criar professor: " + err.message);
       }
     }
 
@@ -164,21 +159,41 @@ const GerenciamentoProfessores = (props) => {
     setShowModal(false);
   };
 
-  const handleDelete = async (id) => {
-    // ADICIONADO: Confirmação antes de excluir
-    if (window.confirm("Tem certeza que deseja excluir este professor?")) {
-      try {
-        // CORREÇÃO: Usar o nome correto da função do serviço (delete)
-        await professoresService.delete(id);
-        const professoresAtualizados = professores.filter((p) => p.id !== id);
-        setProfessores(professoresAtualizados);
-      } catch (err) {
-        setError("Erro ao excluir professor: " + err.message);
-        console.error("Erro ao excluir professor:", err);
-      }
-    }
+  const handleDelete = async (professor) => {
+    try {
+      // Confirmar exclusão antes de prosseguir
+      const confirmacao = window.confirm(
+        `⚠️ ATENÇÃO: Você está prestes a EXCLUIR PERMANENTEMENTE o professor "${professor.nome}".\n\n` +
+          `Esta ação é IRREVERSÍVEL e o professor será removido completamente do sistema.\n\n` +
+          `Deseja continuar?`
+      );
 
-    setActiveDropdown(null); // Fecha o dropdown após excluir ou cancelar
+      if (!confirmacao) {
+        setActiveDropdown(null);
+        return;
+      }
+
+      // Excluir professor completamente do sistema
+      const resultado = await professoresService.deleteComplete(professor.id);
+
+      if (resultado.success) {
+        // Atualizar lista de professores
+        await carregarProfessores();
+
+        // Mostrar mensagem de sucesso
+        alert(
+          `✅ Professor ${professor.nome} foi excluído permanentemente do sistema.`
+        );
+      } else {
+        throw new Error(resultado.message || "Erro desconhecido");
+      }
+
+      setActiveDropdown(null);
+    } catch (err) {
+      console.error("Erro ao excluir professor:", err);
+      alert(`❌ Erro ao excluir professor: ${err.message}`);
+      setActiveDropdown(null);
+    }
   };
 
   const handleVerHistorico = (professor) => {
@@ -240,25 +255,6 @@ const GerenciamentoProfessores = (props) => {
     setShowModal(false);
     setModoEdicao(false);
     setProfessorEditando(null);
-  };
-
-  // Função para controlar o dropdown em dispositivos móveis
-  const toggleDropdown = (id, event) => {
-    // Impedir propagação para evitar que o documento receba o evento
-    event.stopPropagation();
-
-    if (activeDropdown === id) {
-      setActiveDropdown(null);
-    } else {
-      // Se houver algum dropdown ativo, feche-o primeiro
-      if (activeDropdown !== null) {
-        setActiveDropdown(null);
-      }
-      // Depois de um pequeno intervalo, abra o novo
-      setTimeout(() => {
-        setActiveDropdown(id);
-      }, 10);
-    }
   };
 
   // Fechar dropdown quando clicar fora dele
@@ -351,7 +347,7 @@ const GerenciamentoProfessores = (props) => {
                 </button>
                 <button
                   className="btn-excluir"
-                  onClick={() => handleDelete(item.id)}
+                  onClick={() => handleDelete(item)}
                 >
                   Excluir
                 </button>

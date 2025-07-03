@@ -7,6 +7,9 @@ import {
   faFileAlt,
   faCalendarAlt,
   faUser,
+  faChevronLeft,
+  faChevronRight,
+  faList,
 } from "@fortawesome/free-solid-svg-icons";
 
 const RelatorioAberturaAula = () => {
@@ -20,22 +23,55 @@ const RelatorioAberturaAula = () => {
     professor: "todos",
   });
 
+  // Estados para paginação
+  const [paginaAtual, setPaginaAtual] = useState(1);
+  const [itensPorPagina, setItensPorPagina] = useState(20);
+
+  // Funções utilitárias para paginação
+  const calcularDadosPaginacao = useCallback(() => {
+    const totalItens = dadosRelatorio.length;
+    const totalPaginas = Math.ceil(totalItens / itensPorPagina);
+    const indiceInicial = (paginaAtual - 1) * itensPorPagina;
+    const indiceFinal = indiceInicial + itensPorPagina;
+    const dadosPagina = dadosRelatorio.slice(indiceInicial, indiceFinal);
+
+    return {
+      totalItens,
+      totalPaginas,
+      indiceInicial,
+      indiceFinal,
+      dadosPagina,
+      temPaginaAnterior: paginaAtual > 1,
+      temProximaPagina: paginaAtual < totalPaginas,
+    };
+  }, [dadosRelatorio, paginaAtual, itensPorPagina]);
+
+  // Reset da página quando mudam os dados ou filtros
+  useEffect(() => {
+    setPaginaAtual(1);
+  }, [dadosRelatorio]);
+
+  const alterarItensPorPagina = (novoValor) => {
+    setItensPorPagina(novoValor);
+    setPaginaAtual(1);
+  };
+
+  const irParaPagina = (pagina) => {
+    const { totalPaginas } = calcularDadosPaginacao();
+    if (pagina >= 1 && pagina <= totalPaginas) {
+      setPaginaAtual(pagina);
+    }
+  };
+
   // Função para processar dados do relatório
   const processarDadosRelatorio = useCallback(() => {
-    console.log("Processando dados do relatório...");
-    console.log("Aulas disponíveis:", aulas);
-    console.log("Professores disponíveis:", professores);
-
     if (!aulas || aulas.length === 0) {
-      console.log("Nenhuma aula encontrada");
       setDadosRelatorio([]);
       return;
     }
 
     // Filtrar todas as aulas
     let aulasFiltradas = [...aulas];
-
-    console.log("Todas as aulas disponíveis:", aulasFiltradas);
 
     // Aplicar filtros selecionados pelo usuário
     aulasFiltradas = aulasFiltradas.filter((aula) => {
@@ -49,7 +85,8 @@ const RelatorioAberturaAula = () => {
 
       // Filtro por data/período
       if (filtros.dataInicial || filtros.dataFinal) {
-        const aulaData = new Date(aula.data).toISOString().split("T")[0];
+        // Usar data diretamente sem conversão problemática de timezone
+        const aulaData = aula.data.split("T")[0]; // Garantir formato YYYY-MM-DD
 
         // Se só tem data inicial, filtrar só por essa data
         if (filtros.dataInicial && !filtros.dataFinal) {
@@ -73,8 +110,6 @@ const RelatorioAberturaAula = () => {
 
       return true;
     });
-
-    console.log("Aulas após filtros:", aulasFiltradas);
 
     // Agrupar por professor e data
     const agrupamento = aulasFiltradas.reduce((acc, aula) => {
@@ -110,9 +145,8 @@ const RelatorioAberturaAula = () => {
       return new Date(a.data || 0) - new Date(b.data || 0);
     });
 
-    console.log("Dados processados:", dadosProcessados);
     setDadosRelatorio(dadosProcessados);
-  }, [aulas, professores, filtros]);
+  }, [aulas, filtros]);
 
   // Carregar apenas professores na inicialização
   useEffect(() => {
@@ -128,8 +162,6 @@ const RelatorioAberturaAula = () => {
 
   const carregarProfessores = async () => {
     try {
-      console.log("Carregando professores...");
-
       const { supabase } = await import("../services/supabase");
 
       const { data: professoresData, error: professoresError } = await supabase
@@ -141,7 +173,6 @@ const RelatorioAberturaAula = () => {
         console.error("Erro ao buscar professores:", professoresError);
         throw professoresError;
       }
-      console.log("Professores encontrados:", professoresData);
 
       setProfessores(professoresData || []);
     } catch (error) {
@@ -153,12 +184,9 @@ const RelatorioAberturaAula = () => {
   const carregarDados = async () => {
     setLoading(true);
     try {
-      console.log("Iniciando carregamento de aulas...");
-
       const { supabase } = await import("../services/supabase");
 
       // Buscar aulas com joins para professores e alunos
-      console.log("Buscando aulas...");
       const { data: aulasData, error: aulasError } = await supabase
         .from("aulas")
         .select(
@@ -178,11 +206,8 @@ const RelatorioAberturaAula = () => {
         console.error("Erro ao buscar aulas:", aulasError);
         throw aulasError;
       }
-      console.log("Aulas encontradas:", aulasData);
 
       setAulas(aulasData || []);
-
-      console.log("Aulas carregadas no estado");
     } catch (error) {
       console.error("Erro detalhado ao carregar aulas:", error);
       console.error("Stack trace:", error.stack);
@@ -475,79 +500,163 @@ const RelatorioAberturaAula = () => {
               </p>
             </div>
           ) : (
-            <div className="relatorio-table">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Professor</th>
-                    <th>Data</th>
-                    <th>Total de Aulas</th>
-                    <th>Detalhes das Aulas</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {dadosRelatorio.map((item, index) => (
-                    <tr key={index}>
-                      <td className="professor-cell">
-                        <FontAwesomeIcon icon={faUser} />
-                        {item.professor_nome}
-                      </td>
-                      <td className="periodo-cell">
-                        <FontAwesomeIcon icon={faCalendarAlt} />
-                        {item.data_formatada}
-                      </td>
-                      <td className="total-cell">
-                        <span className="badge">{item.total_aulas}</span>
-                      </td>
-                      <td className="detalhes-cell">
-                        <div className="aulas-detalhes">
-                          {item.aulas.map((aula, aulaIndex) => (
-                            <div key={aulaIndex} className="aula-item">
-                              <span className="aula-data">
-                                {formatarData(aula.data)}
-                              </span>
-                              <span
-                                className={`aula-status status-${aula.status}`}
-                              >
-                                {aula.status}
-                              </span>
-                              {aula.aula_alunos &&
-                                aula.aula_alunos.length > 0 && (
-                                  <div className="alunos-info">
-                                    <strong>Alunos:</strong>
-                                    {aula.aula_alunos.map(
-                                      (aulaAluno, alunoIndex) => (
-                                        <div
-                                          key={alunoIndex}
-                                          className="aluno-detalhe"
-                                        >
-                                          •{" "}
-                                          {aulaAluno.aluno?.nome ||
-                                            "Nome não disponível"}
-                                          {aulaAluno.observacoes && (
-                                            <div className="observacoes-aluno">
-                                              Obs: {aulaAluno.observacoes}
-                                            </div>
-                                          )}
-                                        </div>
-                                      )
-                                    )}
+            <>
+              {/* Controles de paginação */}
+              <div className="pagination-controls">
+                <div className="pagination-info">
+                  <FontAwesomeIcon icon={faList} />
+                  <span>
+                    Mostrando {calcularDadosPaginacao().indiceInicial + 1} a{" "}
+                    {Math.min(
+                      calcularDadosPaginacao().indiceFinal,
+                      calcularDadosPaginacao().totalItens
+                    )}{" "}
+                    de {calcularDadosPaginacao().totalItens} registros
+                  </span>
+                </div>
+
+                <div className="pagination-size">
+                  <label>Itens por página:</label>
+                  <select
+                    value={itensPorPagina}
+                    onChange={(e) =>
+                      alterarItensPorPagina(Number(e.target.value))
+                    }
+                  >
+                    <option value={20}>20</option>
+                    <option value={50}>50</option>
+                    <option value={100}>100</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="relatorio-table">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Professor</th>
+                      <th>Data</th>
+                      <th>Total de Aulas</th>
+                      <th>Detalhes das Aulas</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {calcularDadosPaginacao().dadosPagina.map((item, index) => (
+                      <tr key={index}>
+                        <td className="professor-cell">
+                          <FontAwesomeIcon icon={faUser} />
+                          {item.professor_nome}
+                        </td>
+                        <td className="periodo-cell">
+                          <FontAwesomeIcon icon={faCalendarAlt} />
+                          {item.data_formatada}
+                        </td>
+                        <td className="total-cell">
+                          <span className="badge">{item.total_aulas}</span>
+                        </td>
+                        <td className="detalhes-cell">
+                          <div className="aulas-detalhes">
+                            {item.aulas.map((aula, aulaIndex) => (
+                              <div key={aulaIndex} className="aula-item">
+                                <span className="aula-data">
+                                  {formatarData(aula.data)}
+                                </span>
+                                <span
+                                  className={`aula-status status-${aula.status}`}
+                                >
+                                  {aula.status}
+                                </span>
+                                {aula.aula_alunos &&
+                                  aula.aula_alunos.length > 0 && (
+                                    <div className="alunos-info">
+                                      <strong>Alunos:</strong>
+                                      {aula.aula_alunos.map(
+                                        (aulaAluno, alunoIndex) => (
+                                          <div
+                                            key={alunoIndex}
+                                            className="aluno-detalhe"
+                                          >
+                                            •{" "}
+                                            {aulaAluno.aluno?.nome ||
+                                              "Nome não disponível"}
+                                            {aulaAluno.observacoes && (
+                                              <div className="observacoes-aluno">
+                                                Obs: {aulaAluno.observacoes}
+                                              </div>
+                                            )}
+                                          </div>
+                                        )
+                                      )}
+                                    </div>
+                                  )}
+                                {aula.anotacoes && (
+                                  <div className="anotacoes-aula">
+                                    <strong>Anotações:</strong> {aula.anotacoes}
                                   </div>
                                 )}
-                              {aula.anotacoes && (
-                                <div className="anotacoes-aula">
-                                  <strong>Anotações:</strong> {aula.anotacoes}
-                                </div>
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                              </div>
+                            ))}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Navegação da paginação */}
+              {calcularDadosPaginacao().totalPaginas > 1 && (
+                <div className="pagination-navigation">
+                  <button
+                    className="pagination-btn"
+                    onClick={() => irParaPagina(paginaAtual - 1)}
+                    disabled={!calcularDadosPaginacao().temPaginaAnterior}
+                  >
+                    <FontAwesomeIcon icon={faChevronLeft} />
+                    Anterior
+                  </button>
+
+                  <div className="pagination-pages">
+                    {Array.from(
+                      { length: calcularDadosPaginacao().totalPaginas },
+                      (_, i) => i + 1
+                    )
+                      .filter((pagina) => {
+                        const atual = paginaAtual;
+                        return (
+                          pagina === 1 ||
+                          pagina === calcularDadosPaginacao().totalPaginas ||
+                          (pagina >= atual - 2 && pagina <= atual + 2)
+                        );
+                      })
+                      .map((pagina, index, array) => (
+                        <React.Fragment key={pagina}>
+                          {index > 0 && array[index - 1] !== pagina - 1 && (
+                            <span className="pagination-ellipsis">...</span>
+                          )}
+                          <button
+                            className={`pagination-page ${
+                              pagina === paginaAtual ? "active" : ""
+                            }`}
+                            onClick={() => irParaPagina(pagina)}
+                          >
+                            {pagina}
+                          </button>
+                        </React.Fragment>
+                      ))}
+                  </div>
+
+                  <button
+                    className="pagination-btn"
+                    onClick={() => irParaPagina(paginaAtual + 1)}
+                    disabled={!calcularDadosPaginacao().temProximaPagina}
+                  >
+                    Próxima
+                    <FontAwesomeIcon icon={faChevronRight} />
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </div>
       )}

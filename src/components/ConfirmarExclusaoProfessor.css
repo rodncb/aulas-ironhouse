@@ -1,0 +1,220 @@
+.exclusao-professor-modal {
+  max-width: 600px;
+  width: 90%;
+}
+
+.professor-info {
+  background: #f8f9fa;
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  border-left: 4px solid #007bff;
+}
+
+.professor-info h4 {
+  margin: 0 0 10px 0;
+  color: #495057;
+}
+
+.professor-info p {
+  margin: 5px 0;
+  color: #6c757d;
+}
+
+.opcoes-exclusao {
+  margin-bottom: 20px;
+}
+
+.opcoes-exclusao h4 {
+  margin-bottom: 15px;
+  color: #495057;
+}
+
+.opcao-radio {
+  margin-bottom: 15px;
+  padding: 15px;
+  border: 2px solid #e9ecef;
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+
+.opcao-radio:has(input:checked) {
+  border-color: #007bff;
+  background-color: #f8f9ff;
+}
+
+.opcao-radio:has(input[value="excluir_completo"]:checked) {
+  border-color: #dc3545;
+  background-color: #fff5f5;
+}
+
+.opcao-radio input[type="radio"] {
+  margin-right: 10px;
+  transform: scale(1.2);
+}
+
+.opcao-radio label {
+  cursor: pointer;
+  display: block;
+  margin: 0;
+}
+
+.opcao-radio label strong {
+  display: block;
+  margin-bottom: 5px;
+  font-size: 16px;
+}
+
+.opcao-radio label small {
+  color: #6c757d;
+  line-height: 1.4;
+}
+
+.aviso-perigo {
+  background: #fff3cd;
+  border: 1px solid #ffeaa7;
+  padding: 10px;
+  border-radius: 6px;
+  margin: 15px 0;
+}
+
+.aviso-perigo p {
+  margin: 0;
+  color: #856404;
+  font-weight: 500;
+}
+
+.confirmacao-input {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #e9ecef;
+}
+
+.confirmacao-input label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: #495057;
+}
+
+.confirmacao-input input {
+  width: 100%;
+  padding: 10px;
+  border: 2px solid #e9ecef;
+  border-radius: 6px;
+  font-size: 16px;
+  text-transform: uppercase;
+}
+
+.confirmacao-input input:focus {
+  outline: none;
+  border-color: #007bff;
+}
+
+.modal-footer {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  padding-top: 20px;
+  border-top: 1px solid #e9ecef;
+}
+
+.btn-cancelar {
+  padding: 10px 20px;
+  background: #6c757d;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.btn-cancelar:hover:not(:disabled) {
+  background: #5a6268;
+}
+
+.btn-confirmar {
+  padding: 10px 20px;
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.btn-confirmar:hover:not(:disabled) {
+  background: #0056b3;
+}
+
+.btn-confirmar:disabled {
+  background: #e9ecef;
+  color: #6c757d;
+  cursor: not-allowed;
+}
+
+.btn-confirmar.btn-perigo {
+  background: #dc3545;
+}
+
+.btn-confirmar.btn-perigo:hover:not(:disabled) {
+  background: #c82333;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.modal-header h3 {
+  margin: 0;
+  color: #495057;
+}
+
+.close-button {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #6c757d;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.close-button:hover {
+  color: #495057;
+}
+
+.modal-body {
+  padding: 20px;
+}
