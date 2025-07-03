@@ -115,9 +115,7 @@ const RelatorioAulaProfessor = () => {
     return () => {
       delete window.limparDadosRelatorioHorario;
     };
-  }, []);
-
-  // Carregar dados salvos na inicialização
+  }, []);  // Carregar dados salvos na inicialização
   const dadosSalvos = carregarDadosSalvos();
 
   const [loading, setLoading] = useState(false);
@@ -128,7 +126,7 @@ const RelatorioAulaProfessor = () => {
   );
   const [filtros, setFiltros] = useState(
     dadosSalvos?.filtros || {
-      dataInicial: "",
+      dataInicial: "2025-05-31",
       dataFinal: "",
       professor: "todos",
     }
@@ -198,10 +196,24 @@ const RelatorioAulaProfessor = () => {
 
   // Função para processar dados do relatório
   const processarDadosRelatorio = useCallback(() => {
+    console.log("🔍 PROCESSANDO DADOS - Filtros:", filtros);
+    console.log("🔍 TOTAL AULAS CARREGADAS:", aulas?.length || 0);
+
     if (!aulas || aulas.length === 0) {
       setDadosRelatorio([]);
       return;
     }
+
+    // Log das primeiras aulas para verificar as datas
+    console.log(
+      "🔍 PRIMEIRAS 5 AULAS:",
+      aulas.slice(0, 5).map((a) => ({
+        id: a.id,
+        data: a.data,
+        dataSubstring: a.data.substring(0, 10),
+        professor: a.professor?.nome,
+      }))
+    );
 
     // Filtrar aulas
     let aulasFiltradas = [...aulas];
@@ -222,7 +234,13 @@ const RelatorioAulaProfessor = () => {
         const aulaData = aula.data.substring(0, 10); // Pega apenas YYYY-MM-DD
 
         if (filtros.dataInicial && !filtros.dataFinal) {
-          return aulaData >= filtros.dataInicial;
+          const resultado = aulaData >= filtros.dataInicial;
+          if (!resultado) {
+            console.log(
+              `🚫 AULA FILTRADA: ${aulaData} < ${filtros.dataInicial}`
+            );
+          }
+          return resultado;
         } else if (filtros.dataInicial && filtros.dataFinal) {
           return (
             aulaData >= filtros.dataInicial && aulaData <= filtros.dataFinal
@@ -234,6 +252,13 @@ const RelatorioAulaProfessor = () => {
 
       return true;
     });
+
+    console.log("🔍 AULAS APÓS FILTRO:", aulasFiltradas.length);
+    console.log("🔍 PRIMEIRA AULA FILTRADA:", aulasFiltradas[0]?.data);
+    console.log(
+      "🔍 ÚLTIMA AULA FILTRADA:",
+      aulasFiltradas[aulasFiltradas.length - 1]?.data
+    );
 
     // Ordenar por data e professor
     aulasFiltradas.sort((a, b) => {
@@ -306,27 +331,84 @@ const RelatorioAulaProfessor = () => {
     }
   };
 
-  const carregarDados = async () => {
-    setLoading(true);
-    try {
-      const { supabase } = await import("../services/supabase");
+  // Função para carregar todos os dados com paginação real
+  const carregarTodosOsDados = async (tabela, selectClause, orderBy = 'id') => {
+    const { supabase } = await import("../services/supabase");
+    let todosOsDados = [];
+    let inicio = 0;
+    const tamanhoPagina = 1000;
+    let temMaisDados = true;
 
-      const { data: aulasData, error: aulasError } = await supabase
-        .from("aulas")
-        .select(
-          `
-          *,
-          professor:professor_id(*)
-        `
-        )
-        .order("data", { ascending: false });
+    while (temMaisDados) {
+      console.log(`📄 Carregando página ${Math.floor(inicio / tamanhoPagina) + 1} de ${tabela}...`);
+      
+      const { data, error } = await supabase
+        .from(tabela)
+        .select(selectClause)
+        .order(orderBy, { ascending: false })
+        .range(inicio, inicio + tamanhoPagina - 1);
 
-      if (aulasError) {
-        console.error("Erro ao buscar aulas:", aulasError);
-        throw aulasError;
+      if (error) {
+        console.error(`❌ Erro ao carregar ${tabela}:`, error);
+        throw error;
       }
 
-      setAulas(aulasData || []);
+      if (data && data.length > 0) {
+        todosOsDados = [...todosOsDados, ...data];
+        console.log(`✅ Carregados ${data.length} registros de ${tabela}, total: ${todosOsDados.length}`);
+        
+        // Se recebeu menos dados que o tamanho da página, chegou ao fim
+        if (data.length < tamanhoPagina) {
+          temMaisDados = false;
+        } else {
+          inicio += tamanhoPagina;
+        }
+      } else {
+        temMaisDados = false;
+      }
+    }
+
+    console.log(`🎯 Total de registros carregados de ${tabela}: ${todosOsDados.length}`);
+    return todosOsDados;
+  };
+
+  const carregarDados = async () => {
+    console.log("🚀 INICIANDO CARREGAMENTO DE DADOS COM PAGINAÇÃO REAL");
+    setLoading(true);
+    try {
+      // Carregar todas as aulas com paginação real
+      console.log("📊 Carregando todas as aulas do Supabase...");
+      const todasAsAulas = await carregarTodosOsDados(
+        'aulas',
+        `*,
+         professor:professor_id(*)`,
+        'data'
+      );
+
+      console.log("📊 DADOS CARREGADOS:", todasAsAulas?.length || 0, "aulas");
+      
+      if (todasAsAulas && todasAsAulas.length > 0) {
+        console.log("📊 PRIMEIRA AULA:", todasAsAulas[0].data);
+        console.log("📊 ÚLTIMA AULA:", todasAsAulas[todasAsAulas.length - 1].data);
+
+        // Verificar se existem aulas antes de 24/06
+        const aulasAntes24Jun = todasAsAulas.filter(
+          (aula) => aula.data.substring(0, 10) < "2025-06-24"
+        );
+        console.log("📊 AULAS ANTES DE 24/06:", aulasAntes24Jun.length);
+
+        if (aulasAntes24Jun.length > 0) {
+          console.log("📊 EXEMPLO AULA ANTES 24/06:", aulasAntes24Jun[0].data);
+        }
+
+        // Verificar aulas a partir de 31/05
+        const aulasApartir31Mai = todasAsAulas.filter(
+          (aula) => aula.data.substring(0, 10) >= "2025-05-31"
+        );
+        console.log("📊 AULAS A PARTIR DE 31/05:", aulasApartir31Mai.length);
+      }
+
+      setAulas(todasAsAulas || []);
     } catch (error) {
       console.error("Erro detalhado ao carregar aulas:", error);
       toast.error(`Erro ao carregar aulas: ${error.message}`);

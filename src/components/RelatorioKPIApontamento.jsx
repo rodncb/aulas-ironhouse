@@ -68,7 +68,7 @@ const RelatorioKPIApontamento = () => {
   );
   const [filtros, setFiltros] = useState(
     dadosSalvos?.filtros || {
-      dataInicial: "",
+      dataInicial: "2025-05-31",
       dataFinal: "",
       professor: "todos",
     }
@@ -294,28 +294,77 @@ const RelatorioKPIApontamento = () => {
     }
   }, [aulas, processarDadosRelatorio]);
 
+  // Função para carregar todos os dados com paginação real
+  const carregarTodosOsDados = async (tabela, selectClause, orderBy = 'id') => {
+    const { supabase } = await import("../services/supabase");
+    let todosOsDados = [];
+    let inicio = 0;
+    const tamanhoPagina = 1000;
+    let temMaisDados = true;
+
+    while (temMaisDados) {
+      console.log(`📄 [KPI] Carregando página ${Math.floor(inicio / tamanhoPagina) + 1} de ${tabela}...`);
+      
+      const { data, error } = await supabase
+        .from(tabela)
+        .select(selectClause)
+        .order(orderBy, { ascending: false })
+        .range(inicio, inicio + tamanhoPagina - 1);
+
+      if (error) {
+        console.error(`❌ [KPI] Erro ao carregar ${tabela}:`, error);
+        throw error;
+      }
+
+      if (data && data.length > 0) {
+        todosOsDados = [...todosOsDados, ...data];
+        console.log(`✅ [KPI] Carregados ${data.length} registros de ${tabela}, total: ${todosOsDados.length}`);
+        
+        if (data.length < tamanhoPagina) {
+          temMaisDados = false;
+        } else {
+          inicio += tamanhoPagina;
+        }
+      } else {
+        temMaisDados = false;
+      }
+    }
+
+    console.log(`🎯 [KPI] Total de registros carregados de ${tabela}: ${todosOsDados.length}`);
+    return todosOsDados;
+  };
+
   const carregarDados = async () => {
     setLoading(true);
     try {
-      const { supabase } = await import("../services/supabase");
+      console.log("🚀 [KPI] INICIANDO CARREGAMENTO COM PAGINAÇÃO REAL");
+      
+      // Carregar todas as aulas com paginação real
+      const todasAsAulas = await carregarTodosOsDados(
+        'aulas',
+        `*,
+         professor:professor_id(*)`,
+        'data'
+      );
 
-      // Buscar aulas com joins para professores
-      const { data: aulasData, error: aulasError } = await supabase
-        .from("aulas")
-        .select(
-          `
-          *,
-          professor:professor_id(*)
-        `
-        )
-        .order("data", { ascending: false });
+      console.log("📊 [KPI] DADOS CARREGADOS:", todasAsAulas?.length || 0, "aulas");
+      
+      if (todasAsAulas && todasAsAulas.length > 0) {
+        console.log("📊 [KPI] PRIMEIRA AULA:", todasAsAulas[0].data);
+        console.log("📊 [KPI] ÚLTIMA AULA:", todasAsAulas[todasAsAulas.length - 1].data);
 
-      if (aulasError) {
-        console.error("Erro ao buscar aulas:", aulasError);
-        throw aulasError;
+        // Verificar aulas antes de 24/06 e a partir de 31/05
+        const aulasAntes24Jun = todasAsAulas.filter(
+          (aula) => aula.data.substring(0, 10) < "2025-06-24"
+        );
+        const aulasApartir31Mai = todasAsAulas.filter(
+          (aula) => aula.data.substring(0, 10) >= "2025-05-31"
+        );
+        console.log("📊 [KPI] AULAS ANTES DE 24/06:", aulasAntes24Jun.length);
+        console.log("📊 [KPI] AULAS A PARTIR DE 31/05:", aulasApartir31Mai.length);
       }
 
-      setAulas(aulasData || []);
+      setAulas(todasAsAulas || []);
     } catch (error) {
       console.error("Erro ao carregar aulas:", error);
       toast.error(`Erro ao carregar aulas: ${error.message}`);

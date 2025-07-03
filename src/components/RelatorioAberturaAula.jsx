@@ -65,7 +65,7 @@ const RelatorioAberturaAula = () => {
   );
   const [filtros, setFiltros] = useState(
     dadosSalvos?.filtros || {
-      dataInicial: "",
+      dataInicial: "2025-05-31",
       dataFinal: "",
       professor: "todos",
     }
@@ -336,29 +336,87 @@ const RelatorioAberturaAula = () => {
     setLoading(true);
     try {
       const { supabase } = await import("../services/supabase");
+      
+      let todasAulas = [];
+      let hasMore = true;
+      let offset = 0;
+      const batchSize = 1000;
 
-      // Buscar aulas com joins para professores e alunos
-      const { data: aulasData, error: aulasError } = await supabase
-        .from("aulas")
-        .select(
+      console.log("🔄 Iniciando carregamento com paginação real para Relatório de Abertura de Aula...");
+
+      while (hasMore) {
+        console.log(`📄 Carregando lote ${Math.floor(offset / batchSize) + 1} (offset: ${offset})...`);
+        
+        const { data: aulasData, error: aulasError } = await supabase
+          .from("aulas")
+          .select(
+            `
+            *,
+            professor:professor_id(*),
+            aula_alunos(
+              id,
+              observacoes,
+              aluno:aluno_id(*)
+            )
           `
-          *,
-          professor:professor_id(*),
-          aula_alunos(
-            id,
-            observacoes,
-            aluno:aluno_id(*)
           )
-        `
-        )
-        .order("data", { ascending: false });
+          .order("data", { ascending: false })
+          .range(offset, offset + batchSize - 1);
 
-      if (aulasError) {
-        console.error("Erro ao buscar aulas:", aulasError);
-        throw aulasError;
+        if (aulasError) {
+          console.error("Erro ao buscar aulas:", aulasError);
+          throw aulasError;
+        }
+
+        const dadosRecebidos = aulasData || [];
+        console.log(`✅ Lote ${Math.floor(offset / batchSize) + 1}: ${dadosRecebidos.length} registros carregados`);
+        
+        // Log das datas das primeiras e últimas aulas do lote
+        if (dadosRecebidos.length > 0) {
+          const primeiraData = dadosRecebidos[0]?.data?.substring(0, 10);
+          const ultimaData = dadosRecebidos[dadosRecebidos.length - 1]?.data?.substring(0, 10);
+          console.log(`📅 Lote ${Math.floor(offset / batchSize) + 1}: ${primeiraData} até ${ultimaData}`);
+        }
+        
+        todasAulas = [...todasAulas, ...dadosRecebidos];
+        
+        // Se recebemos menos dados que o tamanho do lote, chegamos ao fim
+        hasMore = dadosRecebidos.length === batchSize;
+        offset += batchSize;
       }
 
-      setAulas(aulasData || []);
+      console.log(`🎉 Carregamento completo! Total de aulas carregadas: ${todasAulas.length}`);
+      
+      // Log das datas extremas carregadas
+      if (todasAulas.length > 0) {
+        const datasOrdenadas = todasAulas
+          .map(aula => aula.data?.substring(0, 10))
+          .filter(Boolean)
+          .sort();
+        
+        const dataMinima = datasOrdenadas[0];
+        const dataMaxima = datasOrdenadas[datasOrdenadas.length - 1];
+        
+        console.log(`📊 Dados históricos carregados desde: ${dataMinima} até ${dataMaxima}`);
+        
+        // Verificar se temos dados antes de 24/06/2025
+        const aulasAntes24Jun = todasAulas.filter(aula => {
+          const aulaData = aula.data?.substring(0, 10);
+          return aulaData && aulaData < "2025-06-24";
+        });
+        
+        console.log(`🔍 Aulas antes de 24/06/2025: ${aulasAntes24Jun.length}`);
+        
+        if (aulasAntes24Jun.length > 0) {
+          const datasAntes24Jun = aulasAntes24Jun
+            .map(aula => aula.data?.substring(0, 10))
+            .filter(Boolean)
+            .sort();
+          console.log(`📈 Dados históricos confirmados desde: ${datasAntes24Jun[0]} até ${datasAntes24Jun[datasAntes24Jun.length - 1]}`);
+        }
+      }
+
+      setAulas(todasAulas);
     } catch (error) {
       console.error("Erro ao carregar aulas:", error);
       toast.error(`Erro ao carregar aulas: ${error.message}`);
